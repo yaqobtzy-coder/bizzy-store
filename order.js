@@ -16,7 +16,7 @@ const db = getDatabase(app);
 
 const ZAKI_API_URL = 'https://qris.zakki.store/topup';
 const ZAKI_CHECK_URL = 'https://qris.zakki.store/cektopup';
-const ZAKI_TOKEN = 'f5a82805cba2ef';
+const ZAKI_TOKEN = 'c7f15169bcfd61';
 
 let orderData = null;
 let selectedMethod = 'hoyoverse';
