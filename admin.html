@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel | Bizzy Impact Official</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+    <div class="admin-container">
+        <div class="header">
+            <h1><i class="fas fa-user-shield"></i> Bizzy Impact - Admin Panel</h1>
+            <p>Manajemen Pesanan, Slider, Video, Jam Operasional & Custom Tema</p>
+        </div>
+
+        <!-- Bot Status Bar -->
+        <div class="bot-status-bar">
+            <div class="bot-status">
+                <span class="status-dot online" id="botStatusDot"></span>
+                <span id="botStatusText"><i class="fab fa-telegram"></i> Bizzy Impact Bot</span>
+            </div>
+            <div class="bot-command-badge" onclick="openBot()">
+                <i class="fab fa-telegram"></i> @BizzyImpactBot
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card"><i class="fas fa-clock"></i><div class="value" id="totalPending">0</div><div class="label">Pending</div></div>
+            <div class="stat-card"><i class="fas fa-spinner"></i><div class="value" id="totalProcessing">0</div><div class="label">Processing</div></div>
+            <div class="stat-card"><i class="fas fa-check-circle"></i><div class="value" id="totalCompleted">0</div><div class="label">Completed</div></div>
+            <div class="stat-card"><i class="fas fa-users"></i><div class="value" id="totalUsers">0</div><div class="label">Total User</div></div>
+            <div class="stat-card"><i class="fas fa-chart-line"></i><div class="value" id="totalOrders">0</div><div class="label">Total Orders</div></div>
+        </div>
+
+        <div class="tab-menu">
+            <div class="tab-btn active" data-tab="orders">📋 Pesanan</div>
+            <div class="tab-btn" data-tab="owners">👑 Manajemen Owner</div>
+            <div class="tab-btn" data-tab="categories">📂 Manajemen Kategori</div>
+            <div class="tab-btn" data-tab="products">📦 Manajemen Produk</div>
+            <div class="tab-btn" data-tab="theme">🎨 Custom Tema</div>
+            <div class="tab-btn" data-tab="schedule">⏰ Jadwal Buka/Tutup</div>
+            <div class="tab-btn" data-tab="video">🎬 Video Background</div>
+            <div class="tab-btn" data-tab="loading">📹 Video Loading</div>
+            <div class="tab-btn" data-tab="sliders">🖼️ Slider</div>
+            <div class="tab-btn" data-tab="users">👥 User</div>
+            <div class="tab-btn" data-tab="bot">🤖 Bot Config</div>
+        </div>
+
+        <!-- TAB ORDERS -->
+        <div id="tab-orders" class="tab-pane active">
+            <div class="section">
+                <h3><i class="fas fa-list"></i> Daftar Pesanan</h3>
+                <div id="ordersList"></div>
+            </div>
+        </div>
+
+        <!-- TAB OWNERS (MANAJEMEN ADMIN) -->
+        <div id="tab-owners" class="tab-pane">
+            <div class="section">
+                <h3><i class="fas fa-crown"></i> Manajemen Owner / Admin</h3>
+                <p style="margin-bottom: 15px; font-size: 0.8rem;">Tambah atau hapus akses admin untuk user tertentu.</p>
+                
+                <div style="background: rgba(0,0,0,0.03); border-radius: 20px; padding: 16px; margin-bottom: 20px;">
+                    <h4>Tambah Owner Baru</h4>
+                    <div class="form-group">
+                        <label>Username User</label>
+                        <input type="text" id="ownerUsername" placeholder="Masukkan username user">
+                    </div>
+                    <button class="btn-primary" id="addOwnerBtn">+ Tambah sebagai Owner</button>
+                </div>
+                
+                <h4>Daftar Owner Saat Ini</h4>
+                <div id="ownersList"></div>
+            </div>
+        </div>
+
+        <!-- TAB CATEGORIES (MANAJEMEN KATEGORI) -->
+        <div id="tab-categories" class="tab-pane">
+            <div class="section">
+                <h3><i class="fas fa-folder-tree"></i> Manajemen Kategori Produk</h3>
+                <p style="margin-bottom: 15px; font-size: 0.8rem;">Kategori akan tampil di halaman utama sebagai tab.</p>
+                
+                <div style="background: rgba(0,0,0,0.03); border-radius: 20px; padding: 16px; margin-bottom: 20px;">
+                    <h4>Tambah Kategori Baru</h4>
+                    <div class="form-group">
+                        <label>Nama Kategori</label>
+                        <input type="text" id="categoryName" placeholder="Contoh: EXPLORE, CHARACTER, WEAPON">
+                    </div>
+                    <div class="form-group">
+                        <label>Icon Kategori (FontAwesome)</label>
+                        <input type="text" id="categoryIcon" placeholder="Contoh: fa-map, fa-user-friends" value="fa-box">
+                    </div>
+                    <button class="btn-primary" id="addCategoryBtn">+ Tambah Kategori</button>
+                </div>
+                
+                <h4>Daftar Kategori</h4>
+                <div id="categoriesList"></div>
+            </div>
+        </div>
+
+        <!-- TAB PRODUCTS (MANAJEMEN PRODUK) -->
+        <div id="tab-products" class="tab-pane">
+            <div class="section">
+                <h3><i class="fas fa-boxes"></i> Manajemen Produk</h3>
+                <p style="margin-bottom: 15px; font-size: 0.8rem;">Produk akan tampil di halaman utama sesuai kategorinya.</p>
+                
+                <div style="background: rgba(0,0,0,0.03); border-radius: 20px; padding: 16px; margin-bottom: 20px;">
+                    <h4>Tambah Produk Baru</h4>
+                    <div class="form-group">
+                        <label>Pilih Kategori</label>
+                        <select id="productCategory"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Nama Produk</label>
+                        <input type="text" id="productName" placeholder="Contoh: Mondstadt Full">
+                    </div>
+                    <div class="form-group">
+                        <label>Harga (Rp)</label>
+                        <input type="number" id="productPrice" placeholder="Contoh: 150000">
+                    </div>
+                    <div class="form-group">
+                        <label>Deskripsi (opsional)</label>
+                        <input type="text" id="productDesc" placeholder="Deskripsi singkat">
+                    </div>
+                    <button class="btn-primary" id="addProductBtn">+ Tambah Produk</button>
+                </div>
+                
+                <h4>Daftar Produk</h4>
+                <div id="productsList"></div>
+            </div>
+        </div>
+
+        <!-- TAB CUSTOM THEME -->
+        <div id="tab-theme" class="tab-pane">
+            <div class="section">
+                <h3><i class="fas fa-palette"></i> Custom Tema Website</h3>
+                <p style="margin-bottom: 15px; font-size: 0.8rem;">Ubah warna utama (biru) dan warna aksen (emas) sesuai keinginan Anda.</p>
+                
+                <div class="theme-settings">
+                    <div class="theme-color-group">
+                        <label><i class="fas fa-fill-drip"></i> Warna Utama (Biru)</label>
+                        <input type="color" id="primaryColor" value="#1e88e5">
+                    </div>
+                    <div class="theme-color-group">
+                        <label><i class="fas fa-fill-drip"></i> Warna Utama Gelap</label>
+                        <input type="color" id="primaryDark" value="#0d47a1">
+                    </div>
+                    <div class="theme-color-group">
+                        <label><i class="fas fa-fill-drip"></i> Warna Aksen (Emas)</label>
+                        <input type="color" id="accentColor" value="#ffd700">
+                    </div>
+                    <div class="theme-color-group">
+                        <label><i class="fas fa-fill-drip"></i> Warna Aksen Gelap</label>
+                        <input type="color" id="accentDark" value="#ff8c00">
+                    </div>
+                </div>
+                
+                <div class="theme-preview" id="themePreview">
+                    <p style="margin-bottom: 10px;">Preview:</p>
+                    <span class="preview-btn">Tombol Utama</span>
+                    <span class="preview-accent">Tombol Aksen</span>
+                </div>
+                
+                <button class="btn-primary" id="saveThemeBtn" style="margin-top: 15px;">
+                    <i class="fas fa-save"></i> Simpan Tema
+                </button>
+                <button class="btn-warning" id="resetThemeBtn" style="margin-top: 15px; margin-left: 10px;">
+                    <i class="fas fa-undo"></i> Reset ke Default
+                </button>
+                
+                <div style="margin-top: 15px; padding: 12px; background: rgba(0,0,0,0.05); border-radius: 12px;">
+                    <p><i class="fas fa-info-circle"></i> Tema akan langsung diterapkan ke semua halaman (index, admin, cs, order, my-orders, success) secara otomatis.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB SCHEDULE -->
+        <div id="tab-schedule" class="tab-pane">
+            <div class="section">
+                <h3><i class="fas fa-clock"></i> Jadwal Operasional Web</h3>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+                        <span>Tutup Web Manual:</span>
+                        <label class="switch">
+                            <input type="checkbox" id="manualCloseToggle">
+                            <span class="slider-round"></span>
+                        </label>
+                        <span id="manualCloseStatus">Normal</span>
+                    </label>
+                </div>
+                <div class="time-settings">
+                    <div class="form-group">
+                        <label>Jam Tutup (Mulai)</label>
+                        <input type="time" id="closeTime" value="23:00">
+                    </div>
+                    <div class="form-group">
+                        <label>Jam Buka (Kembali)</label>
+                        <input type="time" id="openTime" value="08:00">
+                    </div>
+                </div>
+                <button class="btn-primary" id="saveScheduleBtn">Simpan Jadwal</button>
+                <div style="margin-top: 15px; padding: 12px; background: rgba(0,0,0,0.05); border-radius: 12px;">
+                    <p><i class="fas fa-info-circle"></i> Web akan otomatis tutup pada jam yang ditentukan dan buka kembali sesuai jadwal.</p>
+                    <p id="scheduleStatus" style="margin-top: 8px; color: var(--primary-color);"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB VIDEO BACKGROUND -->
+        <div id="tab-video" class="tab-pane">
+            <div class="section">
+                <h3><i class="fas fa-video"></i> Manajemen Video Background</h3>
+                <div class="form-group">
+                    <label>URL Video Background (MP4)</label>
+                    <input type="url" id="videoUrl" placeholder="https://example.com/video.mp4" value="https://qu.ax/q7xCK">
+                    <small style="font-size:0.7rem; opacity:0.6;">Masukkan link video MP4 yang ingin ditampilkan. Video akan auto play dan tidak bisa di-pause.</small>
+                </div>
+                <div class="video-preview" id="videoPreview">
+                    <p>Preview Video:</p>
+                    <video id="previewVideo" autoplay loop muted style="max-width:100%; border-radius:12px; max-height:150px;">
+                        <source src="https://qu.ax/q7xCK" type="video/mp4">
+                    </video>
+                </div>
+                <button class="btn-primary" id="saveVideoBtn" style="margin-top: 15px;">Simpan Video URL</button>
+                <div style="margin-top: 15px; padding: 12px; background: rgba(0,0,0,0.05); border-radius: 12px;">
+                    <p><i class="fas fa-info-circle"></i> Video akan tampil di halaman utama dengan bingkai "BIZZY IMPACT".</p>
+                    <p>Video tidak bisa di-pause oleh user dan akan auto loop.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB VIDEO LOADING (BARU) -->
+        <div id="tab-loading" class="tab-pane">
+            <div class="section">
+                <h3><i class="fas fa-hourglass-half"></i> Manajemen Video Loading</h3>
+                <p style="margin-bottom: 15px; font-size: 0.8rem;">Video yang tampil saat pertama kali membuka website (sebelum animasi lebah).</p>
+                
+                <div class="form-group">
+                    <label>URL Video Loading (MP4)</label>
+                    <input type="url" id="loadingVideoUrl" placeholder="https://example.com/loading.mp4" value="https://o.uguu.se/hbSphLyQ.mp4">
+                    <small style="font-size:0.7rem; opacity:0.6;">Masukkan link video MP4 untuk loading screen pertama.</small>
+                </div>
+                <div class="video-preview" id="loadingVideoPreview">
+                    <p>Preview Video Loading:</p>
+                    <video id="previewLoadingVideo" autoplay loop muted style="max-width:100%; border-radius:12px; max-height:150px;">
+                        <source src="https://o.uguu.se/hbSphLyQ.mp4" type="video/mp4">
+                    </video>
+                </div>
+                <button class="btn-primary" id="saveLoadingVideoBtn">Simpan Video Loading URL</button>
+                
+                <div style="margin-top: 15px; padding: 12px; background: rgba(0,0,0,0.05); border-radius: 12px;">
+                    <p><i class="fas fa-info-circle"></i> Video loading akan diputar saat user pertama kali membuka website.</p>
+                    <p>User bisa menekan tombol SKIP untuk langsung ke animasi lebah.</p>
+                    <p>Setelah video selesai atau di-skip, animasi lebah akan tampil selama 13 detik.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB SLIDERS -->
+        <div id="tab-sliders" class="tab-pane">
+            <div class="section">
+                <h3><i class="fas fa-images"></i> Manajemen Slider</h3>
+                <div id="slidesList"></div>
+                <div style="margin-top: 20px;">
+                    <input type="text" id="slideImageUrl" placeholder="URL Gambar Slide" style="width:100%; padding:12px; margin-bottom:10px; background:rgba(0,0,0,0.05); border:1px solid rgba(30,136,229,0.3); border-radius:16px; color:var(--text-dark);">
+                    <button class="btn-primary" id="addSlideBtn">+ Tambah Slide</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB USERS -->
+        <div id="tab-users" class="tab-pane">
+            <div class="section">
+                <h3><i class="fas fa-users"></i> Daftar User</h3>
+                <div id="usersList"></div>
+            </div>
+        </div>
+
+        <!-- TAB BOT CONFIG -->
+        <div id="tab-bot" class="tab-pane">
+            <div class="section">
+                <h3><i class="fab fa-telegram"></i> Konfigurasi Bot Telegram</h3>
+                
+                <div class="form-group">
+                    <label>Status Bot</label>
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+                        <label class="switch">
+                            <input type="checkbox" id="botOnlineToggle">
+                            <span class="slider-round"></span>
+                        </label>
+                        <span id="botStatusTextConfig">Online</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Username Bot</label>
+                    <input type="text" id="botUsername" value="BizzyImpactBot" placeholder="@username">
+                    <small style="font-size:0.7rem;">Username bot tanpa @</small>
+                </div>
+
+                <div class="form-group">
+                    <label>Link Bot</label>
+                    <input type="url" id="botLink" value="https://t.me/BizzyImpactBot" placeholder="https://t.me/...">
+                </div>
+
+                <button class="btn-primary" id="saveBotConfigBtn">
+                    <i class="fas fa-save"></i> Simpan Konfigurasi Bot
+                </button>
+
+                <div class="broadcast-preview" style="margin-top: 20px;">
+                    <p><strong><i class="fas fa-bullhorn"></i> Broadcast ke Bot</strong></p>
+                    <p style="font-size: 0.7rem; margin-bottom: 10px;">Kirim pesan broadcast ke semua user via bot</p>
+                    <textarea id="broadcastMessage" rows="3" style="width:100%; padding:12px; background:rgba(0,0,0,0.05); border-radius:16px; margin-bottom:10px;" placeholder="Tulis pesan broadcast..."></textarea>
+                    <button id="sendBroadcastBtn" class="btn-primary">Kirim Broadcast</button>
+                </div>
+
+                <div style="margin-top: 15px; padding: 12px; background: rgba(0,0,0,0.05); border-radius: 12px;">
+                    <p><i class="fab fa-telegram"></i> <strong>Command Bot yang tersedia:</strong></p>
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
+                        <code>/start</code>, <code>/login</code>, <code>/logout</code>, <code>/cek_antrian</code>, <code>/data_akun</code>, <code>/data_joki</code>, <code>/laporan</code>, <code>/rating</code>, <code>/help</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="spinner"></div>
+        <p style="margin-top:20px;">Memproses...</p>
+    </div>
+
+    <script type="module" src="admin.js"></script>
+</body>
+</html>
