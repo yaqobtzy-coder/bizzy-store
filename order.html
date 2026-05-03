@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Form Order | Bizzy Impact Official</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="order.css">
+</head>
+<body>
+    <div class="overlay"></div>
+
+    <div class="container">
+        <!-- Bot Status Bar -->
+        <div class="bot-status-bar">
+            <div class="bot-status">
+                <span class="status-dot online" id="botStatusDot"></span>
+                <span id="botStatusText"><i class="fab fa-telegram"></i> Bizzy Impact Bot</span>
+            </div>
+            <div class="bot-command-badge" onclick="openBot()">
+                <i class="fab fa-telegram"></i> @BizzyImpactBot
+            </div>
+        </div>
+
+        <div class="form-card">
+            <div class="logo">
+                <h1><i class="fas fa-crown"></i> Bizzy Impact</h1>
+                <p>FORM ORDER JOKI</p>
+            </div>
+
+            <div class="queue-info" id="queueInfo">
+                <i class="fas fa-hourglass-half"></i> Total Antrian Saat Ini: 
+                <span class="queue-number" id="currentQueue">0</span>
+            </div>
+
+            <div class="product-info" id="productInfo">
+                <div class="product-name" id="productName">-</div>
+                <div class="product-price" id="productPrice">Rp 0</div>
+            </div>
+
+            <div class="form-group">
+                <label><i class="fas fa-sign-in-alt"></i> Metode Login</label>
+                <div class="login-method" id="loginMethod">
+                    <div class="login-method-btn" data-method="hoyoverse">HoYoverse</div>
+                    <div class="login-method-btn" data-method="facebook">Facebook</div>
+                    <div class="login-method-btn" data-method="apple">Apple</div>
+                    <div class="login-method-btn" data-method="twitter">Twitter (X)</div>
+                    <div class="login-method-btn" data-method="google">Google</div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label><i class="fas fa-envelope"></i> Email / Username</label>
+                <input type="text" id="loginEmail" placeholder="Masukkan email atau username">
+            </div>
+
+            <div class="form-group">
+                <label><i class="fas fa-lock"></i> Password</label>
+                <input type="password" id="loginPassword" placeholder="Masukkan password">
+            </div>
+
+            <div class="form-group">
+                <label><i class="fas fa-phone"></i> Nomor Telepon (WA)</label>
+                <input type="tel" id="phoneNumber" placeholder="Contoh: 6281234567890">
+            </div>
+
+            <div class="form-group">
+                <label><i class="fas fa-user-tie"></i> Pilih Admin Tujuan</label>
+                <select id="adminSelect">
+                    <option value="6281772352832">Admin 1 - +62 817-7235-2832</option>
+                    <option value="6285794545996">Admin 2 - +62 857-9454-5996</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label><i class="fas fa-link"></i> Link Bukti Transfer (Catbox/GDrive)</label>
+                <input type="url" id="proofLink" placeholder="https://catbox.moe/xxxxx.jpg">
+                <small style="font-size:0.6rem; opacity:0.6;">Upload bukti TF ke catbox.moe, lalu paste linknya</small>
+            </div>
+
+            <div class="form-group">
+                <label><i class="fas fa-comment"></i> Catatan Tambahan (opsional)</label>
+                <textarea id="notes" rows="2" placeholder="Tulis catatan jika ada..."></textarea>
+            </div>
+
+            <button class="btn-primary" id="submitBtn">
+                <i class="fas fa-qrcode"></i> BAYAR SEKARANG
+            </button>
+            <button class="btn-secondary" onclick="goBack()">
+                <i class="fas fa-arrow-left"></i> Kembali
+            </button>
+        </div>
+
+        <!-- Info Bot Commands -->
+        <div style="background: rgba(0,0,0,0.03); border-radius: 20px; padding: 16px; text-align: center;">
+            <p><i class="fab fa-telegram"></i> <strong>Cek status pesanan via Bot Telegram</strong></p>
+            <div class="bot-cmd-list">
+                <div class="bot-cmd" onclick="copyCommand('/cek_antrian')">/cek_antrian</div>
+                <div class="bot-cmd" onclick="copyCommand('/data_akun')">/data_akun</div>
+                <div class="bot-cmd" onclick="copyCommand('/laporan')">/laporan</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="paymentModal" class="payment-modal">
+        <div class="payment-card">
+            <div id="paymentStatusIcon" style="width:80px;height:80px;background:var(--accent-color);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
+                <i class="fas fa-clock" style="font-size:3rem;color:#1a1a2e;"></i>
+            </div>
+            <h3 id="paymentTitle">Menunggu Pembayaran</h3>
+            <p style="margin:16px 0; font-size:0.85rem;">Scan QRIS di bawah untuk membayar</p>
+            <img id="qrisImage" class="qris-image" src="">
+            <div style="background:rgba(0,0,0,0.05); border-radius:20px; padding:12px; margin:16px 0; text-align:left;">
+                <p><strong>ID Transaksi:</strong> <span id="transaksiId">-</span></p>
+                <p><strong>Total Bayar:</strong> <span id="totalBayar">Rp 0</span></p>
+                <p><strong>Produk:</strong> <span id="paymentProduct">-</span></p>
+            </div>
+            <div id="countdownArea" class="countdown"></div>
+            <button id="checkPaymentBtn" style="width:100%; padding:14px; background:var(--primary-color); border:none; border-radius:40px; font-weight:bold; margin-bottom:10px; color:white;">Cek Status Pembayaran</button>
+            <button id="closePaymentBtn" style="width:100%; padding:14px; background:transparent; border:1px solid var(--primary-color); border-radius:40px; color:var(--primary-color); cursor:pointer;">Tutup</button>
+        </div>
+    </div>
+
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="spinner"></div>
+        <p style="margin-top:20px;">Memproses...</p>
+    </div>
+
+    <script type="module" src="order.js"></script>
+</body>
+</html>

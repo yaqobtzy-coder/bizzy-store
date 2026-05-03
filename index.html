@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Bizzy Impact Official - Jasa Joki Genshin Impact</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- LOADING SCREEN 1 - VIDEO (BARU) -->
+    <div class="loading-screen" id="loadingScreen1">
+        <div class="video-loading-container">
+            <video id="loadingVideo" class="loading-video" autoplay muted playsinline>
+                <source src="https://o.uguu.se/hbSphLyQ.mp4" type="video/mp4">
+            </video>
+            <button class="skip-btn" id="skipBtn">⏩ SKIP</button>
+        </div>
+    </div>
+
+    <!-- LOADING SCREEN 2 - LEBAH (ASLI) -->
+    <div class="loading-screen" id="loadingScreen2" style="display: none;">
+        <div class="loading-container">
+            <div class="bee-unit" id="bee">
+                <div class="bee-inner">
+                    <div class="wings">
+                        <div class="wing"></div>
+                        <div class="wing"></div>
+                    </div>
+                    <div class="stripes"></div>
+                </div>
+            </div>
+            <div class="brand-text">
+                <h1 class="bizzy">BI<span>ZZ</span>Y</h1>
+                <div class="impact">IMPACT</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="web-closed-overlay" id="webClosedOverlay">
+        <div class="web-closed-card">
+            <i class="fas fa-clock" style="font-size: 3rem;"></i>
+            <h2 style="margin: 20px 0;">Web Sedang Tutup</h2>
+            <p id="closedMessage">Web akan buka kembali pukul 08:00 WIB</p>
+            <p style="margin-top: 15px; font-size: 0.7rem;">Bizzy Impact Official</p>
+        </div>
+    </div>
+
+    <div class="overlay" id="overlayEl"></div>
+    
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+    <div class="sidebar" id="sidebar">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3><i class="fas fa-crown"></i> Bizzy Impact</h3>
+            <i class="fas fa-times" onclick="closeSidebar()" style="cursor:pointer; font-size: 1.2rem;"></i>
+        </div>
+        
+        <div class="mode-selector">
+            <div class="mode-btn" data-mode="light">☀️ Terang</div>
+            <div class="mode-btn" data-mode="dark">🌙 Gelap</div>
+        </div>
+        
+        <div class="visitor-count" id="visitorCount">
+            <i class="fas fa-eye"></i> Total Pengunjung: <span id="visitorNumber">0</span>
+        </div>
+        <div class="live-clock" id="liveClock"></div>
+        
+        <div class="queue-info">
+            <i class="fas fa-hourglass-half"></i> Total Antrian: <span id="queueTotal">0</span>
+        </div>
+        
+        <div style="margin: 15px 0; padding: 10px; background: rgba(0,0,0,0.05); border-radius: 16px;">
+            <p style="font-size: 0.7rem; margin-bottom: 8px;"><i class="fab fa-telegram"></i> Bot Telegram:</p>
+            <div class="bot-command-list">
+                <div class="bot-cmd" onclick="copyCommand('/start')">/start</div>
+                <div class="bot-cmd" onclick="copyCommand('/cek_antrian')">/cek_antrian</div>
+                <div class="bot-cmd" onclick="copyCommand('/data_akun')">/data_akun</div>
+                <div class="bot-cmd" onclick="copyCommand('/data_joki')">/data_joki</div>
+                <div class="bot-cmd" onclick="copyCommand('/laporan')">/laporan</div>
+                <div class="bot-cmd" onclick="copyCommand('/rating')">/rating</div>
+            </div>
+        </div>
+        
+        <ul class="sidebar-menu">
+            <li onclick="openMyOrders()"><i class="fas fa-box"></i> Pesanan Saya</li>
+            <li onclick="openCustomerService()"><i class="fas fa-headset"></i> Customer Service</li>
+            <li onclick="openAdmin()"><i class="fas fa-user-shield"></i> Admin Panel</li>
+            <li onclick="openBotCommands()"><i class="fab fa-telegram"></i> Bot Commands</li>
+            <li onclick="showPrivacy()"><i class="fas fa-shield-alt"></i> Kebijakan Privasi</li>
+            <li onclick="showReadme()"><i class="fas fa-info-circle"></i> README</li>
+            <li onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> Logout</li>
+        </ul>
+        
+        <div style="margin-top: 20px; padding: 12px; border-radius: 16px;">
+            <p style="font-size: 0.7rem; text-align: center;">© 2026 Bizzy Impact Official</p>
+        </div>
+    </div>
+    
+    <div class="menu-toggle" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+    </div>
+
+    <div class="container" id="mainContainer">
+        <div class="bot-status-bar">
+            <div class="bot-status">
+                <span class="status-dot online" id="botStatusDot"></span>
+                <span id="botStatusText">Bizzy Impact Bot</span>
+            </div>
+            <div class="bot-command-badge" onclick="openBot()">
+                <i class="fab fa-telegram"></i> @BizzyImpactBot
+            </div>
+        </div>
+
+        <div class="header">
+            <div class="flying-bee">
+                <div class="bee-wing"></div>
+                <div class="bee-wing right"></div>
+                <div class="bee-body">
+                    <div class="bee-eye"></div>
+                    <div class="bee-stinger"></div>
+                </div>
+            </div>
+            <div class="logo-custom">
+                <i class="fas fa-crown"></i> BIZZY IMPACT
+            </div>
+            <div class="tagline">OFFICIAL JASA JOKI GENSHIN IMPACT</div>
+        </div>
+        
+        <div class="operational-hours" id="operationalHours">
+            <i class="fas fa-clock"></i> JAM OPERASIONAL KAMI 09:30 - 22:05 WIB
+        </div>
+        
+        <div class="video-card">
+            <div class="video-wrapper">
+                <video id="promoVideo" class="promo-video" autoplay loop muted playsinline>
+                    <source src="https://h.uguu.se/DzfxfqBp.mp4" type="video/mp4">
+                </video>
+            </div>
+        </div>
+        
+        <div class="slider-container" id="sliderContainer">
+            <button class="slider-btn slider-prev" onclick="prevSlide()">❮</button>
+            <div class="slider" id="slider">
+                <div class="slide"><img src="https://via.placeholder.com/500x150?text=Bizzy+Impact+1" alt="Slide 1"></div>
+            </div>
+            <button class="slider-btn slider-next" onclick="nextSlide()">❯</button>
+            <div class="slider-dots" id="sliderDots"></div>
+        </div>
+        
+        <div id="authSection">
+            <div class="auth-card">
+                <h2><i class="fas fa-user-circle"></i> Selamat Datang</h2>
+                <input type="text" id="loginUsername" class="auth-input" placeholder="Username">
+                <input type="password" id="loginPassword" class="auth-input" placeholder="Password">
+                <button class="auth-btn" onclick="handleLogin()">MASUK</button>
+                <div class="auth-switch">
+                    Belum punya akun? <span onclick="showRegister()">Daftar Sekarang</span>
+                </div>
+            </div>
+        </div>
+        
+        <div id="registerSection" style="display: none;">
+            <div class="auth-card">
+                <h2><i class="fas fa-user-plus"></i> Daftar Akun</h2>
+                <input type="text" id="regUsername" class="auth-input" placeholder="Username">
+                <input type="password" id="regPassword" class="auth-input" placeholder="Password">
+                <button class="auth-btn" onclick="handleRegister()">DAFTAR</button>
+                <div class="auth-switch">
+                    Sudah punya akun? <span onclick="showLogin()">Masuk</span>
+                </div>
+            </div>
+        </div>
+        
+        <div id="mainApp" style="display: none;">
+            <div class="welcome-card">
+                <div class="welcome-text">
+                    <i class="fas fa-user"></i> Welcome, <strong id="welcomeUsername">-</strong>
+                </div>
+                <div class="queue-badge" id="myQueueBadge">
+                    <i class="fas fa-hourglass-half"></i> Antrian: -
+                </div>
+            </div>
+            
+            <div class="category-tabs">
+                <div class="category-btn active" data-cat="explore">🗺️ EXPLORE</div>
+                <div class="category-btn" data-cat="character">⚔️ CHARACTER</div>
+                <div class="category-btn" data-cat="weapon">⚔️ WEAPON</div>
+                <div class="category-btn" data-cat="talent">📚 TALENT</div>
+                <div class="category-btn" data-cat="quest">📜 QUEST</div>
+                <div class="category-btn" data-cat="reviews">⭐ ULASAN</div>
+                <div class="category-btn" data-cat="info">ℹ️ INFO</div>
+            </div>
+            
+            <!-- PAGE EXPLORE - LENGKAP -->
+            <div id="page-explore" class="page active">
+                <div class="section-title">🌍 FULL MAP PACKAGES</div>
+                <div class="price-card" data-name="Mondstadt Full" data-price="150000"><div class="price-header"><span class="price-title"><i class="fas fa-map-marker-alt"></i> Mondstadt Full</span><span class="price-value">Rp 150.000</span></div></div>
+                <div class="price-card" data-name="Dragonspine" data-price="70000"><div class="price-header"><span class="price-title"><i class="fas fa-mountain"></i> Dragonspine</span><span class="price-value">Rp 70.000</span></div></div>
+                <div class="price-card" data-name="Liyue + Chasm + Chenyu" data-price="450000"><div class="price-header"><span class="price-title"><i class="fas fa-city"></i> Liyue + Chasm + Chenyu</span><span class="price-value">Rp 450.000</span></div></div>
+                <div class="price-card" data-name="Inazuma + Enkanomiya" data-price="450000"><div class="price-header"><span class="price-title"><i class="fas fa-torii-gate"></i> Inazuma + Enkanomiya</span><span class="price-value">Rp 450.000</span></div></div>
+                <div class="price-card" data-name="Sumeru Forest & Desert" data-price="600000"><div class="price-header"><span class="price-title"><i class="fas fa-tree"></i> Sumeru Forest & Desert</span><span class="price-value">Rp 600.000</span></div></div>
+                <div class="price-card" data-name="Fontaine + Sea Bygone" data-price="550000"><div class="price-header"><span class="price-title"><i class="fas fa-water"></i> Fontaine + Sea Bygone</span><span class="price-value">Rp 550.000</span></div></div>
+                <div class="price-card" data-name="Natlan Full (saat ini)" data-price="350000"><div class="price-header"><span class="price-title"><i class="fas fa-fire"></i> Natlan Full (saat ini)</span><span class="price-value">Rp 350.000</span></div></div>
+                
+                <div class="section-title" style="margin-top: 15px;">📊 HITUNG PER 1%</div>
+                <div class="price-card" data-name="PROGRESS 1-90%" data-price="0"><div class="price-header"><span class="price-title"><i class="fas fa-percent"></i> Progress 1-90%</span><span class="price-value">1% = Rp 1.000</span></div></div>
+                <div class="price-card" data-name="PROGRESS 91-100%" data-price="0"><div class="price-header"><span class="price-title"><i class="fas fa-percent"></i> Progress 91-100%</span><span class="price-value">1% = Rp 2.000</span></div></div>
+                
+                <div class="section-title" style="margin-top: 15px;">🗺️ JOKI MAP MONDSTADT</div>
+                <div class="price-card" data-name="Starfell Valley" data-price="50000"><div class="price-header"><span class="price-title"> Starfell Valley</span><span class="price-value">Rp 50.000</span></div></div>
+                <div class="price-card" data-name="Brightcrown Mountain" data-price="40000"><div class="price-header"><span class="price-title"> Brightcrown Mountain</span><span class="price-value">Rp 40.000</span></div></div>
+                <div class="price-card" data-name="Windswail Highland" data-price="35000"><div class="price-header"><span class="price-title"> Windswail Highland</span><span class="price-value">Rp 35.000</span></div></div>
+                <div class="price-card" data-name="Windcry Hill" data-price="35000"><div class="price-header"><span class="price-title"> Windcry Hill</span><span class="price-value">Rp 35.000</span></div></div>
+                <div class="price-card" data-name="Mondstadt SEMUA" data-price="150000"><div class="price-header"><span class="price-title"> Mondstadt SEMUA</span><span class="price-value">Rp 150.000</span></div></div>
+                <div class="price-card" data-name="Mondo + Dragonspine" data-price="210000"><div class="price-header"><span class="price-title"> Mondo + Dragonspine</span><span class="price-value">Rp 210.000</span></div></div>
+                
+                <div class="section-title" style="margin-top: 15px;">🏯 JOKI MAP LIYUE</div>
+                <div class="price-card" data-name="Minlin" data-price="50000"><div class="price-header"><span class="price-title"> Minlin</span><span class="price-value">Rp 50.000</span></div></div>
+                <div class="price-card" data-name="Bishui Plain" data-price="40000"><div class="price-header"><span class="price-title"> Bishui Plain</span><span class="price-value">Rp 40.000</span></div></div>
+                <div class="price-card" data-name="Qiongji Estuary" data-price="40000"><div class="price-header"><span class="price-title"> Qiongji Estuary</span><span class="price-value">Rp 40.000</span></div></div>
+                <div class="price-card" data-name="Lisha" data-price="40000"><div class="price-header"><span class="price-title"> Lisha</span><span class="price-value">Rp 40.000</span></div></div>
+                <div class="price-card" data-name="Sea of Clouds" data-price="40000"><div class="price-header"><span class="price-title"> Sea of Clouds</span><span class="price-value">Rp 40.000</span></div></div>
+                <div class="price-card" data-name="Liyue SEMUA" data-price="200000"><div class="price-header"><span class="price-title"> Liyue SEMUA</span><span class="price-value">Rp 200.000</span></div></div>
+                
+                <div class="section-title" style="margin-top: 15px;">⛰️ CHASM</div>
+                <div class="price-card" data-name="Chasm Underground" data-price="70000"><div class="price-header"><span class="price-title"> Chasm Underground</span><span class="price-value">Rp 70.000</span></div></div>
+                <div class="price-card" data-name="Chasm SEMUA" data-price="100000"><div class="price-header"><span class="price-title"> Chasm SEMUA</span><span class="price-value">Rp 100.000</span></div></div>
+                
+                <div class="section-title" style="margin-top: 15px;">🏞️ CHENYU VALE</div>
+                <div class="price-card" data-name="Chenyu Vale Upper Vale" data-price="75000"><div class="price-header"><span class="price-title"> Chenyu Vale Upper Vale</span><span class="price-value">Rp 75.000</span></div></div>
+                <div class="price-card" data-name="Chenyu Vale Southern Mountain" data-price="75000"><div class="price-header"><span class="price-title"> Chenyu Vale Southern Mountain</span><span class="price-value">Rp 75.000</span></div></div>
+                <div class="price-card" data-name="Mt Laixin" data-price="15000"><div class="price-header"><span class="price-title"> Mt.Laixin</span><span class="price-value">Rp 15.000</span></div></div>
+                <div class="price-card" data-name="Chenyu Vale SEMUA" data-price="150000"><div class="price-header"><span class="price-title"> Chenyu Vale SEMUA</span><span class="price-value">Rp 150.000</span></div></div>
+                
+                <div class="section-title" style="margin-top: 15px;">⛩️ JOKI MAP INAZUMA</div>
+                <div class="price-card" data-name="Narukami Island" data-price="70000"><div class="price-header"><span class="price-title"> Narukami Island</span><span class="price-value">Rp 70.000</span></div></div>
+                <div class="price-card" data-name="Kannazuka" data-price="70000"><div class="price-header"><span class="price-title"> Kannazuka</span><span class="price-value">Rp 70.000</span></div></div>
+                <div class="price-card" data-name="Yashiori Island" data-price="70000"><div class="price-header"><span class="price-title"> Yashiori Island</span><span class="price-value">Rp 70.000</span></div></div>
+                <div class="price-card" data-name="Watatsumi Island" data-price="70000"><div class="price-header"><span class="price-title"> Watatsumi Island</span><span class="price-value">Rp 70.000</span></div></div>
+                <div class="price-card" data-name="Seirai Island" data-price="70000"><div class="price-header"><span class="price-title"> Seirai Island</span><span class="price-value">Rp 70.000</span></div></div>
+                <div class="price-card" data-name="Tsurumi Island" data-price="70000"><div class="price-header"><span class="price-title"> Tsurumi Island</span><span class="price-value">Rp 70.000</span></div></div>
+                <div class="price-card" data-name="Enkanomiya" data-price="70000"><div class="price-header"><span class="price-title"> Enkanomiya</span><span class="price-value">Rp 70.000</span></div></div>
+                <div class="price-card" data-name="Inazuma SEMUA" data-price="450000"><div class="price-header"><span class="price-title"> Inazuma SEMUA</span><span class="price-value">Rp 450.000</span></div></div>
+                
+                <div class="section-title" style="margin-top: 15px;">🌳 JOKI MAP SUMERU FOREST</div>
+                <div class="price-card" data-name="Lokapala Jungle" data-price="60000"><div class="price-header"><span class="price-title"> Lokapala Jungle</span><span class="price-value">Rp 60.000</span></div></div>
+                <div class="price-card" data-name="Avidya Forest" data-price="60000"><div class="price-header"><span class="price-title"> Avidya Forest</span><span class="price-value">Rp 60.000</span></div></div>
+                <div class="price-card" data-name="Ardravi Valley" data-price="60000"><div class="price-header"><span class="price-title"> Ardravi Valley</span><span class="price-value">Rp 60.000</span></div></div>
+                <div class="price-card" data-name="Vanarana" data-price="50000"><div class="price-header"><span class="price-title"> Vanarana</span><span class="price-value">Rp 50.000</span></div></div>
+                <div class="price-card" data-name="Vissudha Field" data-price="50000"><div class="price-header"><span class="price-title"> Vissudha Field</span><span class="price-value">Rp 50.000</span></div></div>
+                <div class="price-card" data-name="Lost Nursery" data-price="20000"><div class="price-header"><span class="price-title"> Lost Nursery</span><span class="price-value">Rp 20.000</span></div></div>
+                <div class="price-card" data-name="Ashavan Realm" data-price="70000"><div class="price-header"><span class="price-title"> Ashavan Realm</span><span class="price-value">Rp 70.000</span></div></div>
+                <div class="price-card" data-name="Sumeru FOREST FULL" data-price="250000"><div class="price-header"><span class="price-title"> 🌲 FOREST FULL</span><span class="price-value">Rp 250.000</span></div></div>
+                
+                <div class="section-title" style="margin-top: 15px;">🏜️ JOKI MAP SUMERU DESERT</div>
+                <div class="price-card" data-name="Land of Lower Setekh" data-price="70000"><div class="price-header"><span class="price-title"> Land of Lower Setekh</span><span class="price-value">Rp 70.000</span></div></div>
+                <div class="price-card" data-name="Land of Upper Setekh" data-price="70000"><div class="price-header"><span class="price-title"> Land of Upper Setekh</span><span class="price-value">Rp 70.000</span></div></div>
+                <div class="price-card" data-name="Hypostyle Desert" data-price="70000"><div class="price-header"><span class="price-title"> Hypostyle Desert</span><span class="price-value">Rp 70.000</span></div></div>
+                <div class="price-card" data-name="Desert of Hadramaveth" data-price="80000"><div class="price-header"><span class="price-title"> Desert of Hadramaveth</span><span class="price-value">Rp 80.000</span></div></div>
+                <div class="price-card" data-name="Gavireh Lajavard" data-price="60000"><div class="price-header"><span class="price-title"> Gavireh Lajavard</span><span class="price-value">Rp 60.000</span></div></div>
+                <div class="price-card" data-name="Realm of Farakhkert" data-price="60000"><div class="price-header"><span class="price-title"> Realm of Farakhkert</span><span class="price-value">Rp 60.000</span></div></div>
+                <div class="price-card" data-name="Sumeru DESERT FULL" data-price="350000"><div class="price-header"><span class="price-title"> 🏜️ DESERT FULL</span><span class="price-value">Rp 350.000</span></div></div>
+                
+                <div class="section-title" style="margin-top: 15px;">💧 JOKI MAP FONTAINE</div>
+                <div class="price-card" data-name="Beryl Region" data-price="70000"><div class="price-header"><span class="price-title"> Beryl Region</span><span class="price-value">Rp 70.000</span></div></div>
+                <div class="price-card" data-name="Belleau Region" data-price="40000"><div class="price-header"><span class="price-title"> Belleau Region</span><span class="price-value">Rp 40.000</span></div></div>
+                <div class="price-card" data-name="Court of Fontaine Region" data-price="70000"><div class="price-header"><span class="price-title"> Court of Fontaine Region</span><span class="price-value">Rp 70.000</span></div></div>
+                <div class="price-card" data-name="Liffey Region" data-price="70000"><div class="price-header"><span class="price-title"> Liffey Region</span><span class="price-value">Rp 70.000</span></div></div>
+                <div class="price-card" data-name="Fontaine Research" data-price="70000"><div class="price-header"><span class="price-title"> Fontaine Research</span><span class="price-value">Rp 70.000</span></div></div>
+                <div class="price-card" data-name="Erinnyes Forest" data-price="70000"><div class="price-header"><span class="price-title"> Erinnyes Forest</span><span class="price-value">Rp 70.000</span></div></div>
+                <div class="price-card" data-name="Morte Region" data-price="70000"><div class="price-header"><span class="price-title"> Morte Region</span><span class="price-value">Rp 70.000</span></div></div>
+                <div class="price-card" data-name="Nostoi Region" data-price="40000"><div class="price-header"><span class="price-title"> Nostoi Region</span><span class="price-value">Rp 40.000</span></div></div>
+                <div class="price-card" data-name="Sea of Bygone Eras" data-price="70000"><div class="price-header"><span class="price-title"> Sea of Bygone Eras</span><span class="price-value">Rp 70.000</span></div></div>
+                <div class="price-card" data-name="Fontaine FULL" data-price="550000"><div class="price-header"><span class="price-title"> 💧 FONTAINE FULL</span><span class="price-value">Rp 550.000</span></div></div>
+                
+                <div class="section-title" style="margin-top: 15px;">🔥 JOKI MAP NATLAN</div>
+                <div class="price-card" data-name="Tequemecan Valley" data-price="60000"><div class="price-header"><span class="price-title"> Tequemecan Valley</span><span class="price-value">Rp 60.000</span></div></div>
+                <div class="price-card" data-name="Coatepec Mountain" data-price="60000"><div class="price-header"><span class="price-title"> Coatepec Mountain</span><span class="price-value">Rp 60.000</span></div></div>
+                <div class="price-card" data-name="Basin of Unnumbered Flames" data-price="60000"><div class="price-header"><span class="price-title"> Basin of Unnumbered Flames</span><span class="price-value">Rp 60.000</span></div></div>
+                <div class="price-card" data-name="Toyac Springs" data-price="60000"><div class="price-header"><span class="price-title"> Toyac Springs</span><span class="price-value">Rp 60.000</span></div></div>
+                <div class="price-card" data-name="Tezcatepetonco Range" data-price="60000"><div class="price-header"><span class="price-title"> Tezcatepetonco Range</span><span class="price-value">Rp 60.000</span></div></div>
+                <div class="price-card" data-name="Quahuacan Cliff" data-price="60000"><div class="price-header"><span class="price-title"> Quahuacan Cliff</span><span class="price-value">Rp 60.000</span></div></div>
+                <div class="price-card" data-name="Ochkanatlan" data-price="70000"><div class="price-header"><span class="price-title"> Ochkanatlan</span><span class="price-value">Rp 70.000</span></div></div>
+                <div class="price-card" data-name="Natlan FULL" data-price="350000"><div class="price-header"><span class="price-title"> NATLAN FULL</span><span class="price-value">Rp 350.000</span></div></div>
+            </div>
+            
+            <!-- PAGE CHARACTER - LENGKAP -->
+            <div id="page-character" class="page">
+                <div class="section-title">⭐ CHARACTER LEVELING</div>
+                <div class="price-card" data-name="LEVEL 1→20" data-price="7000"><div class="price-header"><span class="price-title"><i class="fas fa-star"></i> Level 1 → 20</span><span class="price-value">Rp 7.000</span></div></div>
+                <div class="price-card" data-name="LEVEL 20→40" data-price="7000"><div class="price-header"><span class="price-title"><i class="fas fa-star"></i> Level 20 → 40</span><span class="price-value">Rp 7.000</span></div></div>
+                <div class="price-card" data-name="LEVEL 40→50" data-price="7000"><div class="price-header"><span class="price-title"><i class="fas fa-star"></i> Level 40 → 50</span><span class="price-value">Rp 7.000</span></div></div>
+                <div class="price-card" data-name="LEVEL 50→60" data-price="12000"><div class="price-header"><span class="price-title"><i class="fas fa-star"></i> Level 50 → 60</span><span class="price-value">Rp 12.000</span></div></div>
+                <div class="price-card" data-name="LEVEL 60→70" data-price="12000"><div class="price-header"><span class="price-title"><i class="fas fa-star"></i> Level 60 → 70</span><span class="price-value">Rp 12.000</span></div></div>
+                <div class="price-card" data-name="LEVEL 70→80" data-price="18000"><div class="price-header"><span class="price-title"><i class="fas fa-star"></i> Level 70 → 80</span><span class="price-value">Rp 18.000</span></div></div>
+                <div class="price-card" data-name="LEVEL 80→90" data-price="25000"><div class="price-header"><span class="price-title"><i class="fas fa-star"></i> Level 80 → 90</span><span class="price-value">Rp 25.000</span></div></div>
+                <div class="price-card" data-name="PAKET ASCEND 1→90" data-price="80000"><div class="price-header"><span class="price-title"><i class="fas fa-crown"></i> Paket Ascend 1 → 90</span><span class="price-value">Rp 80.000</span></div></div>
+            </div>
+            
+            <!-- PAGE WEAPON - LENGKAP -->
+            <div id="page-weapon" class="page">
+                <div class="section-title">⚔️ WEAPON LEVELING</div>
+                <div class="price-card" data-name="WEAPON level 1→20" data-price="5000"><div class="price-header"><span class="price-title"><i class="fas fa-sword"></i> Weapon Level 1 → 20</span><span class="price-value">Rp 5.000</span></div></div>
+                <div class="price-card" data-name="WEAPON level 20→40" data-price="5000"><div class="price-header"><span class="price-title"><i class="fas fa-sword"></i> Weapon Level 20 → 40</span><span class="price-value">Rp 5.000</span></div></div>
+                <div class="price-card" data-name="WEAPON level 40→50" data-price="5000"><div class="price-header"><span class="price-title"><i class="fas fa-sword"></i> Weapon Level 40 → 50</span><span class="price-value">Rp 5.000</span></div></div>
+                <div class="price-card" data-name="WEAPON level 50→60" data-price="7000"><div class="price-header"><span class="price-title"><i class="fas fa-sword"></i> Weapon Level 50 → 60</span><span class="price-value">Rp 7.000</span></div></div>
+                <div class="price-card" data-name="WEAPON level 60→70" data-price="7000"><div class="price-header"><span class="price-title"><i class="fas fa-sword"></i> Weapon Level 60 → 70</span><span class="price-value">Rp 7.000</span></div></div>
+                <div class="price-card" data-name="WEAPON level 70→80" data-price="16000"><div class="price-header"><span class="price-title"><i class="fas fa-sword"></i> Weapon Level 70 → 80</span><span class="price-value">Rp 16.000</span></div></div>
+                <div class="price-card" data-name="WEAPON level 80→90" data-price="20000"><div class="price-header"><span class="price-title"><i class="fas fa-sword"></i> Weapon Level 80 → 90</span><span class="price-value">Rp 20.000</span></div></div>
+                <div class="price-card" data-name="PAKET WEAPON ASCEND 1→90" data-price="60000"><div class="price-header"><span class="price-title"><i class="fas fa-crown"></i> Paket Weapon Ascend 1→90</span><span class="price-value">Rp 60.000</span></div></div>
+            </div>
+            
+            <!-- PAGE TALENT - LENGKAP -->
+            <div id="page-talent" class="page">
+                <div class="section-title">📚 TALENT LEVELING</div>
+                <div class="price-card" data-name="TALENT level 1→2" data-price="2000"><div class="price-header"><span class="price-title"><i class="fas fa-book"></i> Talent Level 1 → 2</span><span class="price-value">Rp 2.000</span></div></div>
+                <div class="price-card" data-name="TALENT level 2→3" data-price="4000"><div class="price-header"><span class="price-title"><i class="fas fa-book"></i> Talent Level 2 → 3</span><span class="price-value">Rp 4.000</span></div></div>
+                <div class="price-card" data-name="TALENT level 3→4" data-price="6000"><div class="price-header"><span class="price-title"><i class="fas fa-book"></i> Talent Level 3 → 4</span><span class="price-value">Rp 6.000</span></div></div>
+                <div class="price-card" data-name="TALENT level 4→5" data-price="8000"><div class="price-header"><span class="price-title"><i class="fas fa-book"></i> Talent Level 4 → 5</span><span class="price-value">Rp 8.000</span></div></div>
+                <div class="price-card" data-name="TALENT level 5→6" data-price="10000"><div class="price-header"><span class="price-title"><i class="fas fa-book"></i> Talent Level 5 → 6</span><span class="price-value">Rp 10.000</span></div></div>
+                <div class="price-card" data-name="TALENT level 6→7" data-price="12000"><div class="price-header"><span class="price-title"><i class="fas fa-book"></i> Talent Level 6 → 7</span><span class="price-value">Rp 12.000</span></div></div>
+                <div class="price-card" data-name="TALENT level 7→8" data-price="14000"><div class="price-header"><span class="price-title"><i class="fas fa-book"></i> Talent Level 7 → 8</span><span class="price-value">Rp 14.000</span></div></div>
+                <div class="price-card" data-name="TALENT level 8→9" data-price="16000"><div class="price-header"><span class="price-title"><i class="fas fa-book"></i> Talent Level 8 → 9</span><span class="price-value">Rp 16.000</span></div></div>
+                <div class="price-card" data-name="TALENT level 9→10" data-price="18000"><div class="price-header"><span class="price-title"><i class="fas fa-book"></i> Talent Level 9 → 10</span><span class="price-value">Rp 18.000</span></div></div>
+                <div class="price-card" data-name="PAKET TALENT 1→10" data-price="85000"><div class="price-header"><span class="price-title"><i class="fas fa-crown"></i> Paket Talent 1 → 10</span><span class="price-value">Rp 85.000</span></div></div>
+                <div class="price-card" data-name="PAKET TIGA CROWN" data-price="250000"><div class="price-header"><span class="price-title"><i class="fas fa-crown"></i> Paket Tiga Crown</span><span class="price-value">Rp 250.000</span></div></div>
+            </div>
+            
+            <!-- PAGE QUEST - LENGKAP -->
+            <div id="page-quest" class="page">
+                <div class="section-title">📜 QUEST NATLAN</div>
+                <div class="price-card" data-name="Antara janji dan lupa" data-price="35000"><div class="price-header"><span class="price-title"><i class="fas fa-scroll"></i> Antara janji dan lupa</span><span class="price-value">Rp 35.000</span></div></div>
+                <div class="price-card" data-name="Bayangan gunung" data-price="40000"><div class="price-header"><span class="price-title"><i class="fas fa-scroll"></i> Bayangan gunung</span><span class="price-value">Rp 40.000</span></div></div>
+                <div class="price-card" data-name="Kisah mencari mimpi di tengah api" data-price="35000"><div class="price-header"><span class="price-title"><i class="fas fa-scroll"></i> Kisah mencari mimpi di tengah api</span><span class="price-value">Rp 35.000</span></div></div>
+                <div class="price-card" data-name="Memancing masalah" data-price="15000"><div class="price-header"><span class="price-title"><i class="fas fa-scroll"></i> Memancing masalah</span><span class="price-value">Rp 15.000</span></div></div>
+                <div class="price-card" data-name="Kembalikan malam pada sang malam" data-price="15000"><div class="price-header"><span class="price-title"><i class="fas fa-scroll"></i> Kembalikan malam pada sang malam</span><span class="price-value">Rp 15.000</span></div></div>
+                <div class="price-card" data-name="Kota yang terkubur oleh abu" data-price="50000"><div class="price-header"><span class="price-title"><i class="fas fa-scroll"></i> Kota yang terkubur oleh abu</span><span class="price-value">Rp 50.000</span></div></div>
+                <div class="price-card" data-name="Misteri bulu mengapung di tepi pantai" data-price="15000"><div class="price-header"><span class="price-title"><i class="fas fa-scroll"></i> Misteri bulu mengapung di tepi pantai</span><span class="price-value">Rp 15.000</span></div></div>
+                <div class="price-card" data-name="Buka jantungmu untuk ku" data-price="15000"><div class="price-header"><span class="price-title"><i class="fas fa-scroll"></i> Buka jantungmu untuk ku</span><span class="price-value">Rp 15.000</span></div></div>
+                <div class="info-card" style="margin-top: 15px;"><i class="fas fa-info-circle"></i> Keterangan: Ini adalah beberapa quest yang harus diselesaikan untuk membuka beberapa tempat tersembunyi yang ada di natlan agar bisa dieksplor nantinya</div>
+            </div>
+            
+            <!-- PAGE REVIEWS -->
+            <div id="page-reviews" class="page">
+                <div class="rating-summary" id="ratingSummary">
+                    <div class="rating-stars-big" id="avgStarsDisplay">★★★★★</div>
+                    <div class="rating-average" id="avgRating">5.0</div>
+                    <div class="rating-count" id="totalReviews">0 ulasan</div>
+                </div>
+                <div class="review-form" id="reviewForm">
+                    <h3 style="margin-bottom: 12px; text-align: center;">⭐ Berikan Ulasan</h3>
+                    <div class="star-rating-input" id="starRatingInput">
+                        <i class="fas fa-star star-input" data-rating="1"></i>
+                        <i class="fas fa-star star-input" data-rating="2"></i>
+                        <i class="fas fa-star star-input" data-rating="3"></i>
+                        <i class="fas fa-star star-input" data-rating="4"></i>
+                        <i class="fas fa-star star-input" data-rating="5"></i>
+                    </div>
+                    <textarea id="reviewText" class="review-input" rows="3" placeholder="Tulis pengalaman Anda menggunakan jasa kami..."></textarea>
+                    <input type="text" id="reviewPackage" class="review-input" placeholder="Paket yang dipesan (opsional) contoh: MONDSTADT">
+                    <button class="review-btn" id="submitReviewBtn"><i class="fas fa-paper-plane"></i> Kirim Ulasan</button>
+                </div>
+                <div class="review-list" id="reviewList"><div class="review-loading"><i class="fas fa-spinner fa-pulse"></i> Memuat ulasan...</div></div>
+            </div>
+            
+            <!-- PAGE INFO -->
+            <div id="page-info" class="page">
+                <div class="info-card"><h3><i class="fas fa-info-circle"></i> Tentang Kami</h3><p>Bizzy Impact Official adalah penyedia jasa joki Genshin Impact terpercaya. Kami melayani explore region, leveling character, weapon, talent, dan berbagai kebutuhan Genshin Impact Anda.</p></div>
+                <div class="info-card" style="margin-top: 15px;"><h3><i class="fas fa-check-circle"></i> Keunggulan Kami</h3><p>✅ Proses Cepat & Aman<br>✅ Harga Terjangkau<br>✅ Bisa Request Custom<br>✅ Support 24 Jam</p></div>
+                <div class="info-card" style="margin-top: 15px;"><h3><i class="fab fa-telegram"></i> Bot Telegram</h3><p>Gunakan bot kami untuk cek antrian, data akun, dan laporan:</p>
+                <div class="bot-command-list" style="justify-content: center;">
+                    <div class="bot-cmd" onclick="copyCommand('/start')">/start</div>
+                    <div class="bot-cmd" onclick="copyCommand('/cek_antrian')">/cek_antrian</div>
+                    <div class="bot-cmd" onclick="copyCommand('/data_akun')">/data_akun</div>
+                    <div class="bot-cmd" onclick="copyCommand('/laporan')">/laporan</div>
+                    <div class="bot-cmd" onclick="copyCommand('/rating')">/rating</div>
+                    <div class="bot-cmd" onclick="copyCommand('/data_joki')">/data_joki</div>
+                </div>
+                <p style="margin-top: 10px; font-size: 0.7rem;">@BizzyImpactBot</p>
+                </div>
+            </div>
+            
+            <button class="btn-order" id="orderBtn"><i class="fas fa-shopping-cart"></i> PESAN SEKARANG</button>
+            
+            <div class="contact-card">
+                <p><i class="fab fa-whatsapp"></i> Admin 1: <a href="https://wa.me/6281772352832" target="_blank">+62 817-7235-2832</a></p>
+                <p><i class="fab fa-whatsapp"></i> Admin 2: <a href="https://wa.me/6285794545996" target="_blank">+62 857-9454-5996</a></p>
+                <p><i class="fab fa-telegram"></i> @bizzyimpactjoki</p>
+            </div>
+            
+            <div class="footer"><p>© 2026 Bizzy Impact Official | All Rights Reserved</p><p>Harga dapat berubah sewaktu-waktu</p></div>
+        </div>
+        
+        <!-- BOTTOM NAV DENGAN SWITCH -->
+        <div class="bottom-nav" id="bottomNav" style="display: none;">
+            <div class="nav-group" id="navGroup1">
+                <div class="nav-item active" data-nav="explore"><i class="fas fa-map"></i><span>EXPLORE</span></div>
+                <div class="nav-item" data-nav="character"><i class="fas fa-user-friends"></i><span>CHAR</span></div>
+                <div class="nav-item" data-nav="weapon"><i class="fas fa-gun"></i><span>WEAPON</span></div>
+                <div class="nav-item" data-nav="talent"><i class="fas fa-book"></i><span>TALENT</span></div>
+            </div>
+            <button class="nav-switch-btn" id="navSwitchBtn"><i class="fas fa-exchange-alt"></i> <span id="switchText">>></span></button>
+            <div class="nav-group" id="navGroup2" style="display: none;">
+                <div class="nav-item" data-nav="quest"><i class="fas fa-scroll"></i><span>QUEST</span></div>
+                <div class="nav-item" data-nav="reviews"><i class="fas fa-star"></i><span>ULASAN</span></div>
+                <div class="nav-item" data-nav="info"><i class="fas fa-info-circle"></i><span>INFO</span></div>
+                <div class="nav-item" data-nav="music"><i class="fas fa-music"></i><span>MUSIK</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="musicModal" class="music-modal">
+        <div class="music-card">
+            <h3><i class="fas fa-music"></i> Music Player</h3>
+            <div id="nowPlayingSection" class="now-playing" style="display: none;">
+                <img id="nowPlayingThumb" class="now-playing-img" src="">
+                <div class="now-playing-info">
+                    <div class="now-playing-title" id="nowPlayingTitle">-</div>
+                    <div class="result-user" id="nowPlayingUser">-</div>
+                </div>
+                <button class="control-btn" id="stopMusicBtn" style="width: 35px; height: 35px;"><i class="fas fa-stop"></i></button>
+            </div>
+            <div class="music-search-box">
+                <input type="text" id="searchSongInput" placeholder="Cari lagu...">
+                <button id="searchSongBtn"><i class="fas fa-search"></i> Cari</button>
+            </div>
+            <div id="searchResults" style="max-height: 300px; overflow-y: auto;">
+                <div class="search-loading" style="display: none;"><i class="fas fa-spinner fa-pulse"></i> Mencari...</div>
+                <div id="resultsList"></div>
+            </div>
+            <div class="now-playing-controls" id="musicControls" style="display: none;">
+                <button class="control-btn" id="playPauseBtn"><i class="fas fa-play"></i></button>
+                <button class="control-btn" id="volumeDownBtn"><i class="fas fa-volume-down"></i></button>
+                <button class="control-btn" id="volumeUpBtn"><i class="fas fa-volume-up"></i></button>
+            </div>
+            <div class="volume-slider" id="volumeSliderDiv" style="display: none;">
+                <input type="range" id="volumeSlider" min="0" max="100" value="50">
+            </div>
+            <button class="close-music" id="closeMusicBtn"><i class="fas fa-times"></i> Tutup</button>
+        </div>
+    </div>
+
+    <audio id="backgroundAudio" style="display: none;"></audio>
+    
+    <script type="module" src="script.js"></script>
+</body>
+</html>

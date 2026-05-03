@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Pesanan Saya | Bizzy Impact Official</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="my-orders.css">
+</head>
+<body>
+    <div class="overlay"></div>
+
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-box"></i> Pesanan Saya</h1>
+            <p>Riwayat dan status pesanan joki Anda</p>
+        </div>
+
+        <!-- Bot Status Bar -->
+        <div class="bot-status-bar">
+            <div class="bot-status">
+                <span class="status-dot online" id="botStatusDot"></span>
+                <span id="botStatusText"><i class="fab fa-telegram"></i> Bizzy Impact Bot</span>
+            </div>
+            <div class="bot-command-badge" onclick="openBot()">
+                <i class="fab fa-telegram"></i> @BizzyImpactBot
+            </div>
+        </div>
+
+        <div class="auto-refresh-info">
+            <i class="fas fa-sync-alt"></i> Data otomatis update setiap 10 detik
+            <button class="btn-refresh" onclick="manualRefresh()"><i class="fas fa-sync-alt"></i> Refresh</button>
+        </div>
+
+        <div id="ordersList"></div>
+
+        <!-- Info Bot Commands -->
+        <div style="background: rgba(0,0,0,0.03); border-radius: 20px; padding: 16px; margin-top: 15px; text-align: center;">
+            <p><i class="fab fa-telegram"></i> <strong>Cek status via Bot Telegram</strong></p>
+            <div class="bot-command-list">
+                <div class="bot-cmd" onclick="copyCommand('/cek_antrian')">/cek_antrian</div>
+                <div class="bot-cmd" onclick="copyCommand('/data_akun')">/data_akun</div>
+                <div class="bot-cmd" onclick="copyCommand('/laporan')">/laporan</div>
+                <div class="bot-cmd" onclick="copyCommand('/help')">/help</div>
+            </div>
+            <p style="font-size: 0.65rem; margin-top: 10px;">Klik command untuk menyalin</p>
+        </div>
+
+        <button class="btn-secondary" onclick="goBack()">
+            <i class="fas fa-arrow-left"></i> Kembali ke Beranda
+        </button>
+
+        <footer>
+            <i class="fas fa-shield-alt"></i> Bizzy Impact Official
+        </footer>
+    </div>
+
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="spinner"></div>
+        <p style="margin-top:20px;">Memuat pesanan...</p>
+    </div>
+
+    <script type="module" src="my-orders.js"></script>
+</body>
+</html>

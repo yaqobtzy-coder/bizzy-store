@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Sukses | Bizzy Impact Official</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="success.css">
+</head>
+<body>
+    <div class="overlay"></div>
+
+    <div class="container">
+        <div class="success-card">
+            <div class="logo">
+                <h1><i class="fas fa-crown"></i> Bizzy Impact</h1>
+                <p>ORDER BERHASIL</p>
+            </div>
+
+            <!-- Bot Status Bar -->
+            <div class="bot-status-bar">
+                <div class="bot-status">
+                    <span class="status-dot" id="botStatusDot"></span>
+                    <span id="botStatusText"><i class="fab fa-telegram"></i> Bizzy Impact Bot</span>
+                </div>
+                <div class="bot-command-badge" onclick="window.open('https://t.me/BizzyImpactBot', '_blank')">
+                    <i class="fab fa-telegram"></i> @BizzyImpactBot
+                </div>
+            </div>
+
+            <div class="ceklis">
+                <i class="fas fa-check"></i>
+            </div>
+
+            <div class="success-title">Pesanan Berhasil!</div>
+            <div class="success-message" id="successMessage">
+                Terima kasih telah menggunakan jasa Bizzy Impact Official.
+            </div>
+
+            <div class="info-box">
+                <i class="fas fa-info-circle"></i> <strong>Sebelum anda ke WhatsApp, silahkan SS bukti TF/sukses ini lalu silahkan pencet tombol di bawah ini beserta bukti TF.</strong><br>
+                Terima kasih 🙏
+            </div>
+
+            <div class="transaction-details">
+                <p><span class="label">Produk:</span> <span id="detailProduct" class="value">-</span></p>
+                <p><span class="label">Total Bayar:</span> <span id="detailAmount" class="value">Rp 0</span></p>
+                <p><span class="label">ID Transaksi:</span> <span id="detailTransactionId" class="value">-</span></p>
+                <p><span class="label">Tanggal:</span> <span id="detailDate" class="value">-</span></p>
+                <p><span class="label">Antrian:</span> <span id="detailQueue" class="value">-</span></p>
+                <p><span class="label">Status:</span> <span id="detailStatus" class="value">Menunggu Konfirmasi Admin</span></p>
+            </div>
+
+            <button class="btn-primary" id="confirmBtn">
+                <i class="fab fa-whatsapp"></i> KONFIRMASI KE ADMIN
+            </button>
+            <button class="btn-telegram" id="botBtn">
+                <i class="fab fa-telegram"></i> CEK STATUS DI BOT
+            </button>
+            <button class="btn-secondary" onclick="goToHome()">
+                <i class="fas fa-home"></i> Kembali ke Beranda
+            </button>
+
+            <div class="countdown" id="countdownArea"></div>
+
+            <div class="warning-box">
+                <p><i class="fab fa-telegram"></i> <strong>Cek status pesanan via Bot Telegram:</strong></p>
+                <div class="bot-cmd-list">
+                    <div class="bot-cmd" onclick="copyCommand('/cek_antrian')">/cek_antrian</div>
+                    <div class="bot-cmd" onclick="copyCommand('/data_akun')">/data_akun</div>
+                    <div class="bot-cmd" onclick="copyCommand('/laporan')">/laporan</div>
+                </div>
+                <p style="font-size: 0.7rem; margin-top: 10px;">@BizzyImpactBot</p>
+            </div>
+
+            <div class="footer">
+                <i class="fas fa-shield-alt"></i> Bizzy Impact Official
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="success.js"></script>
+</body>
+</html>

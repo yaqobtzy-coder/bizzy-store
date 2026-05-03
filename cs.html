@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Customer Service | Bizzy Impact Official</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="cs.css">
+</head>
+<body>
+    <div class="overlay"></div>
+
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-headset"></i> Customer Service</h1>
+            <p>Live Chat dengan Admin</p>
+        </div>
+
+        <!-- Bot Status Bar -->
+        <div class="bot-status-bar">
+            <div class="bot-status">
+                <span class="status-dot online" id="botStatusDot"></span>
+                <span id="botStatusText"><i class="fab fa-telegram"></i> Bizzy Impact Bot</span>
+            </div>
+            <div class="bot-command-badge" onclick="openBot()">
+                <i class="fab fa-telegram"></i> @BizzyImpactBot
+            </div>
+        </div>
+
+        <div class="admin-selector">
+            <div class="admin-card active" data-admin="admin1" data-phone="6281772352832">
+                <i class="fas fa-user-tie"></i>
+                <div class="admin-name">Admin 1</div>
+                <div class="admin-phone">+62 817-7235-2832</div>
+            </div>
+            <div class="admin-card" data-admin="admin2" data-phone="6285794545996">
+                <i class="fas fa-user-tie"></i>
+                <div class="admin-name">Admin 2</div>
+                <div class="admin-phone">+62 857-9454-5996</div>
+            </div>
+        </div>
+
+        <div class="chat-container">
+            <div class="chat-header">
+                <i class="fas fa-comments"></i> Live Chat - <span id="chatTargetName">Admin 1</span>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <div style="text-align:center; padding:20px;">
+                    <i class="fas fa-spinner fa-pulse"></i> Memuat chat...
+                </div>
+            </div>
+            <div class="typing-indicator" id="typingIndicator"></div>
+            <div class="chat-input-area">
+                <input type="text" id="chatInput" placeholder="Ketik pesan...">
+                <button onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+
+        <button class="btn-wa" id="whatsappBtn">
+            <i class="fab fa-whatsapp"></i> Hubungi via WhatsApp
+        </button>
+
+        <!-- Info Bot Commands -->
+        <div style="background: rgba(0,0,0,0.03); border-radius: 20px; padding: 16px; margin-top: 15px; text-align: center;">
+            <p><i class="fab fa-telegram"></i> <strong>Cek Status via Bot Telegram</strong></p>
+            <div class="bot-command-list">
+                <div class="bot-cmd" onclick="copyCommand('/cek_antrian')">/cek_antrian</div>
+                <div class="bot-cmd" onclick="copyCommand('/data_akun')">/data_akun</div>
+                <div class="bot-cmd" onclick="copyCommand('/laporan')">/laporan</div>
+            </div>
+        </div>
+
+        <button class="btn-secondary" onclick="goBack()">
+            <i class="fas fa-arrow-left"></i> Kembali
+        </button>
+    </div>
+
+    <script type="module" src="cs.js"></script>
+</body>
+</html>
