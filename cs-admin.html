@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Admin CS | Bizzy Impact Official</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="cs-admin.css">
+</head>
+<body>
+    <div class="overlay"></div>
+
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-headset"></i> Admin Customer Service</h1>
+            <p>Balas chat user</p>
+        </div>
+
+        <!-- Bot Status Bar -->
+        <div class="bot-status-bar">
+            <div class="bot-status">
+                <span class="status-dot online" id="botStatusDot"></span>
+                <span id="botStatusText"><i class="fab fa-telegram"></i> Bizzy Impact Bot</span>
+            </div>
+            <div class="bot-command-badge" onclick="openBot()">
+                <i class="fab fa-telegram"></i> @BizzyImpactBot
+            </div>
+        </div>
+
+        <div class="admin-selector">
+            <div class="admin-btn active" data-admin="admin1">👨‍💼 Admin 1</div>
+            <div class="admin-btn" data-admin="admin2">👨‍💼 Admin 2</div>
+        </div>
+
+        <div class="user-list" id="userList">
+            <div style="text-align:center; padding:20px;">Memuat daftar user...</div>
+        </div>
+
+        <div class="chat-container" id="chatContainer" style="display: none;">
+            <div class="chat-header">
+                <i class="fas fa-comments"></i> Chat dengan: <span id="chatUserName">-</span>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <div style="text-align:center; padding:20px;">Pilih user untuk memulai chat</div>
+            </div>
+            <div class="typing-indicator" id="typingIndicator"></div>
+            <div class="chat-input-area">
+                <input type="text" id="chatInput" placeholder="Ketik pesan balasan...">
+                <button onclick="sendAdminMessage()"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+
+        <!-- Info Bot Commands -->
+        <div style="background: rgba(0,0,0,0.03); border-radius: 20px; padding: 16px; margin-top: 15px; text-align: center;">
+            <p><i class="fab fa-telegram"></i> <strong>Command Bot untuk Admin</strong></p>
+            <div class="bot-cmd-list">
+                <div class="bot-cmd" onclick="copyCommand('/ambil_data')">/ambil_data</div>
+                <div class="bot-cmd" onclick="copyCommand('/proses')">/proses</div>
+                <div class="bot-cmd" onclick="copyCommand('/done')">/done</div>
+                <div class="bot-cmd" onclick="copyCommand('/antrian')">/antrian</div>
+                <div class="bot-cmd" onclick="copyCommand('/broadcast')">/broadcast</div>
+                <div class="bot-cmd" onclick="copyCommand('/laporan_owner')">/laporan_owner</div>
+            </div>
+        </div>
+
+        <button class="btn-secondary" onclick="goBack()">
+            <i class="fas fa-arrow-left"></i> Kembali ke Admin Panel
+        </button>
+    </div>
+
+    <script type="module" src="cs-admin.js"></script>
+</body>
+</html>
