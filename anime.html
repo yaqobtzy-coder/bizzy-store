@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Anime Zone | Bizzy Tools Zone</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0a0a1a, #0f0f2a);
+            color: #ffffff;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            padding-bottom: 100px;
+        }
+        
+        .header {
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(12px);
+            border-radius: 30px;
+            padding: 12px 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border: 1px solid rgba(255,215,0,0.2);
+        }
+        
+        .header h1 {
+            font-size: 1.3rem;
+            background: linear-gradient(135deg, #FFD966, #FF8C00);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .back-btn {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 30px;
+            cursor: pointer;
+        }
+        
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        
+        .menu-card {
+            background: rgba(15, 15, 35, 0.85);
+            backdrop-filter: blur(15px);
+            border-radius: 24px;
+            padding: 16px;
+            border: 1px solid rgba(255, 215, 0, 0.25);
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        
+        .menu-card:hover {
+            transform: translateY(-2px);
+            border-color: #ffd700;
+        }
+        
+        .menu-card i {
+            font-size: 2rem;
+            color: #ffd700;
+            margin-bottom: 8px;
+        }
+        
+        .menu-card .menu-name {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .menu-card .menu-desc {
+            font-size: 0.6rem;
+            opacity: 0.6;
+        }
+        
+        .query-badge {
+            display: inline-block;
+            background: #9C27B0;
+            padding: 2px 6px;
+            border-radius: 12px;
+            font-size: 0.55rem;
+            margin-top: 6px;
+        }
+        
+        .result-area {
+            background: rgba(0,0,0,0.4);
+            border-radius: 24px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .result-image {
+            max-width: 100%;
+            border-radius: 16px;
+            margin-top: 12px;
+        }
+        
+        .result-video {
+            max-width: 100%;
+            border-radius: 16px;
+            margin-top: 12px;
+        }
+        
+        .query-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            z-index: 3000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .query-modal-content {
+            background: #1a1a2e;
+            border-radius: 32px;
+            padding: 24px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .query-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255,215,0,0.3);
+        }
+        
+        .query-field {
+            margin-bottom: 16px;
+        }
+        
+        .query-field label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #ffd700;
+        }
+        
+        .query-field input, .query-field textarea {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 20px;
+            color: white;
+            font-size: 0.9rem;
+        }
+        
+        .query-field textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(95deg, #FFD700, #FF8C00);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-weight: bold;
+            color: #0a0a1a;
+            cursor: pointer;
+            width: 100%;
+        }
+        
+        .btn-secondary {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,215,0,0.3);
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+        }
+        
+        .btn-download {
+            background: rgba(255,215,0,0.2);
+            border: 1px solid #ffd700;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            color: #ffd700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 10px;
+            margin-right: 8px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .fa-spin {
+            animation: fa-spin 2s infinite linear;
+        }
+        
+        @keyframes fa-spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: #1a1a2e;
+            padding: 12px;
+            border-radius: 40px;
+            text-align: center;
+            z-index: 4000;
+            border-left: 4px solid #ffd700;
+        }
+        
+        .section-title {
+            font-size: 1rem;
+            margin: 20px 0 12px 0;
+            color: #ffd700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .back-to-top {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #ffd700;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #1a1a2e;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <button class="back-btn" onclick="goBack()"><i class="fas fa-arrow-left"></i></button>
+            <h1><i class="fas fa-tv"></i> Anime Zone</h1>
+        </div>
+        
+        <div id="resultArea" class="result-area" style="display: none;"></div>
+        
+        <h2 class="section-title"><i class="fas fa-search"></i> Pencarian Anime</h2>
+        <div class="menu-grid" id="searchMenusGrid"></div>
+        
+        <h2 class="section-title"><i class="fas fa-images"></i> Random Gambar Anime</h2>
+        <div class="menu-grid" id="imageMenusGrid"></div>
+        
+        <h2 class="section-title"><i class="fas fa-info-circle"></i> Info Anime</h2>
+        <div class="menu-grid" id="infoMenusGrid"></div>
+    </div>
+    
+    <div id="queryModal" class="query-modal">
+        <div class="query-modal-content">
+            <div class="query-modal-header">
+                <h3 id="modalTitle">Masukkan Data</h3>
+                <button class="back-btn" onclick="closeQueryModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <div id="queryFields"></div>
+            <button class="btn-primary" id="submitQueryBtn" style="margin-top: 16px;">Proses</button>
+        </div>
+    </div>
+    
+    <div class="back-to-top" onclick="scrollToTop()"><i class="fas fa-chevron-up"></i></div>
+    
+    <script>
+        // Menu definitions
+        const searchMenus = [
+            { name: "Anime Search", desc: "Cari anime berdasarkan judul", icon: "fa-search", cmd: "animesearch", needQuery: true, queryFields: [{ name: "q", label: "Judul Anime", type: "text", required: true, placeholder: "Masukkan judul anime..." }], api: "https://api.skylow.web.id/api/anime/animesearch" },
+            { name: "AniDB Search", desc: "Cari anime di AniDB", icon: "fa-database", cmd: "anidb", needQuery: true, queryFields: [{ name: "q", label: "Kata Kunci", type: "text", required: true, placeholder: "Masukkan kata kunci..." }], api: "https://api.skylow.web.id/api/anime/anidb" }
+        ];
+        
+        const imageMenus = [
+            { name: "Avatar", desc: "Random avatar anime", icon: "fa-user-circle", cmd: "avatar", needQuery: false, api: "https://api.skylow.web.id/api/anime/avatar", responseType: "image" },
+            { name: "Chitoge", desc: "Random Chitoge", icon: "fa-female", cmd: "chitoge", needQuery: false, api: "https://api.skylow.web.id/api/anime/chitoge", responseType: "image" },
+            { name: "Cuddle", desc: "Random cuddle", icon: "fa-heart", cmd: "cuddle", needQuery: false, api: "https://api.skylow.web.id/api/anime/cuddle", responseType: "image" },
+            { name: "Deidara", desc: "Random Deidara", icon: "fa-mask", cmd: "deidara", needQuery: false, api: "https://api.skylow.web.id/api/anime/deidara", responseType: "image" },
+            { name: "Erza", desc: "Random Erza", icon: "fa-crown", cmd: "erza", needQuery: false, api: "https://api.skylow.web.id/api/anime/erza", responseType: "image" },
+            { name: "Feed", desc: "Random feed", icon: "fa-image", cmd: "feed", needQuery: false, api: "https://api.skylow.web.id/api/anime/feed", responseType: "image" },
+            { name: "Fox Girl", desc: "Random fox girl", icon: "fa-fox", cmd: "fox_girl", needQuery: false, api: "https://api.skylow.web.id/api/anime/fox_girl", responseType: "image" },
+            { name: "Gecg", desc: "Random gecg", icon: "fa-smile", cmd: "gecg", needQuery: false, api: "https://api.skylow.web.id/api/anime/gecg", responseType: "image" },
+            { name: "Gremory", desc: "Random Gremory", icon: "fa-demon", cmd: "gremory", needQuery: false, api: "https://api.skylow.web.id/api/anime/gremory", responseType: "image" },
+            { name: "Hestia", desc: "Random Hestia", icon: "fa-goddess", cmd: "hestia", needQuery: false, api: "https://api.skylow.web.id/api/anime/hestia", responseType: "image" },
+            { name: "Hinata", desc: "Random Hinata", icon: "fa-user-ninja", cmd: "hinata", needQuery: false, api: "https://api.skylow.web.id/api/anime/hinata", responseType: "image" },
+            { name: "Hitorigottoh", desc: "Random Hitorigottoh", icon: "fa-music", cmd: "hitorigottoh", needQuery: false, api: "https://api.skylow.web.id/api/anime/hitorigottoh", responseType: "image" },
+            { name: "Hug", desc: "Random hug", icon: "fa-hand-peace", cmd: "hug", needQuery: false, api: "https://api.skylow.web.id/api/anime/hug", responseType: "image" },
+            { name: "Inori", desc: "Random Inori", icon: "fa-star", cmd: "inori", needQuery: false, api: "https://api.skylow.web.id/api/anime/inori", responseType: "image" },
+            { name: "Isuzu", desc: "Random Isuzu", icon: "fa-car", cmd: "isuzu", needQuery: false, api: "https://api.skylow.web.id/api/anime/isuzu", responseType: "image" },
+            { name: "Itachi", desc: "Random Itachi", icon: "fa-eye", cmd: "itachi", needQuery: false, api: "https://api.skylow.web.id/api/anime/itachi", responseType: "image" },
+            { name: "Itori", desc: "Random Itori", icon: "fa-book", cmd: "itori", needQuery: false, api: "https://api.skylow.web.id/api/anime/itori", responseType: "image" },
+            { name: "Kagura", desc: "Random Kagura", icon: "fa-umbrella", cmd: "kagura", needQuery: false, api: "https://api.skylow.web.id/api/anime/kagura", responseType: "image" },
+            { name: "Kiss", desc: "Random kiss", icon: "fa-kiss", cmd: "kiss", needQuery: false, api: "https://api.skylow.web.id/api/anime/kiss", responseType: "image" },
+            { name: "Madara", desc: "Random Madara", icon: "fa-mask", cmd: "madara", needQuery: false, api: "https://api.skylow.web.id/api/anime/madara", responseType: "image" },
+            { name: "Mikasa", desc: "Random Mikasa", icon: "fa-fighter-jet", cmd: "mikasa", needQuery: false, api: "https://api.skylow.web.id/api/anime/mikasa", responseType: "image" },
+            { name: "Minato", desc: "Random Minato", icon: "fa-bolt", cmd: "minato", needQuery: false, api: "https://api.skylow.web.id/api/anime/minato", responseType: "image" },
+            { name: "Naruto", desc: "Random Naruto", icon: "fa-user-ninja", cmd: "naruto", needQuery: false, api: "https://api.skylow.web.id/api/anime/naruto", responseType: "image" },
+            { name: "Neko Anime", desc: "Random neko", icon: "fa-cat", cmd: "nekoanime", needQuery: false, api: "https://api.skylow.web.id/api/anime/nekoanime", responseType: "image" },
+            { name: "Natsukawa", desc: "Random Natsukawa", icon: "fa-leaf", cmd: "natsukawa", needQuery: false, api: "https://api.skylow.web.id/api/anime/natsukawa", responseType: "image" },
+            { name: "Nezuko", desc: "Random Nezuko", icon: "fa-mask", cmd: "nezuko", needQuery: false, api: "https://api.skylow.web.id/api/anime/nezuko", responseType: "image" },
+            { name: "Nishimiya", desc: "Random Nishimiya", icon: "fa-deaf", cmd: "nishimiya", needQuery: false, api: "https://api.skylow.web.id/api/anime/nishimiya", responseType: "image" },
+            { name: "One Piece", desc: "Random One Piece", icon: "fa-ship", cmd: "onepiece", needQuery: false, api: "https://api.skylow.web.id/api/anime/onepiece", responseType: "image" },
+            { name: "Yuki", desc: "Random Yuki", icon: "fa-snowflake", cmd: "yuki", needQuery: false, api: "https://api.skylow.web.id/api/anime/yuki", responseType: "image" }
+        ];
+        
+        const infoMenus = [
+            { name: "Anime Info", desc: "Info detail anime", icon: "fa-info-circle", cmd: "animeinfo", needQuery: true, queryFields: [{ name: "q", label: "Judul Anime", type: "text", required: true, placeholder: "Masukkan judul anime..." }], api: "https://api.skylow.web.id/api/anime/animeinfo", responseType: "json" },
+            { name: "Animestory WA", desc: "Cerita anime untuk WA", icon: "fa-whatsapp", cmd: "animestorywa", needQuery: false, api: "https://api.skylow.web.id/api/anime/animestorywa", responseType: "text" }
+        ];
+        
+        let currentMenu = null;
+        
+        function renderMenus() {
+            renderGrid('searchMenusGrid', searchMenus);
+            renderGrid('imageMenusGrid', imageMenus);
+            renderGrid('infoMenusGrid', infoMenus);
+        }
+        
+        function renderGrid(containerId, menus) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            
+            container.innerHTML = menus.map(menu => `
+                <div class="menu-card" onclick="openMenu('${menu.cmd}')" data-menu='${JSON.stringify(menu)}'>
+                    <i class="fas ${menu.icon}"></i>
+                    <div class="menu-name">${escapeHtml(menu.name)}</div>
+                    <div class="menu-desc">${escapeHtml(menu.desc)}</div>
+                    ${menu.needQuery ? '<div class="query-badge"><i class="fas fa-keyboard"></i> Butuh Input</div>' : ''}
+                </div>
+            `).join('');
+            
+            // Attach menu data to cards
+            document.querySelectorAll(`#${containerId} .menu-card`).forEach((card, idx) => {
+                card.onclick = () => openMenuByData(menus[idx]);
+            });
+        }
+        
+        function openMenuByData(menu) {
+            currentMenu = menu;
+            if (menu.needQuery) {
+                showQueryModal(menu);
+            } else {
+                executeApiCall(menu);
+            }
+        }
+        
+        function openMenu(cmd) {
+            const allMenus = [...searchMenus, ...imageMenus, ...infoMenus];
+            const menu = allMenus.find(m => m.cmd === cmd);
+            if (menu) openMenuByData(menu);
+        }
+        
+        function showQueryModal(menu) {
+            const modal = document.getElementById('queryModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const queryFields = document.getElementById('queryFields');
+            
+            modalTitle.innerText = `${menu.name} - Masukkan Data`;
+            
+            queryFields.innerHTML = menu.queryFields.map(field => `
+                <div class="query-field">
+                    <label>${escapeHtml(field.label)} ${field.required ? '*' : ''}</label>
+                    ${field.type === 'textarea' ? 
+                        `<textarea id="field_${field.name}" placeholder="${escapeHtml(field.placeholder || '')}" ${field.required ? 'required' : ''}></textarea>` :
+                        `<input type="${field.type}" id="field_${field.name}" placeholder="${escapeHtml(field.placeholder || '')}" ${field.required ? 'required' : ''}>`
+                    }
+                </div>
+            `).join('');
+            
+            modal.style.display = 'flex';
+            
+            const submitBtn = document.getElementById('submitQueryBtn');
+            submitBtn.onclick = () => {
+                const params = {};
+                let isValid = true;
+                
+                menu.queryFields.forEach(field => {
+                    const value = document.getElementById(`field_${field.name}`).value.trim();
+                    if (field.required && !value) {
+                        showToast(`Mohon isi ${field.label}`);
+                        isValid = false;
+                    }
+                    params[field.name] = encodeURIComponent(value);
+                });
+                
+                if (isValid) {
+                    closeQueryModal();
+                    executeApiCall(menu, params);
+                }
+            };
+        }
+        
+        function closeQueryModal() {
+            document.getElementById('queryModal').style.display = 'none';
+        }
+        
+        async function executeApiCall(menu, params = {}) {
+            showLoading(true);
+            
+            let url = menu.api;
+            if (Object.keys(params).length > 0) {
+                const queryString = Object.entries(params).map(([k, v]) => `${k}=${v}`).join('&');
+                url = `${menu.api}?${queryString}`;
+            }
+            
+            try {
+                const response = await fetch(url);
+                
+                if (menu.responseType === 'image' || (!menu.responseType && menu.api.includes('/maker/') && !menu.api.includes('info') && !menu.api.includes('search'))) {
+                    // Handle image response
+                    const blob = await response.blob();
+                    const blobUrl = URL.createObjectURL(blob);
+                    showResult('image', blobUrl, menu.name);
+                } else if (menu.responseType === 'json' || menu.cmd === 'animeinfo' || menu.cmd === 'animesearch' || menu.cmd === 'anidb') {
+                    const data = await response.json();
+                    showResult('json', data, menu.name);
+                } else {
+                    const text = await response.text();
+                    showResult('text', text, menu.name);
+                }
+            } catch (error) {
+                showToast(`Error: ${error.message}`);
+                showResult('error', error.message, menu.name);
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        function showResult(type, data, title) {
+            const resultArea = document.getElementById('resultArea');
+            resultArea.style.display = 'block';
+            
+            let html = `<h3 style="margin-bottom: 12px;"><i class="fas fa-${type === 'image' ? 'image' : 'file-alt'}"></i> ${escapeHtml(title)}</h3>`;
+            
+            if (type === 'image') {
+                html += `
+                    <img src="${data}" class="result-image" onclick="window.open('${data}', '_blank')">
+                    <div>
+                        <button class="btn-download" onclick="downloadMedia('${data}', 'image')"><i class="fas fa-download"></i> Download Gambar</button>
+                        <button class="btn-download" onclick="window.open('${data}', '_blank')"><i class="fas fa-external-link-alt"></i> Buka Baru</button>
+                    </div>
+                `;
+            } else if (type === 'json') {
+                if (data.result) {
+                    if (Array.isArray(data.result)) {
+                        html += `<div style="max-height: 400px; overflow-y: auto;">`;
+                        data.result.slice(0, 10).forEach(item => {
+                            html += `<div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 12px; margin-bottom: 8px;">
+                                <strong>${escapeHtml(item.title || item.name || 'Item')}</strong>
+                                ${item.image ? `<div><img src="${item.image}" style="max-width: 100px; border-radius: 8px; margin-top: 8px;"></div>` : ''}
+                                ${item.synopsis ? `<div style="font-size: 0.75rem; margin-top: 4px;">${escapeHtml(item.synopsis.substring(0, 200))}...</div>` : ''}
+                            </div>`;
+                        });
+                        html += `</div>`;
+                    } else {
+                        html += `<pre style="background: rgba(0,0,0,0.3); padding: 16px; border-radius: 16px; overflow-x: auto; font-size: 0.7rem;">${escapeHtml(JSON.stringify(data.result, null, 2))}</pre>`;
+                    }
+                } else {
+                    html += `<pre style="background: rgba(0,0,0,0.3); padding: 16px; border-radius: 16px; overflow-x: auto; font-size: 0.7rem;">${escapeHtml(JSON.stringify(data, null, 2))}</pre>`;
+                }
+            } else if (type === 'text') {
+                html += `<div style="background: rgba(0,0,0,0.3); padding: 16px; border-radius: 16px; line-height: 1.6;">${escapeHtml(data)}</div>`;
+            } else if (type === 'error') {
+                html += `<div style="background: rgba(255,68,68,0.2); padding: 16px; border-radius: 16px; color: #ff6666;">❌ Error: ${escapeHtml(data)}</div>`;
+            }
+            
+            resultArea.innerHTML = html;
+            resultArea.scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function downloadMedia(url, type) {
+            fetch(url)
+                .then(response => response.blob())
+                .then(blob => {
+                    const blobUrl = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = blobUrl;
+                    a.download = `download_${Date.now()}.${type === 'image' ? 'jpg' : 'mp4'}`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(blobUrl);
+                    showToast('Download dimulai!');
+                })
+                .catch(err => showToast('Gagal download: ' + err.message));
+        }
+        
+        function showLoading(show) {
+            const loader = document.getElementById('loadingOverlay');
+            if (!loader) {
+                const div = document.createElement('div');
+                div.id = 'loadingOverlay';
+                div.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);display:none;justify-content:center;align-items:center;z-index:9999;';
+                div.innerHTML = '<div style="width:50px;height:50px;border:3px solid rgba(255,215,0,0.3);border-top:3px solid #FFD700;border-radius:50%;animation:spin 1s linear infinite;"></div><style>@keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}</style>';
+                document.body.appendChild(div);
+            }
+            const loaderEl = document.getElementById('loadingOverlay');
+            if (show) loaderEl.style.display = 'flex';
+            else loaderEl.style.display = 'none';
+        }
+        
+        function showToast(msg) {
+            let existing = document.querySelector(".toast");
+            if (existing) existing.remove();
+            let toast = document.createElement("div");
+            toast.className = "toast";
+            toast.innerHTML = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+        
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
+        }
+        
+        function goBack() {
+            window.location.href = 'tools.html';
+        }
+        
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        renderMenus();
+    </script>
+</body>
+</html>

@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Games Zone | Bizzy Tools Zone</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0a0a1a, #0f0f2a);
+            color: #ffffff;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            padding-bottom: 100px;
+        }
+        
+        .header {
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(12px);
+            border-radius: 30px;
+            padding: 12px 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border: 1px solid rgba(255,215,0,0.2);
+        }
+        
+        .header h1 {
+            font-size: 1.3rem;
+            background: linear-gradient(135deg, #FFD966, #FF8C00);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .back-btn {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 30px;
+            cursor: pointer;
+        }
+        
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        
+        .menu-card {
+            background: rgba(15, 15, 35, 0.85);
+            backdrop-filter: blur(15px);
+            border-radius: 24px;
+            padding: 16px;
+            border: 1px solid rgba(255, 215, 0, 0.25);
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        
+        .menu-card:hover {
+            transform: translateY(-2px);
+            border-color: #ffd700;
+        }
+        
+        .menu-card i {
+            font-size: 2rem;
+            color: #ffd700;
+            margin-bottom: 8px;
+        }
+        
+        .menu-card .menu-name {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .menu-card .menu-desc {
+            font-size: 0.6rem;
+            opacity: 0.6;
+        }
+        
+        .query-badge {
+            display: inline-block;
+            background: #9C27B0;
+            padding: 2px 6px;
+            border-radius: 12px;
+            font-size: 0.55rem;
+            margin-top: 6px;
+        }
+        
+        .result-area {
+            background: rgba(0,0,0,0.4);
+            border-radius: 24px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .quiz-card {
+            background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(255,100,0,0.05));
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+        
+        .quiz-question {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+        
+        .quiz-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        
+        .quiz-option {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 16px;
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .quiz-option:hover {
+            background: rgba(255,215,0,0.2);
+            border-color: #ffd700;
+        }
+        
+        .quiz-option.correct {
+            background: rgba(40,167,69,0.3);
+            border-color: #28a745;
+        }
+        
+        .quiz-option.wrong {
+            background: rgba(220,53,69,0.3);
+            border-color: #dc3545;
+        }
+        
+        .quiz-feedback {
+            margin-top: 12px;
+            padding: 12px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+        }
+        
+        .quiz-feedback.correct {
+            background: rgba(40,167,69,0.2);
+            color: #28a745;
+        }
+        
+        .quiz-feedback.wrong {
+            background: rgba(220,53,69,0.2);
+            color: #ff6666;
+        }
+        
+        .quiz-next-btn {
+            background: linear-gradient(95deg, #FFD700, #FF8C00);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-weight: bold;
+            color: #0a0a1a;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 16px;
+        }
+        
+        .quiz-score {
+            text-align: center;
+            padding: 16px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 16px;
+            margin-top: 16px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(95deg, #FFD700, #FF8C00);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-weight: bold;
+            color: #0a0a1a;
+            cursor: pointer;
+            width: 100%;
+        }
+        
+        .btn-secondary {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,215,0,0.3);
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            margin-right: 8px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .fa-spin {
+            animation: fa-spin 2s infinite linear;
+        }
+        
+        @keyframes fa-spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: #1a1a2e;
+            padding: 12px;
+            border-radius: 40px;
+            text-align: center;
+            z-index: 4000;
+            border-left: 4px solid #ffd700;
+        }
+        
+        .section-title {
+            font-size: 1rem;
+            margin: 20px 0 12px 0;
+            color: #ffd700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .answer-input-area {
+            display: flex;
+            gap: 10px;
+            margin: 16px 0;
+        }
+        
+        .answer-input-area input {
+            flex: 1;
+            padding: 12px 16px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 30px;
+            color: white;
+            font-size: 0.9rem;
+        }
+        
+        .answer-input-area button {
+            background: linear-gradient(95deg, #FFD700, #FF8C00);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-weight: bold;
+            color: #0a0a1a;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <button class="back-btn" onclick="goBack()"><i class="fas fa-arrow-left"></i></button>
+            <h1><i class="fas fa-gamepad"></i> Games Zone</h1>
+        </div>
+        
+        <div id="resultArea" class="result-area" style="display: none;"></div>
+        
+        <h2 class="section-title"><i class="fas fa-brain"></i> Quiz & Tebak-tebakan</h2>
+        <div class="menu-grid" id="gamesGrid"></div>
+    </div>
+    
+    <div id="loadingOverlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);display:none;justify-content:center;align-items:center;z-index:9999;">
+        <div style="width:50px;height:50px;border:3px solid rgba(255,215,0,0.3);border-top:3px solid #FFD700;border-radius:50%;animation:spin 1s linear infinite;"></div>
+        <style>@keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}</style>
+    </div>
+    
+    <script>
+        // Game state
+        let currentGame = null;
+        let currentQuestions = [];
+        let currentIndex = 0;
+        let score = 0;
+        
+        const games = [
+            { name: "Asah Otak", desc: "Tingkatkan ketajaman otakmu", icon: "fa-brain", cmd: "asahotak", needQuery: false, api: "https://api.skylow.web.id/api/games/asahotak", gameType: "quiz" },
+            { name: "Islamic Quiz", desc: "Uji pengetahuan Islammu", icon: "fa-mosque", cmd: "islamicquiz", needQuery: false, api: "https://api.skylow.web.id/api/games/islamicquiz", gameType: "quiz" },
+            { name: "Siapakah Aku?", desc: "Tebak tokoh dari deskripsi", icon: "fa-question-circle", cmd: "siapakahaku", needQuery: false, api: "https://api.skylow.web.id/api/games/siapakahaku", gameType: "answer" },
+            { name: "Susun Kata", desc: "Susun huruf jadi kata", icon: "fa-font", cmd: "susunkata", needQuery: false, api: "https://api.skylow.web.id/api/games/susunkata", gameType: "answer" },
+            { name: "Tebak Kimia", desc: "Tebak unsur kimia", icon: "fa-flask", cmd: "tebakkimia", needQuery: false, api: "https://api.skylow.web.id/api/games/tebakkimia", gameType: "answer" },
+            { name: "Tebak Lirik", desc: "Tebak lagu dari lirik", icon: "fa-music", cmd: "tebaklirik", needQuery: false, api: "https://api.skylow.web.id/api/games/tebaklirik", gameType: "answer" },
+            { name: "Tebak-tebakan", desc: "Tebakan lucu dan seru", icon: "fa-smile-wink", cmd: "tebaktebakan", needQuery: false, api: "https://api.skylow.web.id/api/games/tebaktebakan", gameType: "answer" },
+            { name: "Teka-teki", desc: "Pecahkan teka-teki", icon: "fa-puzzle-piece", cmd: "tekateki", needQuery: false, api: "https://api.skylow.web.id/api/games/tekateki", gameType: "answer" }
+        ];
+        
+        function renderGames() {
+            const container = document.getElementById('gamesGrid');
+            container.innerHTML = games.map(game => `
+                <div class="menu-card" onclick="startGame('${game.cmd}')">
+                    <i class="fas ${game.icon}"></i>
+                    <div class="menu-name">${escapeHtml(game.name)}</div>
+                    <div class="menu-desc">${escapeHtml(game.desc)}</div>
+                </div>
+            `).join('');
+        }
+        
+        async function startGame(cmd) {
+            const game = games.find(g => g.cmd === cmd);
+            if (!game) return;
+            
+            currentGame = game;
+            currentIndex = 0;
+            score = 0;
+            
+            await fetchQuestions(game);
+        }
+        
+        async function fetchQuestions(game) {
+            showLoading(true);
+            
+            try {
+                const response = await fetch(game.api);
+                const data = await response.json();
+                
+                if (data.status && data.result) {
+                    if (game.gameType === "quiz") {
+                        currentQuestions = parseQuizData(data.result);
+                        showQuizQuestion();
+                    } else {
+                        currentQuestions = parseAnswerData(data.result);
+                        showAnswerQuestion();
+                    }
+                } else {
+                    showToast("Gagal memuat soal! Silakan coba lagi.");
+                    showResult('error', "Gagal memuat soal", game.name);
+                }
+            } catch (error) {
+                showToast(`Error: ${error.message}`);
+                showResult('error', error.message, game.name);
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        function parseQuizData(data) {
+            // Handle different API response formats
+            if (Array.isArray(data)) {
+                return data.map(item => ({
+                    question: item.question || item.soal || item.pertanyaan,
+                    options: item.options || item.pilihan || item.choices,
+                    answer: item.answer || item.jawaban
+                }));
+            } else if (data.question) {
+                return [{
+                    question: data.question,
+                    options: data.options,
+                    answer: data.answer
+                }];
+            }
+            return [];
+        }
+        
+        function parseAnswerData(data) {
+            if (Array.isArray(data)) {
+                return data.map(item => ({
+                    question: item.question || item.soal || item.pertanyaan,
+                    answer: item.answer || item.jawaban
+                }));
+            } else if (data.question) {
+                return [{
+                    question: data.question,
+                    answer: data.answer
+                }];
+            }
+            return [];
+        }
+        
+        function showQuizQuestion() {
+            if (currentIndex >= currentQuestions.length) {
+                showQuizResult();
+                return;
+            }
+            
+            const q = currentQuestions[currentIndex];
+            const resultArea = document.getElementById('resultArea');
+            resultArea.style.display = 'block';
+            
+            let optionsHtml = '';
+            if (q.options && Array.isArray(q.options)) {
+                optionsHtml = `<div class="quiz-options">` + 
+                    q.options.map((opt, idx) => `
+                        <div class="quiz-option" onclick="checkQuizAnswer('${escapeHtml(opt)}', '${escapeHtml(q.answer)}')">
+                            ${String.fromCharCode(65+idx)}. ${escapeHtml(opt)}
+                        </div>
+                    `).join('') + 
+                `</div>`;
+            }
+            
+            resultArea.innerHTML = `
+                <div class="quiz-card">
+                    <div class="quiz-question">
+                        <strong>Soal ${currentIndex + 1}/${currentQuestions.length}</strong><br>
+                        ${escapeHtml(q.question)}
+                    </div>
+                    ${optionsHtml}
+                    <div id="quizFeedback"></div>
+                    <div id="quizNextBtn"></div>
+                </div>
+                <div class="quiz-score">
+                    Score: ${score}/${currentIndex}
+                </div>
+            `;
+        }
+        
+        function checkQuizAnswer(selected, correct) {
+            const feedbackDiv = document.getElementById('quizFeedback');
+            const options = document.querySelectorAll('.quiz-option');
+            
+            // Disable all options
+            options.forEach(opt => opt.style.pointerEvents = 'none');
+            
+            // Mark correct/wrong
+            options.forEach(opt => {
+                if (opt.innerText.includes(correct)) {
+                    opt.classList.add('correct');
+                }
+            });
+            
+            const isCorrect = selected === correct;
+            
+            if (isCorrect) {
+                score++;
+                feedbackDiv.innerHTML = `<div class="quiz-feedback correct">✅ Benar! +1 poin</div>`;
+            } else {
+                feedbackDiv.innerHTML = `<div class="quiz-feedback wrong">❌ Salah! Jawaban yang benar: ${escapeHtml(correct)}</div>`;
+            }
+            
+            // Update score display
+            document.querySelector('.quiz-score').innerHTML = `Score: ${score}/${currentIndex + 1}`;
+            
+            // Add next button
+            document.getElementById('quizNextBtn').innerHTML = `
+                <button class="quiz-next-btn" onclick="nextQuizQuestion()">
+                    ${currentIndex + 1 >= currentQuestions.length ? 'Lihat Hasil' : 'Soal Selanjutnya'}
+                </button>
+            `;
+        }
+        
+        function nextQuizQuestion() {
+            currentIndex++;
+            showQuizQuestion();
+        }
+        
+        function showQuizResult() {
+            const resultArea = document.getElementById('resultArea');
+            const percentage = (score / currentQuestions.length) * 100;
+            let message = '';
+            
+            if (percentage >= 80) message = '🏆 Luar biasa! Kamu jenius!';
+            else if (percentage >= 60) message = '🎉 Bagus! Terus tingkatkan!';
+            else if (percentage >= 40) message = '📚 Coba lagi, pasti bisa lebih baik!';
+            else message = '💪 Jangan menyerah, belajar lagi yuk!';
+            
+            resultArea.innerHTML = `
+                <div class="quiz-card">
+                    <div style="text-align: center;">
+                        <i class="fas fa-trophy" style="font-size: 3rem; color: #ffd700;"></i>
+                        <h3>Game Selesai!</h3>
+                        <div class="quiz-score" style="margin-top: 16px;">
+                            <div style="font-size: 2rem; font-weight: bold;">${score}/${currentQuestions.length}</div>
+                            <div>${percentage}%</div>
+                        </div>
+                        <p style="margin-top: 16px;">${message}</p>
+                        <button class="btn-primary" onclick="restartGame()" style="margin-top: 16px;">Main Lagi</button>
+                        <button class="btn-secondary" onclick="clearResult()">Kembali ke Menu</button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function showAnswerQuestion() {
+            if (currentIndex >= currentQuestions.length) {
+                showAnswerResult();
+                return;
+            }
+            
+            const q = currentQuestions[currentIndex];
+            const resultArea = document.getElementById('resultArea');
+            resultArea.style.display = 'block';
+            
+            resultArea.innerHTML = `
+                <div class="quiz-card">
+                    <div class="quiz-question">
+                        <strong>Soal ${currentIndex + 1}/${currentQuestions.length}</strong><br>
+                        ${escapeHtml(q.question)}
+                    </div>
+                    <div class="answer-input-area">
+                        <input type="text" id="answerInput" placeholder="Ketik jawabanmu..." autocomplete="off">
+                        <button onclick="checkAnswer('${escapeHtml(q.answer)}')"><i class="fas fa-paper-plane"></i> Jawab</button>
+                    </div>
+                    <div id="answerFeedback"></div>
+                    <div class="quiz-score">
+                        Score: ${score}/${currentIndex}
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('answerInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    checkAnswer(q.answer);
+                }
+            });
+        }
+        
+        function checkAnswer(correctAnswer) {
+            const input = document.getElementById('answerInput');
+            const userAnswer = input.value.trim().toLowerCase();
+            const feedbackDiv = document.getElementById('answerFeedback');
+            
+            const isCorrect = userAnswer === correctAnswer.toLowerCase();
+            
+            if (isCorrect) {
+                score++;
+                feedbackDiv.innerHTML = `<div class="quiz-feedback correct">✅ Benar! +1 poin</div>`;
+            } else {
+                feedbackDiv.innerHTML = `<div class="quiz-feedback wrong">❌ Salah! Jawaban yang benar: ${escapeHtml(correctAnswer)}</div>`;
+            }
+            
+            input.disabled = true;
+            document.querySelector('.answer-input-area button').disabled = true;
+            
+            // Update score
+            document.querySelector('.quiz-score').innerHTML = `Score: ${score}/${currentIndex + 1}`;
+            
+            // Add next button after delay
+            setTimeout(() => {
+                if (currentIndex + 1 >= currentQuestions.length) {
+                    showAnswerResult();
+                } else {
+                    currentIndex++;
+                    showAnswerQuestion();
+                }
+            }, 1500);
+        }
+        
+        function showAnswerResult() {
+            const resultArea = document.getElementById('resultArea');
+            const percentage = (score / currentQuestions.length) * 100;
+            let message = '';
+            
+            if (percentage >= 80) message = '🏆 Hebat! Kamu sangat pintar!';
+            else if (percentage >= 60) message = '🎉 Kerja bagus! Terus belajar!';
+            else if (percentage >= 40) message = '📚 Lumayan, tingkatkan lagi!';
+            else message = '💪 Tetap semangat! Coba lagi!';
+            
+            resultArea.innerHTML = `
+                <div class="quiz-card">
+                    <div style="text-align: center;">
+                        <i class="fas fa-trophy" style="font-size: 3rem; color: #ffd700;"></i>
+                        <h3>Game Selesai!</h3>
+                        <div class="quiz-score" style="margin-top: 16px;">
+                            <div style="font-size: 2rem; font-weight: bold;">${score}/${currentQuestions.length}</div>
+                            <div>${percentage}%</div>
+                        </div>
+                        <p style="margin-top: 16px;">${message}</p>
+                        <button class="btn-primary" onclick="restartGame()" style="margin-top: 16px;">Main Lagi</button>
+                        <button class="btn-secondary" onclick="clearResult()">Kembali ke Menu</button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function restartGame() {
+            fetchQuestions(currentGame);
+        }
+        
+        function clearResult() {
+            document.getElementById('resultArea').style.display = 'none';
+            currentGame = null;
+            currentQuestions = [];
+            currentIndex = 0;
+            score = 0;
+        }
+        
+        function showResult(type, data, title) {
+            const resultArea = document.getElementById('resultArea');
+            resultArea.style.display = 'block';
+            
+            let html = `<h3 style="margin-bottom: 12px;"><i class="fas fa-info-circle"></i> ${escapeHtml(title)}</h3>`;
+            
+            if (type === 'error') {
+                html += `<div style="background: rgba(255,68,68,0.2); padding: 16px; border-radius: 16px; color: #ff6666;">❌ Error: ${escapeHtml(data)}</div>`;
+                html += `<button class="btn-secondary" onclick="clearResult()" style="margin-top: 12px;">Kembali</button>`;
+            }
+            
+            resultArea.innerHTML = html;
+        }
+        
+        function showLoading(show) {
+            const loader = document.getElementById('loadingOverlay');
+            if (show) loader.style.display = 'flex';
+            else loader.style.display = 'none';
+        }
+        
+        function showToast(msg) {
+            let existing = document.querySelector(".toast");
+            if (existing) existing.remove();
+            let toast = document.createElement("div");
+            toast.className = "toast";
+            toast.innerHTML = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+        
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]));
+        }
+        
+        function goBack() {
+            window.location.href = 'tools.html';
+        }
+        
+        renderGames();
+    </script>
+</body>
+</html>
