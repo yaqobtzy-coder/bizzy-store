@@ -1,4 +1,5 @@
 // ========== GLOBAL CHAT SYSTEM - 1 USER 1 DEVICE + ADMIN ==========
+// Dengan Upload Foto ke ImgBB & Auto Scroll
 
 // Firebase Configuration
 const firebaseConfig = {
@@ -14,9 +15,11 @@ const firebaseConfig = {
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
-const storage = firebase.storage();
 
-// Admin username (case sensitive)
+// ImgBB API Key
+const IMGBB_API_KEY = 'a60507c67d4d1a5d3f6b0cecbb168314';
+
+// Admin username (case sensitive) - HANYA "Rayy" yang jadi admin
 const ADMIN_USERNAME = "Rayy";
 
 // Global Variables
@@ -30,6 +33,9 @@ let isTyping = false;
 let typingTimeout = null;
 let messageLimit = 50;
 let isAdmin = false;
+let pendingImageFile = null;
+let isUploading = false;
+let scrollObserver = null;
 
 // DOM Elements
 const loginScreen = document.getElementById('loginScreen');
@@ -71,15 +77,16 @@ function showToast(message, type = 'info') {
 }
 
 function formatTime(timestamp) {
-    if (!timestamp) return 'just now';
+    if (!timestamp) return 'baru saja';
     const date = new Date(timestamp);
     const now = new Date();
     const diff = Math.floor((now - date) / 1000);
     
-    if (diff < 60) return `${diff}s ago`;
-    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-    return `${date.getDate()}/${date.getMonth() + 1}`;
+    if (diff < 10) return 'baru saja';
+    if (diff < 60) return `${diff} detik lalu`;
+    if (diff < 3600) return `${Math.floor(diff / 60)} menit lalu`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)} jam lalu`;
+    return `${date.getDate()}/${date.getMonth() + 1} ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
 }
 
 function escapeHtml(str) {
@@ -159,6 +166,7 @@ async function login() {
     currentDeviceId = generateDeviceId();
     currentUser = username;
     currentUserId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+    // HANYA username "Rayy" yang jadi admin (case sensitive)
     isAdmin = (username === ADMIN_USERNAME);
     
     localStorage.setItem('chat_username', currentUser);
@@ -180,6 +188,7 @@ function loginSuccess() {
     }, 200);
     
     setupFirebase();
+    setupScrollObserver(); // Setup auto scroll
     messageInput.focus();
     
     if (isAdmin) {
@@ -198,6 +207,12 @@ async function logout() {
     }
     if (currentUserId) {
         await database.ref(`chat/usernames/${currentUserId}`).remove();
+    }
+    
+    // Hentikan observer
+    if (scrollObserver) {
+        scrollObserver.disconnect();
+        scrollObserver = null;
     }
     
     localStorage.removeItem('chat_username');
@@ -256,6 +271,35 @@ async function confirmKick() {
     closeKickModal();
 }
 
+// ========== SETUP SCROLL OBSERVER - PESAN BARU AUTO SCROLL ==========
+function setupScrollObserver() {
+    if (scrollObserver) {
+        scrollObserver.disconnect();
+    }
+    
+    scrollObserver = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.addedNodes.length > 0) {
+                // Cek apakah pesan baru dari user lain atau sendiri
+                scrollToBottom();
+            }
+        });
+    });
+    
+    scrollObserver.observe(messagesContainer, { 
+        childList: true, 
+        subtree: true 
+    });
+}
+
+// ========== SCROLL TO BOTTOM - RESPONSIF ==========
+function scrollToBottom() {
+    if (messagesContainer) {
+        // Langsung scroll tanpa timeout
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+}
+
 // ========== FIREBASE SETUP ==========
 function setupFirebase() {
     database.ref(`chat/usernames/${currentUserId}`).set({
@@ -298,6 +342,7 @@ function setupFirebase() {
             userList.sort((a, b) => a.username.localeCompare(b.username));
             
             userList.forEach(user => {
+                // HANYA username "Rayy" yang tampil sebagai admin
                 const isUserAdmin = (user.username === ADMIN_USERNAME);
                 usersHtml += `
                     <div class="online-user">
@@ -324,6 +369,7 @@ function setupFirebase() {
     messagesRef.limitToLast(messageLimit).on('child_added', (snapshot) => {
         const message = snapshot.val();
         addMessageToUI(message);
+        // Scroll otomatis ke bawah saat pesan baru masuk
         scrollToBottom();
     });
     
@@ -387,76 +433,130 @@ function setupFirebase() {
     });
 }
 
-// ========== SEND MESSAGE ==========
-async function sendMessage() {
-    const text = messageInput.value.trim();
-    if (!text && !pendingImage) return;
+// ========== UPLOAD IMAGE TO IMGBB ==========
+async function uploadImageToImgbb(file) {
+    const formData = new FormData();
+    formData.append('image', file);
+    
+    const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+        method: 'POST',
+        body: formData
+    });
+    
+    const data = await response.json();
+    
+    if (!data.success) {
+        throw new Error(data?.error?.message || 'Upload gagal');
+    }
+    
+    return data.data.url;
+}
+
+// ========== SEND MESSAGE WITH IMAGE ==========
+async function sendMessageWithImage(file, caption = '') {
+    if (!file) return false;
+    
+    if (!file.type.startsWith('image/')) {
+        showToast('Hanya file gambar yang diperbolehkan!');
+        return false;
+    }
+    
+    if (file.size > 10 * 1024 * 1024) {
+        showToast('Ukuran gambar maksimal 10MB!');
+        return false;
+    }
+    
+    if (uploadProgress) uploadProgress.style.display = 'flex';
+    
+    try {
+        const imageUrl = await uploadImageToImgbb(file);
+        
+        if (uploadProgress) uploadProgress.style.display = 'none';
+        
+        const messageData = {
+            id: Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+            userId: currentUserId,
+            username: currentUser,
+            isAdmin: isAdmin,
+            text: caption || '',
+            imageUrl: imageUrl,
+            timestamp: firebase.database.ServerValue.TIMESTAMP,
+            type: 'image'
+        };
+        
+        await messagesRef.push(messageData);
+        showToast('Gambar berhasil dikirim!', 'success');
+        return true;
+        
+    } catch (error) {
+        console.error('Upload error:', error);
+        if (uploadProgress) uploadProgress.style.display = 'none';
+        showToast('Gagal mengunggah gambar: ' + error.message, 'error');
+        return false;
+    }
+}
+
+// ========== SEND TEXT MESSAGE ==========
+async function sendTextMessage(text) {
+    if (!text.trim()) return false;
     
     const messageData = {
         id: Date.now() + '_' + Math.random().toString(36).substr(2, 6),
         userId: currentUserId,
         username: currentUser,
         isAdmin: isAdmin,
-        text: text || '',
+        text: text,
         timestamp: firebase.database.ServerValue.TIMESTAMP,
         type: 'text'
     };
     
-    if (pendingImage) {
-        messageData.type = 'image';
-        messageData.imageUrl = pendingImage;
-        messageData.text = text || '';
-        pendingImage = null;
-        
-        if (uploadProgress) uploadProgress.style.display = 'none';
-    }
-    
     await messagesRef.push(messageData);
-    
-    messageInput.value = '';
-    messageInput.style.height = 'auto';
-    
-    if (typingRef && currentUserId) {
-        typingRef.child(currentUserId).remove();
-    }
-    isTyping = false;
+    return true;
 }
 
-let pendingImage = null;
+// ========== SEND MESSAGE (MAIN FUNCTION) ==========
+async function sendMessage() {
+    const text = messageInput.value.trim();
+    
+    if (pendingImageFile) {
+        await sendMessageWithImage(pendingImageFile, text);
+        pendingImageFile = null;
+        messageInput.value = '';
+        messageInput.style.height = 'auto';
+        
+        if (typingRef && currentUserId) {
+            typingRef.child(currentUserId).remove();
+        }
+        isTyping = false;
+        // Scroll ke bawah setelah kirim pesan
+        scrollToBottom();
+        return;
+    }
+    
+    if (text) {
+        await sendTextMessage(text);
+        messageInput.value = '';
+        messageInput.style.height = 'auto';
+        
+        if (typingRef && currentUserId) {
+            typingRef.child(currentUserId).remove();
+        }
+        isTyping = false;
+        // Scroll ke bawah setelah kirim pesan
+        scrollToBottom();
+    }
+}
 
-async function uploadImage(file) {
+// ========== HANDLE IMAGE SELECTION ==========
+function handleImageSelect(file) {
     if (!file) return;
     
-    if (!file.type.startsWith('image/')) {
-        showToast('Hanya file gambar yang diperbolehkan!');
-        return;
-    }
-    
-    if (file.size > 5 * 1024 * 1024) {
-        showToast('Ukuran gambar maksimal 5MB!');
-        return;
-    }
-    
-    uploadProgress.style.display = 'flex';
-    
-    const fileName = `chat_images/${currentUserId}_${Date.now()}_${file.name}`;
-    const storageRef = storage.ref(fileName);
-    
-    try {
-        const snapshot = await storageRef.put(file);
-        const downloadUrl = await snapshot.ref.getDownloadURL();
-        
-        pendingImage = downloadUrl;
-        uploadProgress.style.display = 'none';
-        
-        showToast('Gambar siap dikirim! Tekan send untuk mengirim.');
-        messageInput.focus();
-        
-    } catch (error) {
-        console.error('Upload error:', error);
-        uploadProgress.style.display = 'none';
-        showToast('Gagal mengunggah gambar: ' + error.message);
-    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        showToast('Gambar siap dikirim! Tekan send untuk mengirim.', 'success');
+        pendingImageFile = file;
+    };
+    reader.readAsDataURL(file);
 }
 
 // ========== DISPLAY MESSAGES ==========
@@ -476,7 +576,8 @@ function addMessageToUI(message) {
     messageDiv.className = `message ${isOwn ? 'own' : 'other'}`;
     messageDiv.setAttribute('data-id', message.id);
     
-    const isUserAdmin = message.isAdmin || message.username === ADMIN_USERNAME;
+    // HANYA username "Rayy" yang dapat badge admin
+    const isUserAdmin = (message.username === ADMIN_USERNAME);
     
     let contentHtml = '';
     
@@ -487,7 +588,7 @@ function addMessageToUI(message) {
                     ${escapeHtml(message.username)}${isOwn ? ' (You)' : ''}
                     ${isUserAdmin ? '<span class="admin-badge"><i class="fas fa-crown"></i> Admin</span>' : ''}
                 </div>
-                <img src="${message.imageUrl}" class="message-image" onclick="previewImage('${message.imageUrl}')" alt="Image">
+                <img src="${message.imageUrl}" class="message-image" onclick="previewImage('${message.imageUrl}')" alt="Image" loading="lazy">
                 ${message.text ? `<div class="message-text" style="margin-top: 8px;">${escapeHtml(message.text)}</div>` : ''}
                 <div class="message-time">${formatTime(message.timestamp)}</div>
             </div>
@@ -525,12 +626,6 @@ function previewImage(url) {
     document.body.appendChild(modal);
 }
 
-function scrollToBottom() {
-    setTimeout(() => {
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    }, 100);
-}
-
 function autoResizeTextarea() {
     messageInput.style.height = 'auto';
     messageInput.style.height = Math.min(messageInput.scrollHeight, 100) + 'px';
@@ -561,12 +656,10 @@ function toggleOnlinePanel() {
 
 // ========== NAVIGASI LANGSUNG KE WEB LAIN ==========
 function navigateTo(page) {
-    // SIMPAN STATE MUSIC SEBELUM PINDAH (PENTING!)
     if (window.GlobalMusic && window.GlobalMusic.saveState) {
         window.GlobalMusic.saveState();
     }
     
-    // Cleanup chat sebelum pindah
     if (onlineRef && currentUserId) {
         onlineRef.child(currentUserId).remove();
     }
@@ -575,6 +668,12 @@ function navigateTo(page) {
     }
     if (currentUserId) {
         database.ref(`chat/usernames/${currentUserId}`).remove();
+    }
+    
+    // Hentikan observer
+    if (scrollObserver) {
+        scrollObserver.disconnect();
+        scrollObserver = null;
     }
     
     document.body.style.opacity = '0';
@@ -623,7 +722,7 @@ imageBtn.addEventListener('click', () => {
 
 imageInput.addEventListener('change', (e) => {
     if (e.target.files && e.target.files[0]) {
-        uploadImage(e.target.files[0]);
+        handleImageSelect(e.target.files[0]);
     }
     imageInput.value = '';
 });
@@ -661,6 +760,7 @@ async function checkSavedUser() {
 
 checkSavedUser();
 
+// Expose functions to global
 window.previewImage = previewImage;
 window.toggleOnlinePanel = toggleOnlinePanel;
 window.goBackToTools = goBackToTools;
@@ -670,3 +770,5 @@ window.closeKickModal = closeKickModal;
 window.confirmKick = confirmKick;
 
 console.log('💬 Global Chat System Ready! 1 User = 1 Device | Admin: Rayy');
+console.log('📸 Upload gambar menggunakan ImgBB API');
+console.log('🔄 Auto scroll aktif - pesan baru tidak akan kepotong!');
