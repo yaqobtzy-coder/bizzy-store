@@ -348,18 +348,18 @@ body {
     flex-shrink: 0;
 }
 
-/* Messages Container */
+/* ========== FIX: MESSAGES CONTAINER - CHAT TIDAK KEPOTONG ========== */
 .messages-container {
     flex: 1;
     overflow-y: auto;
     padding: 12px;
+    padding-bottom: 100px; /* PENTING: padding bottom ekstra untuk chat tidak kepotong */
     display: flex;
     flex-direction: column;
     gap: 10px;
     -webkit-overflow-scrolling: touch;
     scroll-behavior: smooth;
     min-height: 0;
-    padding-bottom: 20px;
 }
 
 .messages-container::-webkit-scrollbar {
@@ -374,6 +374,11 @@ body {
 .messages-container::-webkit-scrollbar-thumb {
     background: var(--primary);
     border-radius: 10px;
+}
+
+/* Elemen terakhir di messages-container punya margin bottom ekstra */
+.messages-container > :last-child {
+    margin-bottom: 8px;
 }
 
 .welcome-message {
@@ -558,8 +563,7 @@ body {
     transform: scale(0.95);
 }
 
-/* ========== CHAT DRAWER - LAYOUT BARU ========== */
-/* Kiri: Tombol Emoji + Image, Tengah: Input, Kanan: Send */
+/* ========== CHAT DRAWER ========== */
 .chat-drawer {
     position: fixed;
     bottom: 0;
@@ -696,7 +700,7 @@ body {
     transform: scale(0.95);
 }
 
-/* Floating Emoji Picker (muncul dari tombol emoji) */
+/* Floating Emoji Picker */
 .floating-emoji-picker {
     position: fixed;
     bottom: 160px;
@@ -733,12 +737,10 @@ body {
     transform: scale(1.1);
 }
 
-/* Old Input Area - Hidden */
+/* Old Elements - Hidden */
 .input-area {
     display: none !important;
 }
-
-/* Old Emoji Picker - Hidden */
 #emojiPicker {
     display: none !important;
 }
@@ -1035,66 +1037,7 @@ body.light .floating-emoji-picker {
     border-color: rgba(30, 136, 229, 0.3);
 }
 
-/* ========== ANIMATIONS ========== */
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes slideUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes messageSlideIn {
-    from {
-        opacity: 0;
-        transform: translateX(-15px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
-.message.own {
-    animation: messageSlideInRight 0.3s ease;
-}
-
-@keyframes messageSlideInRight {
-    from {
-        opacity: 0;
-        transform: translateX(15px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
-@keyframes typingBounce {
-    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
-    30% { transform: translateY(-5px); opacity: 1; }
-}
-
-/* ========== RESPONSIVE ========== */
+/* ========== RESPONSIVE FIXES ========== */
 @media (max-width: 480px) {
     .message-content {
         max-width: calc(100% - 42px);
@@ -1164,6 +1107,11 @@ body.light .floating-emoji-picker {
         max-height: 250px;
         bottom: 140px;
     }
+    
+    /* FIX: tambahan padding bottom untuk mobile */
+    .messages-container {
+        padding-bottom: 90px;
+    }
 }
 
 /* Landscape mode */
@@ -1229,4 +1177,68 @@ body.light .floating-emoji-picker {
         max-height: 160px;
         bottom: 120px;
     }
+    
+    /* FIX: tambahan padding bottom untuk landscape */
+    .messages-container {
+        padding-bottom: 70px;
+    }
+}
+
+/* ========== ANIMATIONS ========== */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes messageSlideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-15px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.message.own {
+    animation: messageSlideInRight 0.3s ease;
+}
+
+@keyframes messageSlideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(15px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes typingBounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+    30% { transform: translateY(-5px); opacity: 1; }
 }

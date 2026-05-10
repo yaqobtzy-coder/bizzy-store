@@ -45,6 +45,7 @@ let typingTimeout = null;
 let messageLimit = 50;
 let isAdmin = false;
 let pendingImageFile = null;
+let pendingImageCaption = ''; // FIX: simpan caption untuk foto
 let scrollObserver = null;
 
 // DOM Elements
@@ -399,17 +400,45 @@ async function sendTextMessage(text) {
     return true;
 }
 
-// ========== DRAWER HANDLERS ==========
-const drawerMessageInput = document.getElementById('drawerMessageInput');
-const drawerSendBtn = document.getElementById('drawerSendBtn');
-const drawerEmojiBtn = document.getElementById('drawerEmojiBtn');
-const drawerImageBtn = document.getElementById('drawerImageBtn');
-const chatDrawer = document.getElementById('chatDrawer');
-const closeDrawerBtn = document.getElementById('closeDrawerBtn');
-const floatingChatBtn = document.getElementById('floatingChatBtn');
-const imageInput = document.getElementById('imageInput');
+// ========== FIX: SEND MESSAGE HANDLER (Kirim foto & teks) ==========
+async function handleSendMessage() {
+    const drawerMessageInput = document.getElementById('drawerMessageInput');
+    const text = drawerMessageInput?.value.trim() || '';
+    
+    // CASE 1: Ada foto pending
+    if (pendingImageFile) {
+        // Kirim foto dengan caption (text)
+        await sendMessageWithImage(pendingImageFile, text);
+        // Reset setelah kirim
+        pendingImageFile = null;
+        pendingImageCaption = '';
+        if (drawerMessageInput) drawerMessageInput.value = '';
+        // Reset tinggi textarea
+        if (drawerMessageInput) {
+            drawerMessageInput.style.height = 'auto';
+        }
+        return;
+    }
+    
+    // CASE 2: Kirim teks biasa
+    if (text) {
+        await sendTextMessage(text);
+        if (drawerMessageInput) drawerMessageInput.value = '';
+        if (drawerMessageInput) drawerMessageInput.style.height = 'auto';
+    }
+}
 
+// ========== DRAWER HANDLERS ==========
 function setupDrawerEvents() {
+    const drawerMessageInput = document.getElementById('drawerMessageInput');
+    const drawerSendBtn = document.getElementById('drawerSendBtn');
+    const drawerEmojiBtn = document.getElementById('drawerEmojiBtn');
+    const drawerImageBtn = document.getElementById('drawerImageBtn');
+    const chatDrawer = document.getElementById('chatDrawer');
+    const closeDrawerBtn = document.getElementById('closeDrawerBtn');
+    const floatingChatBtn = document.getElementById('floatingChatBtn');
+    const imageInput = document.getElementById('imageInput');
+    
     // Open drawer
     if (floatingChatBtn) {
         floatingChatBtn.addEventListener('click', () => {
@@ -417,7 +446,6 @@ function setupDrawerEvents() {
             setTimeout(() => {
                 if (drawerMessageInput) {
                     drawerMessageInput.focus();
-                    drawerMessageInput.click();
                 }
             }, 150);
         });
@@ -430,26 +458,23 @@ function setupDrawerEvents() {
         });
     }
     
-    // Send message
+    // FIX: Send message button - pake handleSendMessage
     if (drawerSendBtn) {
-        drawerSendBtn.addEventListener('click', async () => {
-            const text = drawerMessageInput?.value.trim();
-            if (text) {
-                await sendTextMessage(text);
-                if (drawerMessageInput) drawerMessageInput.value = '';
-                scrollToBottom();
-            }
+        drawerSendBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            await handleSendMessage();
         });
     }
     
     // Enter key
     if (drawerMessageInput) {
-        drawerMessageInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey && drawerSendBtn) {
+        drawerMessageInput.addEventListener('keypress', async (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                drawerSendBtn.click();
+                await handleSendMessage();
             }
         });
+        
         drawerMessageInput.addEventListener('input', function() {
             this.style.height = 'auto';
             this.style.height = Math.min(this.scrollHeight, 80) + 'px';
@@ -464,31 +489,34 @@ function setupDrawerEvents() {
         });
     }
     
-    // Image button
+    // FIX: Image button - pilih gambar
     if (drawerImageBtn && imageInput) {
         drawerImageBtn.addEventListener('click', () => {
             imageInput.click();
         });
     }
     
-    // Image input change
+    // FIX: Image input change - simpan pending image
     if (imageInput) {
         imageInput.addEventListener('change', (e) => {
             if (e.target.files && e.target.files[0]) {
-                const reader = new FileReader();
-                reader.onload = () => {
-                    showToast('Gambar siap dikirim! Tekan send.', 'success');
-                    pendingImageFile = e.target.files[0];
-                };
-                reader.readAsDataURL(e.target.files[0]);
+                const file = e.target.files[0];
+                pendingImageFile = file;
+                showToast(`📷 Gambar "${file.name}" siap dikirim! Tekan kirim.`, 'success');
+                // Fokus ke input untuk tambah caption
+                if (drawerMessageInput) {
+                    drawerMessageInput.focus();
+                }
             }
-            imageInput.value = '';
+            imageInput.value = ''; // Reset biar bisa upload file sama lagi
         });
     }
 }
 
 // Floating Emoji Picker
 function toggleFloatingEmojiPicker() {
+    const drawerMessageInput = document.getElementById('drawerMessageInput');
+    
     if (floatingEmojiPicker && floatingEmojiPicker.style.display === 'block') {
         floatingEmojiPicker.style.display = 'none';
         return;
@@ -514,6 +542,7 @@ function toggleFloatingEmojiPicker() {
         
         floatingEmojiPicker.querySelectorAll('.emoji').forEach(emoji => {
             emoji.addEventListener('click', () => {
+                const drawerMessageInput = document.getElementById('drawerMessageInput');
                 if (drawerMessageInput) {
                     drawerMessageInput.value += emoji.textContent;
                     drawerMessageInput.focus();
@@ -528,6 +557,7 @@ function toggleFloatingEmojiPicker() {
 
 // Close emoji picker on click outside
 document.addEventListener('click', (e) => {
+    const drawerEmojiBtn = document.getElementById('drawerEmojiBtn');
     if (floatingEmojiPicker && !floatingEmojiPicker.contains(e.target) && e.target !== drawerEmojiBtn) {
         floatingEmojiPicker.style.display = 'none';
     }
@@ -604,21 +634,6 @@ function goBackToTools() {
     setTimeout(() => { window.location.href = 'tools.html'; }, 200);
 }
 
-// ========== SEND MESSAGE FROM OLD INPUT (tetap support) ==========
-async function sendMessage() {
-    const text = drawerMessageInput?.value.trim();
-    if (pendingImageFile) {
-        await sendMessageWithImage(pendingImageFile, text);
-        pendingImageFile = null;
-        if (drawerMessageInput) drawerMessageInput.value = '';
-        return;
-    }
-    if (text) {
-        await sendTextMessage(text);
-        if (drawerMessageInput) drawerMessageInput.value = '';
-    }
-}
-
 // ========== INIT ==========
 if (loginBtn) loginBtn.addEventListener('click', login);
 if (usernameInput) usernameInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') login(); });
@@ -656,6 +671,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+// Export ke global
 window.previewImage = previewImage;
 window.toggleOnlinePanel = toggleOnlinePanel;
 window.goBackToTools = goBackToTools;
@@ -663,6 +679,6 @@ window.navigateTo = navigateTo;
 window.openKickModal = openKickModal;
 window.closeKickModal = closeKickModal;
 window.confirmKick = confirmKick;
-window.sendMessage = sendMessage;
+window.handleSendMessage = handleSendMessage;
 
-console.log('💬 Chat System Ready!');
+console.log('💬 Chat System Ready - Fixed!');
