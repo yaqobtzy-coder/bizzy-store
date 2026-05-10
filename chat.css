@@ -164,7 +164,7 @@ body {
     margin: 0 auto;
     background: linear-gradient(135deg, #0a0a1a, #0f0f2a);
     position: relative;
-    padding-top: 56px; /* Kurangi dari 60px */
+    padding-top: 0px; /* Kurangi dari 60px */
 }
 
 /* Chat Header */
