@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Global Chat | Bizzy Impact</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="chat.css">
+    <!-- TIDAK PERLU style override untuk Dynamic Island -->
+</head>
+<body>
+    <!-- LOGIN SCREEN -->
+    <div id="loginScreen" class="login-screen">
+        <div class="login-card">
+            <div class="login-logo">
+                <i class="fas fa-comments"></i>
+                <h2>Global Chat</h2>
+                <p>Bizzy Impact Official</p>
+            </div>
+            <div class="login-form">
+                <div class="input-group">
+                    <i class="fas fa-user"></i>
+                    <input type="text" id="usernameInput" placeholder="Masukkan Username" maxlength="20" autocomplete="off">
+                </div>
+                <button id="loginBtn" class="login-btn">
+                    <i class="fas fa-sign-in-alt"></i> Masuk ke Chat
+                </button>
+                <div class="login-info">
+                    <i class="fas fa-info-circle"></i> 1 username = 1 device | Dilarang double login
+                </div>
+                <div class="login-info">
+                    <i class="fas fa-crown"></i> Username "Rayy" memiliki akses Admin
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN CHAT SCREEN -->
+    <div id="chatScreen" class="chat-screen" style="display: none;">
+        <!-- Header -->
+        <div class="chat-header">
+            <button class="back-btn" onclick="goBackToTools()"><i class="fas fa-arrow-left"></i></button>
+            <div class="chat-title">
+                <i class="fas fa-comments"></i>
+                <span>Global Chat</span>
+            </div>
+            <div class="online-badge" id="onlineBadge">
+                <i class="fas fa-circle"></i>
+                <span id="onlineCount">0</span>
+            </div>
+            <button class="logout-btn" id="logoutBtn"><i class="fas fa-sign-out-alt"></i></button>
+        </div>
+
+        <!-- Online Users Panel -->
+        <div class="online-panel" id="onlinePanel">
+            <div class="online-panel-header" onclick="toggleOnlinePanel()">
+                <i class="fas fa-users"></i>
+                <span>Online Users</span>
+                <i class="fas fa-chevron-down" id="panelToggleIcon"></i>
+            </div>
+            <div class="online-users-list" id="onlineUsersList">
+                <div class="loading-users"><i class="fas fa-spinner fa-pulse"></i> Memuat...</div>
+            </div>
+        </div>
+
+        <!-- Messages Container -->
+        <div class="messages-container" id="messagesContainer">
+            <div class="welcome-message">
+                <i class="fas fa-hand-peace"></i>
+                <h3>Selamat Datang di Global Chat!</h3>
+                <p>Gunakan dengan bijak dan hormati sesama pengguna.</p>
+                <p class="small">💡 Kamu bisa kirim teks, emoji, dan foto dari galeri!</p>
+                <p class="small">👑 User "Rayy" adalah Admin - memiliki akses kick user</p>
+            </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="input-area">
+            <div class="input-actions">
+                <button id="emojiBtn" class="action-btn" title="Emoji">
+                    <i class="far fa-smile-wink"></i>
+                </button>
+                <button id="imageBtn" class="action-btn" title="Kirim Foto">
+                    <i class="fas fa-image"></i>
+                </button>
+                <input type="file" id="imageInput" accept="image/*" style="display: none;">
+            </div>
+            <div class="message-input-wrapper">
+                <textarea id="messageInput" placeholder="Ketik pesan..." rows="1"></textarea>
+            </div>
+            <button id="sendBtn" class="send-btn">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+
+        <!-- Emoji Picker -->
+        <div id="emojiPicker" class="emoji-picker" style="display: none;">
+            <div class="emoji-list">
+                <span class="emoji">😀</span><span class="emoji">😃</span><span class="emoji">😄</span><span class="emoji">😁</span>
+                <span class="emoji">😆</span><span class="emoji">😅</span><span class="emoji">😂</span><span class="emoji">🤣</span>
+                <span class="emoji">😊</span><span class="emoji">😇</span><span class="emoji">🙂</span><span class="emoji">🙃</span>
+                <span class="emoji">😉</span><span class="emoji">😌</span><span class="emoji">😍</span><span class="emoji">🥰</span>
+                <span class="emoji">😘</span><span class="emoji">😗</span><span class="emoji">😙</span><span class="emoji">😚</span>
+                <span class="emoji">😋</span><span class="emoji">😛</span><span class="emoji">😝</span><span class="emoji">😜</span>
+                <span class="emoji">🤪</span><span class="emoji">🤨</span><span class="emoji">🧐</span><span class="emoji">🤓</span>
+                <span class="emoji">😎</span><span class="emoji">🤩</span><span class="emoji">🥳</span><span class="emoji">😏</span>
+                <span class="emoji">😒</span><span class="emoji">😞</span><span class="emoji">😔</span><span class="emoji">😟</span>
+                <span class="emoji">😕</span><span class="emoji">🙁</span><span class="emoji">😣</span><span class="emoji">😖</span>
+                <span class="emoji">😫</span><span class="emoji">😩</span><span class="emoji">🥺</span><span class="emoji">😢</span>
+                <span class="emoji">😭</span><span class="emoji">😤</span><span class="emoji">😠</span><span class="emoji">😡</span>
+                <span class="emoji">🤬</span><span class="emoji">🤯</span><span class="emoji">😳</span><span class="emoji">🥵</span>
+                <span class="emoji">🥶</span><span class="emoji">😱</span><span class="emoji">😨</span><span class="emoji">😰</span>
+                <span class="emoji">😥</span><span class="emoji">😓</span><span class="emoji">🤗</span><span class="emoji">🤔</span>
+                <span class="emoji">🤭</span><span class="emoji">🤫</span><span class="emoji">🤥</span><span class="emoji">😶</span>
+                <span class="emoji">😐</span><span class="emoji">😑</span><span class="emoji">😬</span><span class="emoji">🙄</span>
+                <span class="emoji">😯</span><span class="emoji">😦</span><span class="emoji">😧</span><span class="emoji">😮</span>
+                <span class="emoji">😲</span><span class="emoji">🥱</span><span class="emoji">😴</span><span class="emoji">🤤</span>
+                <span class="emoji">😪</span><span class="emoji">😵</span><span class="emoji">🤐</span><span class="emoji">🥴</span>
+                <span class="emoji">🤢</span><span class="emoji">🤮</span><span class="emoji">🤧</span><span class="emoji">😷</span>
+                <span class="emoji">🤒</span><span class="emoji">🤕</span><span class="emoji">🤑</span><span class="emoji">🤠</span>
+                <span class="emoji">😈</span><span class="emoji">👿</span><span class="emoji">👹</span><span class="emoji">👺</span>
+                <span class="emoji">🤡</span><span class="emoji">💩</span><span class="emoji">👻</span><span class="emoji">💀</span>
+                <span class="emoji">☠️</span><span class="emoji">👽</span><span class="emoji">🤖</span><span class="emoji">🎃</span>
+                <span class="emoji">😺</span><span class="emoji">😸</span><span class="emoji">😹</span><span class="emoji">😻</span>
+                <span class="emoji">😼</span><span class="emoji">😽</span><span class="emoji">🙀</span><span class="emoji">😿</span>
+                <span class="emoji">😾</span><span class="emoji">❤️</span><span class="emoji">🧡</span><span class="emoji">💛</span>
+                <span class="emoji">💚</span><span class="emoji">💙</span><span class="emoji">💜</span><span class="emoji">🤎</span>
+                <span class="emoji">🖤</span><span class="emoji">🤍</span><span class="emoji">💔</span><span class="emoji">❤️‍🔥</span>
+                <span class="emoji">💕</span><span class="emoji">💞</span><span class="emoji">💓</span><span class="emoji">💗</span>
+                <span class="emoji">💖</span><span class="emoji">💘</span><span class="emoji">💝</span><span class="emoji">🎉</span>
+                <span class="emoji">🎊</span><span class="emoji">🎈</span><span class="emoji">🎁</span><span class="emoji">🎀</span>
+                <span class="emoji">🌟</span><span class="emoji">⭐</span><span class="emoji">🌙</span><span class="emoji">☀️</span>
+                <span class="emoji">⚡</span><span class="emoji">🔥</span><span class="emoji">💧</span><span class="emoji">❄️</span>
+                <span class="emoji">🌈</span><span class="emoji">☁️</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upload Progress -->
+    <div id="uploadProgress" class="upload-progress" style="display: none;">
+        <div class="upload-progress-content">
+            <i class="fas fa-spinner fa-pulse"></i>
+            <span>Mengunggah gambar...</span>
+        </div>
+    </div>
+
+    <!-- Kick Confirmation Modal -->
+    <div id="kickModal" class="kick-modal" style="display: none;">
+        <div class="kick-modal-content">
+            <div class="kick-modal-header">
+                <i class="fas fa-gavel"></i>
+                <h3>Kick User</h3>
+                <button onclick="closeKickModal()" class="close-modal-btn"><i class="fas fa-times"></i></button>
+            </div>
+            <p>Yakin ingin mengeluarkan <strong id="kickUserName"></strong> dari chat?</p>
+            <div class="kick-modal-buttons">
+                <button onclick="confirmKick()" class="btn-danger">Kick User</button>
+                <button onclick="closeKickModal()" class="btn-secondary">Batal</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
+    <!-- PASTIKAN global-music.js DIPANGGIL AGAR DYNAMIC ISLAND MUNCUL -->
+    <script src="global-music.js"></script>
+    <script src="chat.js"></script>
+</body>
+</html>
