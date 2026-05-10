@@ -161,13 +161,13 @@ body {
     height: 100vh;
     width: 100%;
     max-width: 600px;
-    margin: 2 auto;
+    margin: 0 auto;
     background: linear-gradient(135deg, #0a0a1a, #0f0f2a);
     position: relative;
-    padding-top: 20px; /* Kurangi dari 60px */
+    padding-top: 0; /* FIX: Hapus padding-top yang bikin input kepotong */
 }
 
-/* Chat Header */
+/* Chat Header - FIXED */
 .chat-header {
     position: fixed;
     top: 0;
@@ -176,20 +176,20 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 8px 16px; /* Kurangi padding */
+    padding: 8px 16px;
     background: rgba(0, 0, 0, 0.8);
     backdrop-filter: blur(12px);
     border-bottom: 1px solid rgba(255, 215, 0, 0.2);
     z-index: 100;
     max-width: 600px;
     margin: 0 auto;
-    height: 52px; /* Fixed height */
+    height: 52px;
 }
 
 .back-btn, .logout-btn {
     background: rgba(255, 255, 255, 0.1);
     border: none;
-    width: 36px; /* Kurangi ukuran */
+    width: 36px;
     height: 36px;
     border-radius: 50%;
     cursor: pointer;
@@ -233,13 +233,13 @@ body {
     font-size: 0.55rem;
 }
 
-/* Online Panel - Tanpa flex-shrink yang mengganggu */
+/* Online Panel */
 .online-panel {
     background: rgba(0, 0, 0, 0.4);
     border-bottom: 1px solid rgba(255, 215, 0, 0.1);
     transition: all 0.3s ease;
-    margin-top: 0;
-    max-height: 45px; /* Batasi tinggi saat collapsed */
+    margin-top: 52px; /* FIX: Turunkan biar tidak ketutup header */
+    max-height: 45px;
     overflow: hidden;
 }
 
@@ -315,7 +315,6 @@ body {
     word-break: break-word;
 }
 
-/* Admin Badge */
 .admin-badge {
     background: linear-gradient(135deg, #9b59b6, #8e44ad);
     color: white;
@@ -333,7 +332,6 @@ body {
     color: #ffd700;
 }
 
-/* Kick Button */
 .kick-btn {
     background: rgba(220, 53, 69, 0.2);
     border: none;
@@ -360,7 +358,8 @@ body {
     gap: 10px;
     -webkit-overflow-scrolling: touch;
     scroll-behavior: smooth;
-    min-height: 0; /* Kunci! Biar flex child bisa mengecil */
+    min-height: 0;
+    /* FIX: Tidak perlu margin-top karena online-panel sudah handling */
 }
 
 .messages-container::-webkit-scrollbar {
@@ -534,16 +533,20 @@ body {
     margin-top: 3px;
 }
 
-/* Input Area */
+/* ========== INPUT AREA - FIX TIDAK KEPOTONG ========== */
 .input-area {
     display: flex;
     align-items: flex-end;
     gap: 6px;
     padding: 8px 12px;
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.9);
     backdrop-filter: blur(12px);
     border-top: 1px solid rgba(255, 215, 0, 0.2);
     min-height: 56px;
+    position: sticky;
+    bottom: 0;
+    width: 100%;
+    z-index: 90;
 }
 
 .input-actions {
@@ -1050,16 +1053,13 @@ body.light .system-message {
 
 /* Landscape mode */
 @media (max-height: 500px) and (orientation: landscape) {
-    .chat-screen {
-        padding-top: 48px;
-    }
-    
     .chat-header {
         height: 48px;
         padding: 5px 12px;
     }
     
     .online-panel {
+        margin-top: 48px;
         max-height: 40px;
     }
     
