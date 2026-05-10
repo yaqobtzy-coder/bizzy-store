@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Bizzy Downloader | MP3 & MP4 Downloader</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="downloader.css">
+</head>
+<body>
+    <button class="back-btn" onclick="goBack()">
+        <i class="fas fa-arrow-left"></i>
+    </button>
+
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-download"></i> Bizzy Downloader</h1>
+            <p>Download video & audio dari TikTok, YouTube, Instagram, Facebook, Twitter</p>
+        </div>
+
+        <div class="input-card">
+            <!-- Platform Options -->
+            <div class="platform-options">
+                <button class="platform-btn active" data-platform="tiktok">
+                    <i class="fab fa-tiktok"></i> TikTok
+                </button>
+                <button class="platform-btn" data-platform="youtube">
+                    <i class="fab fa-youtube"></i> YouTube
+                </button>
+                <button class="platform-btn" data-platform="instagram">
+                    <i class="fab fa-instagram"></i> Instagram
+                </button>
+                <button class="platform-btn" data-platform="facebook">
+                    <i class="fab fa-facebook"></i> Facebook
+                </button>
+                <button class="platform-btn" data-platform="twitter">
+                    <i class="fab fa-twitter"></i> Twitter
+                </button>
+            </div>
+
+            <!-- Type Selector -->
+            <div class="type-selector">
+                <button class="type-btn active" data-type="video">
+                    <i class="fas fa-video"></i> Video (MP4)
+                </button>
+                <button class="type-btn" data-type="audio">
+                    <i class="fas fa-music"></i> Audio (MP3)
+                </button>
+            </div>
+
+            <!-- URL Input -->
+            <div class="url-input-group">
+                <input type="text" id="urlInput" placeholder="Masukkan link video...">
+                <button id="downloadBtn" class="download-btn">
+                    <i class="fas fa-download"></i> Download
+                </button>
+            </div>
+        </div>
+
+        <!-- Loading -->
+        <div id="loadingOverlay" class="loading-overlay">
+            <div class="spinner"></div>
+            <p>Memproses link...</p>
+        </div>
+
+        <!-- Result Area -->
+        <div id="resultArea" class="result-area" style="display: none;">
+            <!-- Hasil akan ditampilkan di sini -->
+        </div>
+
+        <!-- Info Card -->
+        <div class="info-card">
+            <i class="fas fa-info-circle"></i>
+            <div class="info-text">
+                <strong>Cara Penggunaan:</strong><br>
+                1. Pilih platform (TikTok, YouTube, dll)<br>
+                2. Pilih format (Video/Audio)<br>
+                3. Paste link dan klik Download<br>
+                4. Tunggu proses selesai
+            </div>
+        </div>
+    </div>
+
+    <script src="global-music.js"></script>
+    <script src="downloader.js"></script>
+</body>
+</html>

@@ -134,7 +134,7 @@ function setupScrollToTop() {
     });
 }
 
-// Update waktu yang ditampilkan di UI jika ada
+// Update waktu yang ditampilkan
 function updateDateTime() {
     const now = new Date();
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };

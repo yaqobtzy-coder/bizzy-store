@@ -33,7 +33,7 @@ body {
     bottom: 0;
 }
 
-/* ========== LOGIN SCREEN - MOBILE FIRST ========== */
+/* ========== LOGIN SCREEN ========== */
 .login-screen {
     position: fixed;
     top: 0;
@@ -153,7 +153,7 @@ body {
     flex-wrap: wrap;
 }
 
-/* ========== CHAT SCREEN - MOBILE FRIENDLY ========== */
+/* ========== CHAT SCREEN ========== */
 .chat-screen {
     display: flex;
     flex-direction: column;
@@ -166,7 +166,7 @@ body {
     padding-top: 60px;
 }
 
-/* Chat Header - Fixed on mobile */
+/* Chat Header */
 .chat-header {
     position: fixed;
     top: 0;
@@ -231,7 +231,7 @@ body {
     font-size: 0.6rem;
 }
 
-/* Online Panel - Mobile Friendly */
+/* Online Panel */
 .online-panel {
     background: rgba(0, 0, 0, 0.4);
     border-bottom: 1px solid rgba(255, 215, 0, 0.1);
@@ -345,7 +345,7 @@ body {
     transform: scale(0.95);
 }
 
-/* Messages Container - Mobile Friendly */
+/* Messages Container - FIXED untuk pesan terbaru tidak kepotong */
 .messages-container {
     flex: 1;
     overflow-y: auto;
@@ -354,9 +354,10 @@ body {
     flex-direction: column;
     gap: 12px;
     -webkit-overflow-scrolling: touch;
-    min-height: 0;
+    scroll-behavior: smooth;
 }
 
+/* Auto scroll ke pesan terbaru */
 .messages-container::-webkit-scrollbar {
     width: 3px;
 }
@@ -397,7 +398,7 @@ body {
     margin-top: 6px;
 }
 
-/* Message Bubbles - Mobile Friendly */
+/* Message Bubbles */
 .message {
     display: flex;
     gap: 8px;
@@ -435,8 +436,6 @@ body {
     padding: 10px 14px;
     border-bottom-left-radius: 4px;
     word-break: break-word;
-    max-width: 100%;
-    overflow-wrap: break-word;
 }
 
 .message.own .message-bubble {
@@ -446,15 +445,13 @@ body {
 }
 
 .message-sender {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 600;
     margin-bottom: 4px;
     display: flex;
     align-items: center;
     gap: 6px;
     flex-wrap: wrap;
-    word-break: break-word;
-    max-width: 100%;
 }
 
 .message-sender .admin-badge {
@@ -492,7 +489,6 @@ body {
     opacity: 0.5;
     margin-top: 4px;
     text-align: right;
-    clear: both;
 }
 
 /* System Message */
@@ -537,7 +533,7 @@ body {
     margin-top: 4px;
 }
 
-/* Input Area - Mobile Friendly */
+/* Input Area */
 .input-area {
     display: flex;
     align-items: flex-end;
@@ -625,7 +621,7 @@ body {
     transform: scale(0.95);
 }
 
-/* Emoji Picker - Mobile Friendly */
+/* Emoji Picker */
 .emoji-picker {
     position: fixed;
     bottom: 80px;
@@ -687,7 +683,7 @@ body {
     color: var(--primary);
 }
 
-/* Kick Modal - Mobile Friendly */
+/* Kick Modal */
 .kick-modal {
     position: fixed;
     top: 0;
@@ -784,7 +780,7 @@ body {
     transform: scale(0.98);
 }
 
-/* Toast Notification - Mobile Friendly */
+/* Toast Notification */
 .toast {
     position: fixed;
     bottom: 80px;
@@ -799,6 +795,8 @@ body {
     border-left: 4px solid var(--primary);
     animation: slideUp 0.3s ease;
     backdrop-filter: blur(10px);
+    max-width: 400px;
+    margin: 0 auto;
 }
 
 /* Image Preview Modal */
@@ -834,13 +832,11 @@ body {
 }
 
 /* ========== DYNAMIC ISLAND - MOBILE FRIENDLY ========== */
-/* Biarkan global-music.js yang mengatur posisi dan drag */
-/* Hanya set z-index dan pastikan tidak tertutup */
 .dynamic-island {
     z-index: 10001 !important;
 }
 
-/* ========== LIGHT THEME - MOBILE FRIENDLY ========== */
+/* ========== LIGHT THEME ========== */
 body.light {
     background: linear-gradient(135deg, #f0f4ff, #e8ecf5);
     color: #1a1a2e;
@@ -942,7 +938,7 @@ body.light .welcome-message .small {
 
 body.light .system-message {
     background: rgba(0, 0, 0, 0.05);
-    color: rgba(0, 0, 0, 0.6);
+    color: #1a1a2e;
 }
 
 /* ========== ANIMATIONS ========== */
@@ -1080,20 +1076,5 @@ body.light .system-message {
     
     .message-bubble {
         padding: 6px 10px;
-    }
-}
-
-/* Safe area untuk iPhone notch */
-@supports (padding: max(0px)) {
-    .chat-screen {
-        padding-top: max(60px, env(safe-area-inset-top));
-    }
-    
-    .input-area {
-        padding-bottom: max(10px, env(safe-area-inset-bottom));
-    }
-    
-    .chat-header {
-        padding-top: max(10px, env(safe-area-inset-top));
     }
 }

@@ -3,83 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Bizzy Tools Zone | RayyxPrimze</title>
+    <title>Bizzy Tools Zone | All in One</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="tools.css">
 </head>
 <body>
+    <!-- Theme Toggle Button -->
+    <button class="theme-toggle" onclick="toggleTheme()">
+        <i class="fas fa-moon"></i>
+    </button>
+
     <div class="container">
+        <!-- Header -->
         <div class="header">
             <h1><i class="fas fa-crown"></i> Bizzy Tools Zone</h1>
-            <p>by RayyxPrimze | Premium Tools Collection</p>
+            <p>Pilih tools yang ingin kamu gunakan</p>
         </div>
-        
-        <div class="menu-grid">
-            <div class="menu-card" data-page="ai.html">
-                <i class="fas fa-robot"></i>
-                <div class="menu-name">AI Assistant</div>
-                <div class="menu-desc">Chat dengan AI ramah</div>
-                <div class="menu-hover-effect"></div>
-            </div>
-            
-            <div class="menu-card" data-page="anime.html">
-                <i class="fas fa-tv"></i>
-                <div class="menu-name">Anime Zone</div>
-                <div class="menu-desc">Info & gambar anime</div>
-                <div class="menu-hover-effect"></div>
-            </div>
-            
-            <div class="menu-card" data-page="games.html">
-                <i class="fas fa-gamepad"></i>
-                <div class="menu-name">Games Zone</div>
-                <div class="menu-desc">Quiz & tebak-tebakan</div>
-                <div class="menu-hover-effect"></div>
-            </div>
-            
+
+        <!-- Tools Grid -->
+        <div class="tools-grid">
+            <!-- Music -->
             <div class="menu-card" data-page="music.html">
                 <i class="fas fa-music"></i>
-                <div class="menu-name">Music Zone</div>
-                <div class="menu-desc">Cari lagu & streaming</div>
-                <div class="menu-hover-effect"></div>
+                <div class="menu-name">Music Player</div>
+                <div class="menu-desc">Putar lagu favoritmu</div>
             </div>
-            
-            <div class="menu-card" data-page="maker.html">
-                <i class="fas fa-magic"></i>
-                <div class="menu-name">Maker Zone</div>
-                <div class="menu-desc">Fake KTP, grup, dll</div>
-                <div class="menu-hover-effect"></div>
-            </div>
-            
+
+            <!-- Chat -->
             <div class="menu-card" data-page="chat.html">
                 <i class="fas fa-comments"></i>
                 <div class="menu-name">Global Chat</div>
-                <div class="menu-desc">Chat dengan pengguna lain</div>
-                <div class="menu-hover-effect"></div>
+                <div class="menu-desc">Ngobrol dengan pengguna lain</div>
             </div>
-            
-            <div class="menu-card" data-page="tools-admin.html">
-                <i class="fas fa-crown"></i>
-                <div class="menu-name">Admin Panel</div>
-                <div class="menu-desc">Kelola menu & API</div>
-                <div class="menu-hover-effect"></div>
+
+            <!-- Anime -->
+            <div class="menu-card" data-page="anime.html">
+                <i class="fas fa-tv"></i>
+                <div class="menu-name">Anime Zone</div>
+                <div class="menu-desc">Cari info & gambar anime</div>
+            </div>
+
+            <!-- Games -->
+            <div class="menu-card" data-page="games.html">
+                <i class="fas fa-gamepad"></i>
+                <div class="menu-name">Games Zone</div>
+                <div class="menu-desc">Asah otak dengan quiz</div>
+            </div>
+
+            <!-- Maker -->
+            <div class="menu-card" data-page="maker.html">
+                <i class="fas fa-magic"></i>
+                <div class="menu-name">Maker Zone</div>
+                <div class="menu-desc">Buat konten keren</div>
+            </div>
+
+            <!-- AI Assistant -->
+            <div class="menu-card" data-page="ai.html">
+                <i class="fas fa-robot"></i>
+                <div class="menu-name">AI Assistant</div>
+                <div class="menu-desc">Tanya apapun ke AI</div>
+            </div>
+
+            <!-- Downloader -->
+            <div class="menu-card" data-page="downloader.html">
+                <i class="fas fa-download"></i>
+                <div class="menu-name">Downloader</div>
+                <div class="menu-desc">Download video & audio dari medsos</div>
             </div>
         </div>
-        
-        <div class="info-card">
-            <h3><i class="fas fa-info-circle"></i> Info Penting</h3>
-            <p>• Semua fitur membutuhkan login akun web store<br>
-            • Minimal role PREMIUM untuk akses semua fitur<br>
-            • AI Assistant: ramah, asik, tidak bisa di-jailbreak<br>
-            • Maker Zone mendukung multi-query input</p>
-        </div>
-        
+
+        <!-- Footer -->
         <div class="footer">
-            <i class="fas fa-shield-alt"></i> Bizzy Tools Zone © 2024 | Created by RayyxPrimze
+            <p>© 2026 Bizzy Impact | All Rights Reserved</p>
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
+    <div class="current-time" id="currentDateTime"></div>
+
     <script src="global-music.js"></script>
     <script src="tools.js"></script>
 </body>
