@@ -160,7 +160,7 @@
         </div>
     </div>
 
-    <!-- Floating Chat Button & Drawer -->
+    <!-- Floating Chat Button & Drawer (Layout: Kiri Emoji+Image, Tengah Input, Kanan Send) -->
     <button id="floatingChatBtn" class="floating-chat-btn">
         <i class="fas fa-comment-dots"></i>
     </button>
@@ -171,9 +171,21 @@
             <button id="closeDrawerBtn" class="close-drawer"><i class="fas fa-times"></i></button>
         </div>
         <div class="drawer-input-area">
+            <!-- Kiri: Tombol Emoji + Gambar -->
+            <div class="drawer-actions-left">
+                <button id="drawerEmojiBtn" class="drawer-action-btn" title="Emoji">
+                    <i class="far fa-smile-wink"></i>
+                </button>
+                <button id="drawerImageBtn" class="drawer-action-btn" title="Kirim Foto">
+                    <i class="fas fa-image"></i>
+                </button>
+                <input type="file" id="drawerImageInput" accept="image/*" style="display: none;">
+            </div>
+            <!-- Tengah: Input Teks -->
             <div class="drawer-input-wrapper">
                 <textarea id="drawerMessageInput" placeholder="Ketik pesan..." rows="1"></textarea>
             </div>
+            <!-- Kanan: Tombol Kirim -->
             <button id="drawerSendBtn" class="drawer-send-btn">
                 <i class="fas fa-paper-plane"></i>
             </button>
