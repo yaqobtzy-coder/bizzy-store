@@ -3,31 +3,447 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Games Zone | Bizzy Tools Zone</title>
+    <title>Maintenance | Bizzy Tools Zone</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="games.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0a0a1a, #0f0f2a);
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .maintenance-container {
+            max-width: 500px;
+            text-align: center;
+            animation: fadeInUp 0.6s ease;
+        }
+
+        .maintenance-icon {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, #ffd700, #ff8c00);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 30px;
+            animation: pulse 2s infinite;
+        }
+
+        .maintenance-icon i {
+            font-size: 4rem;
+            color: #0a0a1a;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.4); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 20px rgba(255, 215, 0, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 215, 0, 0); }
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #FFD700, #FF8C00);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .message-box {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 24px;
+            margin: 20px 0;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+        }
+
+        .message-box p {
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            background: rgba(220, 53, 69, 0.2);
+            color: #ff6666;
+            padding: 6px 16px;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            margin-bottom: 20px;
+            border: 1px solid rgba(220, 53, 69, 0.3);
+        }
+
+        .countdown {
+            font-size: 1rem;
+            margin: 20px 0;
+            color: #ffd700;
+        }
+
+        .countdown .timer {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .countdown .timer-box {
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 16px;
+            padding: 12px 8px;
+            min-width: 70px;
+            text-align: center;
+        }
+
+        .countdown .timer-box span:first-child {
+            font-size: 1.8rem;
+            font-weight: bold;
+            display: block;
+        }
+
+        .countdown .timer-box span:last-child {
+            font-size: 0.65rem;
+            opacity: 0.7;
+        }
+
+        .back-btn {
+            background: linear-gradient(95deg, #FFD700, #FF8C00);
+            border: none;
+            padding: 14px 32px;
+            border-radius: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #1a1a2e;
+            font-size: 1rem;
+            margin-top: 20px;
+        }
+
+        .back-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+        }
+
+        .social-links {
+            margin-top: 40px;
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .social-links a {
+            color: #ffd700;
+            font-size: 1.5rem;
+            transition: all 0.2s ease;
+            opacity: 0.7;
+            cursor: pointer;
+        }
+
+        .social-links a:hover {
+            opacity: 1;
+            transform: translateY(-3px);
+        }
+
+        /* Admin Panel */
+        .admin-panel {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 8px 12px;
+            border-radius: 40px;
+            font-size: 0.7rem;
+            z-index: 9999;
+            display: flex;
+            gap: 8px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            cursor: pointer;
+        }
+
+        .admin-panel button {
+            background: rgba(255, 215, 0, 0.2);
+            border: none;
+            padding: 5px 12px;
+            border-radius: 30px;
+            cursor: pointer;
+            color: #ffd700;
+            font-size: 0.7rem;
+            transition: all 0.2s ease;
+        }
+
+        .admin-panel button:hover {
+            background: #ffd700;
+            color: #1a1a2e;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(10px);
+            color: #ffd700;
+            padding: 10px 20px;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            z-index: 10000;
+            border-left: 3px solid #ffd700;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Light Theme */
+        body.light {
+            background: linear-gradient(135deg, #f0f4ff, #e8ecf5);
+            color: #1a1a2e;
+        }
+
+        body.light .message-box {
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        body.light .status-badge {
+            background: rgba(220, 53, 69, 0.1);
+        }
+
+        body.light .countdown .timer-box {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        body.light .admin-panel {
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .countdown .timer {
+                gap: 8px;
+            }
+            .countdown .timer-box {
+                min-width: 55px;
+                padding: 8px 4px;
+            }
+            .countdown .timer-box span:first-child {
+                font-size: 1.2rem;
+            }
+            .admin-panel {
+                bottom: 10px;
+                right: 10px;
+                padding: 5px 8px;
+                gap: 5px;
+            }
+            .admin-panel button {
+                padding: 3px 8px;
+                font-size: 0.6rem;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <button class="back-btn" onclick="goBack()"><i class="fas fa-arrow-left"></i> Kembali</button>
-            <h1><i class="fas fa-gamepad"></i> Games Zone</h1>
+    <div class="maintenance-container">
+        <div class="maintenance-icon">
+            <i class="fas fa-tools"></i>
         </div>
         
-        <div id="resultArea" class="result-area" style="display: none;"></div>
+        <div class="status-badge">
+            <i class="fas fa-clock"></i> Sedang Maintenance
+        </div>
         
-        <h2 class="section-title"><i class="fas fa-brain"></i> Pilih Game</h2>
-        <div class="menu-grid" id="gamesGrid"></div>
+        <h1>Mohon Maaf</h1>
+        
+        <div class="message-box">
+            <p>
+                <i class="fas fa-server" style="color: #ffd700;"></i>
+                <strong>Bizzy Tools Zone</strong> sedang dalam masa perbaikan.
+            </p>
+            <p>
+                Kami sedang meningkatkan performa server dan menambahkan fitur-fitur baru.
+                Harap bersabar dan kembali lagi nanti.
+            </p>
+            <div class="countdown">
+                <i class="fas fa-hourglass-half"></i> Estimasi selesai:
+                <div class="timer" id="timer">
+                    <div class="timer-box"><span id="days">00</span><span>Hari</span></div>
+                    <div class="timer-box"><span id="hours">00</span><span>Jam</span></div>
+                    <div class="timer-box"><span id="minutes">00</span><span>Menit</span></div>
+                    <div class="timer-box"><span id="seconds">00</span><span>Detik</span></div>
+                </div>
+            </div>
+        </div>
+        
+        <button class="back-btn" onclick="checkStatus()">
+            <i class="fas fa-sync-alt"></i> Cek Status
+        </button>
+        
+        <div class="social-links">
+            <a onclick="showToastMsg('Hubungi @BizzyImpactBot untuk info lebih lanjut')"><i class="fab fa-telegram"></i></a>
+            <a onclick="showToastMsg('Hubungi admin untuk info lebih lanjut')"><i class="fab fa-instagram"></i></a>
+            <a onclick="goToTools()"><i class="fas fa-home"></i></a>
+        </div>
     </div>
 
-    <div id="loadingOverlay" class="loading-overlay">
-        <div class="spinner"></div>
-        <p>Memuat soal...</p>
+    <!-- Admin Panel -->
+    <div class="admin-panel">
+        <i class="fas fa-cog"></i>
+        <button onclick="setMaintenance(1)">1 Jam</button>
+        <button onclick="setMaintenance(24)">1 Hari</button>
+        <button onclick="setMaintenance(480)">20 Hari</button>
+        <button onclick="setMaintenance(720)">30 Hari</button>
+        <button onclick="endMaintenance()">Selesai</button>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
-    <script src="global-music.js"></script>
-    <script src="games.js"></script>
+    <script>
+        // ========== MAINTENANCE TIMER (20 HARI DEFAULT) ==========
+        let countdownInterval;
+
+        function startCountdown() {
+            const targetTime = localStorage.getItem('maintenance_target');
+            let endTime;
+            
+            if (targetTime) {
+                endTime = parseInt(targetTime);
+            } else {
+                // DEFAULT: 20 HARI = 20 * 24 * 60 * 60 * 1000 milidetik
+                endTime = Date.now() + (20 * 24 * 60 * 60 * 1000);
+                localStorage.setItem('maintenance_target', endTime);
+            }
+            
+            function updateCountdown() {
+                const now = Date.now();
+                const remaining = endTime - now;
+                
+                if (remaining <= 0) {
+                    // Maintenance selesai
+                    document.getElementById('days').innerText = '00';
+                    document.getElementById('hours').innerText = '00';
+                    document.getElementById('minutes').innerText = '00';
+                    document.getElementById('seconds').innerText = '00';
+                    
+                    const timerDiv = document.querySelector('.countdown');
+                    if (timerDiv) {
+                        timerDiv.innerHTML = '<i class="fas fa-check-circle"></i> Maintenance selesai! <a href="tools.html" style="color:#ffd700; text-decoration:underline;">Klik di sini</a> untuk masuk.';
+                    }
+                    
+                    localStorage.removeItem('maintenance_target');
+                    if (countdownInterval) clearInterval(countdownInterval);
+                    return;
+                }
+                
+                const days = Math.floor(remaining / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((remaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
+                
+                document.getElementById('days').innerText = days.toString().padStart(2, '0');
+                document.getElementById('hours').innerText = hours.toString().padStart(2, '0');
+                document.getElementById('minutes').innerText = minutes.toString().padStart(2, '0');
+                document.getElementById('seconds').innerText = seconds.toString().padStart(2, '0');
+            }
+            
+            updateCountdown();
+            if (countdownInterval) clearInterval(countdownInterval);
+            countdownInterval = setInterval(updateCountdown, 1000);
+        }
+        
+        // ========== ADMIN FUNCTIONS ==========
+        function setMaintenance(hours) {
+            let milliseconds = hours * 60 * 60 * 1000;
+            let endTime = Date.now() + milliseconds;
+            localStorage.setItem('maintenance_target', endTime);
+            showToastMsg(`Maintenance diatur selama ${hours} jam (${Math.floor(hours/24)} hari)`);
+            setTimeout(() => location.reload(), 1500);
+        }
+        
+        function endMaintenance() {
+            localStorage.removeItem('maintenance_target');
+            showToastMsg('Maintenance selesai! Mengalihkan...');
+            setTimeout(() => {
+                window.location.href = 'tools.html';
+            }, 1500);
+        }
+        
+        function checkStatus() {
+            showToastMsg('Menghubungi server...');
+            setTimeout(() => {
+                const target = localStorage.getItem('maintenance_target');
+                if (!target || Date.now() > parseInt(target)) {
+                    window.location.href = 'tools.html';
+                } else {
+                    showToastMsg('Website masih dalam maintenance. Harap tunggu.');
+                }
+            }, 1000);
+        }
+        
+        function goToTools() {
+            localStorage.removeItem('maintenance_target');
+            window.location.href = 'tools.html';
+        }
+        
+        function showToastMsg(msg) {
+            const existing = document.querySelector('.toast');
+            if (existing) existing.remove();
+            
+            let toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.innerHTML = `<i class="fas fa-info-circle"></i> ${msg}`;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+        
+        // ========== LOAD THEME ==========
+        const savedTheme = localStorage.getItem('bizzy_theme_mode');
+        if (savedTheme === 'light') {
+            document.body.classList.add('light');
+        }
+        
+        // ========== INIT ==========
+        startCountdown();
+        
+        // Expose functions ke global
+        window.setMaintenance = setMaintenance;
+        window.endMaintenance = endMaintenance;
+        window.checkStatus = checkStatus;
+        window.goToTools = goToTools;
+        window.showToastMsg = showToastMsg;
+    </script>
 </body>
 </html>

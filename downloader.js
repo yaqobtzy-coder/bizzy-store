@@ -1,4 +1,4 @@
-// ========== DOWNLOADER MP3/MP4 - BIZZY ==========
+// ========== DOWNLOADER MP3/MP4/IMAGE - BIZZY ==========
 
 let currentPlatform = 'tiktok';
 let currentType = 'video';
@@ -10,7 +10,8 @@ const API_URLS = {
     youtube: 'https://api-faa.my.id/faa/aio',
     instagram: 'https://api-faa.my.id/faa/aio',
     facebook: 'https://api-faa.my.id/faa/aio',
-    twitter: 'https://api-faa.my.id/faa/aio'
+    twitter: 'https://api-faa.my.id/faa/aio',
+    pinterest: 'https://api-faa.my.id/faa/aio'
 };
 
 // Load theme from localStorage
@@ -84,6 +85,7 @@ async function downloadMedia(url, filename) {
     }
 }
 
+// ========== TIKTOK PROCESSOR (Support Image) ==========
 async function processTikTok(url) {
     const response = await fetch(`${API_URLS.tiktok}?url=${encodeURIComponent(url)}`);
     const data = await response.json();
@@ -97,21 +99,23 @@ async function processTikTok(url) {
     let filename = '';
     
     if (currentType === 'video') {
-        // Ambil video tanpa watermark
         downloadUrl = result.data || result.alternatives?.selected || result.alternatives?.sd;
         filename = `${result.title || 'video'}_${Date.now()}.mp4`;
-    } else {
-        // Ambil audio/music
+    } else if (currentType === 'audio') {
         downloadUrl = result.music_info?.url;
         filename = `${result.music_info?.title || 'audio'}_${Date.now()}.mp3`;
+    } else {
+        // MODE GAMBAR - ambil thumbnail/cover
+        downloadUrl = result.cover || result.author?.avatar || result.thumbnail;
+        filename = `${result.title || 'image'}_${Date.now()}.jpg`;
     }
     
     if (!downloadUrl) {
-        throw new Error('URL download tidak ditemukan');
+        throw new Error('URL tidak ditemukan');
     }
     
     return {
-        title: result.title || result.music_info?.title || 'TikTok Video',
+        title: result.title || result.music_info?.title || 'TikTok Media',
         author: result.author?.nickname || result.author?.username || 'Unknown',
         thumbnail: result.cover || result.author?.avatar,
         duration: result.duration,
@@ -122,6 +126,56 @@ async function processTikTok(url) {
     };
 }
 
+// ========== INSTAGRAM PROCESSOR (Support Image) ==========
+async function processInstagram(url) {
+    const response = await fetch(`${API_URLS.instagram}?url=${encodeURIComponent(url)}`);
+    const data = await response.json();
+    
+    if (!data.status || !data.result) {
+        throw new Error('Gagal memproses link Instagram');
+    }
+    
+    const result = data.result;
+    let downloadUrl = '';
+    let filename = '';
+    let imageUrls = [];
+    
+    if (currentType === 'video') {
+        downloadUrl = result.video_url || result.download_url;
+        filename = `${result.title || 'video'}_${Date.now()}.mp4`;
+    } else if (currentType === 'audio') {
+        downloadUrl = result.audio_url || result.music_url;
+        filename = `${result.title || 'audio'}_${Date.now()}.mp3`;
+    } else {
+        // MODE GAMBAR - ambil gambar dari Instagram (carousel support)
+        if (result.images && result.images.length > 0) {
+            imageUrls = result.images;
+            downloadUrl = imageUrls[0];
+        } else if (result.image_url) {
+            downloadUrl = result.image_url;
+        } else if (result.thumbnail) {
+            downloadUrl = result.thumbnail;
+        }
+        filename = `instagram_${Date.now()}.jpg`;
+    }
+    
+    if (!downloadUrl && imageUrls.length === 0) {
+        throw new Error('URL tidak ditemukan');
+    }
+    
+    return {
+        title: result.title || 'Instagram Media',
+        author: result.author?.username || result.owner || 'Unknown',
+        thumbnail: result.thumbnail || result.image_url,
+        downloadUrl: downloadUrl,
+        filename: filename,
+        imageUrls: imageUrls,
+        type: currentType,
+        isCarousel: imageUrls.length > 1
+    };
+}
+
+// ========== OTHER PLATFORM PROCESSOR ==========
 async function processOtherPlatform(url) {
     const response = await fetch(`${API_URLS.youtube}?url=${encodeURIComponent(url)}`);
     const data = await response.json();
@@ -133,40 +187,53 @@ async function processOtherPlatform(url) {
     const result = data.result;
     let downloadUrl = '';
     let filename = '';
+    let imageUrls = [];
     
     if (currentType === 'video') {
-        // Cari video dengan kualitas terbaik
         if (result.download_url) {
             downloadUrl = result.download_url;
         } else if (result.alternative_urls && result.alternative_urls.length > 0) {
             downloadUrl = result.alternative_urls[0];
         }
         filename = `${result.title || 'video'}_${Date.now()}.mp4`;
-    } else {
-        // Cari audio
+    } else if (currentType === 'audio') {
         if (result.music_info?.url) {
             downloadUrl = result.music_info.url;
         } else if (result.download_url && result.title) {
             downloadUrl = result.download_url;
         }
         filename = `${result.title || 'audio'}_${Date.now()}.mp3`;
+    } else {
+        // MODE GAMBAR
+        if (result.images && result.images.length > 0) {
+            imageUrls = result.images;
+            downloadUrl = imageUrls[0];
+        } else if (result.image_url) {
+            downloadUrl = result.image_url;
+        } else if (result.thumbnail) {
+            downloadUrl = result.thumbnail;
+        }
+        filename = `image_${Date.now()}.jpg`;
     }
     
-    if (!downloadUrl) {
-        throw new Error('URL download tidak ditemukan');
+    if (!downloadUrl && imageUrls.length === 0) {
+        throw new Error('URL tidak ditemukan');
     }
     
     return {
         title: result.title || 'Media',
         author: result.author?.username || result.creator || 'Unknown',
-        thumbnail: result.thumbnail || 'https://via.placeholder.com/100x100?text=🎵',
+        thumbnail: result.thumbnail || 'https://via.placeholder.com/100x100?text=📷',
         duration: result.duration,
         downloadUrl: downloadUrl,
         filename: filename,
-        type: currentType
+        imageUrls: imageUrls,
+        type: currentType,
+        isCarousel: imageUrls.length > 1
     };
 }
 
+// ========== MAIN PROCESS ==========
 async function processDownload() {
     if (isLoading) {
         showToast('Tunggu proses sebelumnya selesai');
@@ -189,6 +256,8 @@ async function processDownload() {
         
         if (currentPlatform === 'tiktok') {
             result = await processTikTok(url);
+        } else if (currentPlatform === 'instagram') {
+            result = await processInstagram(url);
         } else {
             result = await processOtherPlatform(url);
         }
@@ -205,6 +274,7 @@ async function processDownload() {
     }
 }
 
+// ========== SHOW RESULT (Support Image & Carousel) ==========
 function showResult(data) {
     const resultArea = document.getElementById('resultArea');
     
@@ -220,8 +290,36 @@ function showResult(data) {
         `;
     }
     
-    const typeIcon = currentType === 'video' ? 'fa-video' : 'fa-music';
-    const typeText = currentType === 'video' ? 'Download Video (MP4)' : 'Download Audio (MP3)';
+    let typeIcon = '';
+    let typeText = '';
+    
+    if (currentType === 'video') {
+        typeIcon = 'fa-video';
+        typeText = 'Download Video (MP4)';
+    } else if (currentType === 'audio') {
+        typeIcon = 'fa-music';
+        typeText = 'Download Audio (MP3)';
+    } else {
+        typeIcon = 'fa-image';
+        typeText = 'Download Gambar (JPG/PNG)';
+    }
+    
+    // Untuk carousel (multiple images)
+    let carouselHtml = '';
+    if (data.isCarousel && data.imageUrls && data.imageUrls.length > 1) {
+        carouselHtml = `
+            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,215,0,0.2);">
+                <p style="font-size: 0.7rem; margin-bottom: 10px;"><i class="fas fa-images"></i> ${data.imageUrls.length} Gambar ditemukan:</p>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    ${data.imageUrls.map((imgUrl, idx) => `
+                        <button class="dl-btn" onclick="downloadMedia('${imgUrl}', 'image_${idx+1}_${Date.now()}.jpg')">
+                            <i class="fas fa-image"></i> Gambar ${idx+1}
+                        </button>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
     
     resultArea.innerHTML = `
         <div class="result-header">
@@ -236,9 +334,11 @@ function showResult(data) {
             </div>
         </div>
         <div class="download-buttons">
-            <button class="dl-btn dl-btn-primary" onclick="downloadMedia('${data.downloadUrl}', '${data.filename}')">
-                <i class="fas ${typeIcon}"></i> ${typeText}
-            </button>
+            ${!data.isCarousel ? `
+                <button class="dl-btn dl-btn-primary" onclick="downloadMedia('${data.downloadUrl}', '${data.filename}')">
+                    <i class="fas ${typeIcon}"></i> ${typeText}
+                </button>
+            ` : ''}
             <button class="dl-btn" onclick="window.open('${data.downloadUrl}', '_blank')">
                 <i class="fas fa-external-link-alt"></i> Buka di Browser
             </button>
@@ -246,6 +346,7 @@ function showResult(data) {
                 <i class="fas fa-copy"></i> Copy URL
             </button>
         </div>
+        ${carouselHtml}
     `;
     
     resultArea.style.display = 'block';
@@ -281,6 +382,7 @@ function init() {
             document.querySelectorAll('.platform-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             currentPlatform = btn.getAttribute('data-platform');
+            console.log(`Platform changed to: ${currentPlatform}`);
         });
     });
     
@@ -290,6 +392,7 @@ function init() {
             document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             currentType = btn.getAttribute('data-type');
+            console.log(`Type changed to: ${currentType}`);
         });
     });
     
@@ -305,3 +408,8 @@ function init() {
 }
 
 document.addEventListener('DOMContentLoaded', init);
+
+// Expose functions to global
+window.downloadMedia = downloadMedia;
+window.copyToClipboard = copyToClipboard;
+window.goBack = goBack;

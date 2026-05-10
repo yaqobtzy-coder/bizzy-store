@@ -1,5 +1,5 @@
 // ========== GLOBAL CHAT SYSTEM - 1 USER 1 DEVICE + ADMIN ==========
-// Dengan Upload Foto ke ImgBB & Auto Scroll
+// Dengan Upload Foto ke ImgBB & Auto Scroll + Floating Chat Button
 
 // Firebase Configuration
 const firebaseConfig = {
@@ -188,8 +188,7 @@ function loginSuccess() {
     }, 200);
     
     setupFirebase();
-    setupScrollObserver(); // Setup auto scroll
-    messageInput.focus();
+    setupScrollObserver();
     
     if (isAdmin) {
         showToast(`Selamat datang, Admin ${currentUser}! Anda memiliki akses kick user.`, 'success');
@@ -209,7 +208,6 @@ async function logout() {
         await database.ref(`chat/usernames/${currentUserId}`).remove();
     }
     
-    // Hentikan observer
     if (scrollObserver) {
         scrollObserver.disconnect();
         scrollObserver = null;
@@ -271,7 +269,7 @@ async function confirmKick() {
     closeKickModal();
 }
 
-// ========== SETUP SCROLL OBSERVER - PESAN BARU AUTO SCROLL ==========
+// ========== SETUP SCROLL OBSERVER ==========
 function setupScrollObserver() {
     if (scrollObserver) {
         scrollObserver.disconnect();
@@ -280,7 +278,6 @@ function setupScrollObserver() {
     scrollObserver = new MutationObserver(function(mutations) {
         mutations.forEach(function(mutation) {
             if (mutation.addedNodes.length > 0) {
-                // Cek apakah pesan baru dari user lain atau sendiri
                 scrollToBottom();
             }
         });
@@ -292,10 +289,8 @@ function setupScrollObserver() {
     });
 }
 
-// ========== SCROLL TO BOTTOM - RESPONSIF ==========
 function scrollToBottom() {
     if (messagesContainer) {
-        // Langsung scroll tanpa timeout
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
 }
@@ -342,7 +337,6 @@ function setupFirebase() {
             userList.sort((a, b) => a.username.localeCompare(b.username));
             
             userList.forEach(user => {
-                // HANYA username "Rayy" yang tampil sebagai admin
                 const isUserAdmin = (user.username === ADMIN_USERNAME);
                 usersHtml += `
                     <div class="online-user">
@@ -369,7 +363,6 @@ function setupFirebase() {
     messagesRef.limitToLast(messageLimit).on('child_added', (snapshot) => {
         const message = snapshot.val();
         addMessageToUI(message);
-        // Scroll otomatis ke bawah saat pesan baru masuk
         scrollToBottom();
     });
     
@@ -528,7 +521,6 @@ async function sendMessage() {
             typingRef.child(currentUserId).remove();
         }
         isTyping = false;
-        // Scroll ke bawah setelah kirim pesan
         scrollToBottom();
         return;
     }
@@ -542,7 +534,6 @@ async function sendMessage() {
             typingRef.child(currentUserId).remove();
         }
         isTyping = false;
-        // Scroll ke bawah setelah kirim pesan
         scrollToBottom();
     }
 }
@@ -576,7 +567,6 @@ function addMessageToUI(message) {
     messageDiv.className = `message ${isOwn ? 'own' : 'other'}`;
     messageDiv.setAttribute('data-id', message.id);
     
-    // HANYA username "Rayy" yang dapat badge admin
     const isUserAdmin = (message.username === ADMIN_USERNAME);
     
     let contentHtml = '';
@@ -654,7 +644,7 @@ function toggleOnlinePanel() {
     }
 }
 
-// ========== NAVIGASI LANGSUNG KE WEB LAIN ==========
+// ========== NAVIGATION ==========
 function navigateTo(page) {
     if (window.GlobalMusic && window.GlobalMusic.saveState) {
         window.GlobalMusic.saveState();
@@ -670,7 +660,6 @@ function navigateTo(page) {
         database.ref(`chat/usernames/${currentUserId}`).remove();
     }
     
-    // Hentikan observer
     if (scrollObserver) {
         scrollObserver.disconnect();
         scrollObserver = null;
@@ -683,7 +672,6 @@ function navigateTo(page) {
     }, 200);
 }
 
-// ========== GO BACK TO TOOLS - SIMPAN STATE MUSIC ==========
 function goBackToTools() {
     if (window.GlobalMusic && window.GlobalMusic.saveState) {
         window.GlobalMusic.saveState();
@@ -693,6 +681,62 @@ function goBackToTools() {
     setTimeout(() => {
         window.location.href = 'tools.html';
     }, 200);
+}
+
+// ========== FLOATING CHAT BUTTON & DRAWER ==========
+const floatingChatBtn = document.getElementById('floatingChatBtn');
+const chatDrawer = document.getElementById('chatDrawer');
+const closeDrawerBtn = document.getElementById('closeDrawerBtn');
+const drawerMessageInput = document.getElementById('drawerMessageInput');
+const drawerSendBtn = document.getElementById('drawerSendBtn');
+
+function openDrawer() {
+    chatDrawer.classList.add('open');
+    drawerMessageInput.focus();
+    autoResizeDrawerInput();
+}
+
+function closeDrawer() {
+    chatDrawer.classList.remove('open');
+}
+
+function autoResizeDrawerInput() {
+    if (drawerMessageInput) {
+        drawerMessageInput.style.height = 'auto';
+        drawerMessageInput.style.height = Math.min(drawerMessageInput.scrollHeight, 70) + 'px';
+    }
+}
+
+if (floatingChatBtn) {
+    floatingChatBtn.addEventListener('click', openDrawer);
+}
+
+if (closeDrawerBtn) {
+    closeDrawerBtn.addEventListener('click', closeDrawer);
+}
+
+if (drawerSendBtn) {
+    drawerSendBtn.addEventListener('click', async () => {
+        const text = drawerMessageInput.value.trim();
+        if (text) {
+            await sendTextMessage(text);
+            drawerMessageInput.value = '';
+            drawerMessageInput.style.height = 'auto';
+            closeDrawer();
+            scrollToBottom();
+        }
+    });
+}
+
+if (drawerMessageInput) {
+    drawerMessageInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            drawerSendBtn.click();
+        }
+    });
+    
+    drawerMessageInput.addEventListener('input', autoResizeDrawerInput);
 }
 
 // ========== EVENT LISTENERS ==========
@@ -772,3 +816,4 @@ window.confirmKick = confirmKick;
 console.log('💬 Global Chat System Ready! 1 User = 1 Device | Admin: Rayy');
 console.log('📸 Upload gambar menggunakan ImgBB API');
 console.log('🔄 Auto scroll aktif - pesan baru tidak akan kepotong!');
+console.log('💬 Floating chat button aktif - klik tombol di kanan bawah untuk kirim pesan!');

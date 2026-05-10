@@ -21,6 +21,9 @@
             <p>Pilih tools yang ingin kamu gunakan</p>
         </div>
 
+        <!-- Update Info Section (dari Admin Panel) -->
+        <div id="updateInfoContainer" style="display: none;"></div>
+
         <!-- Tools Grid -->
         <div class="tools-grid">
             <!-- Music -->
@@ -69,9 +72,12 @@
             <div class="menu-card" data-page="downloader.html">
                 <i class="fas fa-download"></i>
                 <div class="menu-name">Downloader</div>
-                <div class="menu-desc">Download video & audio dari medsos</div>
+                <div class="menu-desc">Download video, audio & gambar</div>
             </div>
         </div>
+
+        <!-- Readme Section (dari Admin Panel) -->
+        <div id="readmeContainer" style="display: none;"></div>
 
         <!-- Footer -->
         <div class="footer">
@@ -80,6 +86,27 @@
     </div>
 
     <div class="current-time" id="currentDateTime"></div>
+
+    <!-- POPUP MODAL (dari Admin Panel) -->
+    <div id="popupModal" class="popup-modal" style="display: none;">
+        <div class="popup-overlay" onclick="closePopup()"></div>
+        <div class="popup-content">
+            <button class="popup-close" onclick="closePopup()"><i class="fas fa-times"></i></button>
+            <div class="popup-thumbnail">
+                <img id="popupThumb" src="" alt="Popup Image">
+            </div>
+            <div class="popup-text" id="popupText"></div>
+            <div class="popup-buttons">
+                <button id="popupBtn1" class="popup-btn popup-btn-primary" onclick="handlePopupBtn1()"></button>
+                <button id="popupBtn2" class="popup-btn popup-btn-secondary" onclick="handlePopupBtn2()"></button>
+            </div>
+            <div class="popup-dontshow">
+                <label>
+                    <input type="checkbox" id="dontShowAgain"> Jangan tampilkan lagi
+                </label>
+            </div>
+        </div>
+    </div>
 
     <script src="global-music.js"></script>
     <script src="tools.js"></script>
