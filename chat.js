@@ -1,5 +1,5 @@
-// ========== GLOBAL CHAT SYSTEM - 1 USER 1 DEVICE + ADMIN ==========
-// Dengan Upload Foto ke ImgBB & Auto Scroll + Floating Chat Button + Drawer Layout Baru
+// ========== GLOBAL CHAT SYSTEM - FULL UPGRADE ==========
+// Fitur: Reply, Pin Message, Mute User, Tambah/Unadmin, Role Owner, Voice Note, Typing Bubble
 
 // Firebase Configuration
 const firebaseConfig = {
@@ -30,8 +30,8 @@ try {
 // ImgBB API Key
 const IMGBB_API_KEY = 'a60507c67d4d1a5d3f6b0cecbb168314';
 
-// Admin username
-const ADMIN_USERNAME = "Rayy";
+// Owner username (role tertinggi)
+const OWNER_USERNAME = "Rayy";
 
 // Global Variables
 let currentUser = null;
@@ -40,13 +40,20 @@ let currentDeviceId = null;
 let onlineRef = null;
 let messagesRef = null;
 let typingRef = null;
-let isTyping = false;
-let typingTimeout = null;
+let mutedRef = null;
+let pinnedMessageRef = null;
 let messageLimit = 50;
+let isOwner = false;
 let isAdmin = false;
 let pendingImageFile = null;
-let pendingImageCaption = ''; // FIX: simpan caption untuk foto
 let scrollObserver = null;
+let currentReplyTo = null; // Untuk reply
+let currentContextMessage = null; // Untuk context menu
+let mediaRecorder = null;
+let audioChunks = [];
+let isRecording = false;
+let recordingStartTime = null;
+let recordingTimer = null;
 
 // DOM Elements
 const loginScreen = document.getElementById('loginScreen');
@@ -61,8 +68,21 @@ const onlinePanel = document.getElementById('onlinePanel');
 const uploadProgress = document.getElementById('uploadProgress');
 const kickModal = document.getElementById('kickModal');
 const kickUserNameSpan = document.getElementById('kickUserName');
+const muteModal = document.getElementById('muteModal');
+const muteUserNameSpan = document.getElementById('muteUserName');
+const unmuteModal = document.getElementById('unmuteModal');
+const unmuteUserNameSpan = document.getElementById('unmuteUserName');
+const pinMessageBar = document.getElementById('pinMessageBar');
+const pinMessageText = document.getElementById('pinMessageText');
+const replyIndicator = document.getElementById('replyIndicator');
+const replyMessagePreview = document.getElementById('replyMessagePreview');
+const voiceModal = document.getElementById('voiceModal');
+const voiceTimer = document.getElementById('voiceTimer');
+const voiceWave = document.getElementById('voiceWave');
 
 let userToKick = null;
+let userToMute = null;
+let userToUnmute = null;
 let floatingEmojiPicker = null;
 
 // ========== UTILITIES ==========
@@ -143,6 +163,25 @@ async function isUsernameTaken(username) {
     }
 }
 
+// ========== CHECK MUTED ==========
+async function isUserMuted(userId) {
+    if (!database) return false;
+    try {
+        const snapshot = await database.ref(`chat/muted/${userId}`).once('value');
+        const mutedData = snapshot.val();
+        if (!mutedData) return false;
+        if (mutedData.permanent) return true;
+        if (mutedData.until && mutedData.until > Date.now()) return true;
+        if (mutedData.until && mutedData.until <= Date.now()) {
+            await database.ref(`chat/muted/${userId}`).remove();
+            return false;
+        }
+        return false;
+    } catch (error) {
+        return false;
+    }
+}
+
 // ========== LOGIN ==========
 async function login() {
     if (!database) {
@@ -170,7 +209,8 @@ async function login() {
         
         currentUser = username;
         currentUserId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
-        isAdmin = (username === ADMIN_USERNAME);
+        isOwner = (username === OWNER_USERNAME);
+        isAdmin = isOwner; // Owner adalah admin juga
         
         localStorage.setItem('chat_username', currentUser);
         localStorage.setItem('chat_userId', currentUserId);
@@ -195,8 +235,13 @@ function loginSuccess() {
             setupFirebase();
             setupScrollObserver();
             setupDrawerEvents();
-            if (isAdmin) {
-                showToast(`Selamat datang, Admin ${currentUser}!`, 'success');
+            setupContextMenu();
+            setupVoiceRecorder();
+            loadPinnedMessage();
+            if (isOwner) {
+                showToast(`👑 Selamat datang, Owner ${currentUser}!`, 'success');
+            } else if (isAdmin) {
+                showToast(`⭐ Selamat datang, Admin ${currentUser}!`, 'success');
             } else {
                 showToast(`Selamat datang, ${currentUser}!`);
             }
@@ -216,6 +261,7 @@ async function logout() {
     
     currentUser = null;
     currentUserId = null;
+    isOwner = false;
     isAdmin = false;
     
     chatScreen.style.opacity = '0';
@@ -256,16 +302,162 @@ async function confirmKick() {
             id: Date.now() + '_' + Math.random().toString(36).substr(2, 6),
             userId: 'system',
             username: 'System',
-            text: `👑 Admin ${currentUser} mengeluarkan ${username} dari chat!`,
+            text: `👑 ${currentUser} mengeluarkan ${username} dari chat!`,
             timestamp: firebase.database.ServerValue.TIMESTAMP,
             type: 'system'
         });
         if (onlineRef) await onlineRef.child(userId).remove();
         if (typingRef) await typingRef.child(userId).remove();
-        if (database) await database.ref(`chat/usernames/${userId}`).remove();
+        if (database) {
+            await database.ref(`chat/usernames/${userId}`).remove();
+            await database.ref(`chat/muted/${userId}`).remove();
+        }
         showToast(`${username} telah di-kick!`, 'success');
         closeKickModal();
     } catch(e) { showToast('Gagal kick user!', 'error'); }
+}
+
+// ========== MUTE USER ==========
+function openMuteModal(userId, username) {
+    if (!isAdmin) return;
+    userToMute = { userId, username };
+    muteUserNameSpan.innerText = username;
+    muteModal.style.display = 'flex';
+}
+
+function closeMuteModal() {
+    muteModal.style.display = 'none';
+    userToMute = null;
+}
+
+async function confirmMute() {
+    if (!userToMute) return;
+    const { userId, username } = userToMute;
+    const duration = parseInt(document.getElementById('muteDuration').value);
+    
+    try {
+        let muteData = {};
+        if (duration === 0) {
+            muteData = { permanent: true, mutedAt: Date.now() };
+        } else {
+            muteData = { until: Date.now() + (duration * 60 * 1000), duration: duration, mutedAt: Date.now() };
+        }
+        await database.ref(`chat/muted/${userId}`).set(muteData);
+        
+        await messagesRef.push({
+            id: Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+            userId: 'system',
+            username: 'System',
+            text: `🔇 ${currentUser} mem-mute ${username}${duration === 0 ? ' (Permanen)' : ` selama ${duration} menit`}!`,
+            timestamp: firebase.database.ServerValue.TIMESTAMP,
+            type: 'system'
+        });
+        showToast(`${username} telah di-mute!`, 'success');
+        closeMuteModal();
+    } catch(e) { showToast('Gagal mute user!', 'error'); }
+}
+
+function openUnmuteModal(userId, username) {
+    if (!isAdmin) return;
+    userToUnmute = { userId, username };
+    unmuteUserNameSpan.innerText = username;
+    unmuteModal.style.display = 'flex';
+}
+
+function closeUnmuteModal() {
+    unmuteModal.style.display = 'none';
+    userToUnmute = null;
+}
+
+async function confirmUnmute() {
+    if (!userToUnmute) return;
+    const { userId, username } = userToUnmute;
+    try {
+        await database.ref(`chat/muted/${userId}`).remove();
+        await messagesRef.push({
+            id: Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+            userId: 'system',
+            username: 'System',
+            text: `🔊 ${currentUser} membuka mute ${username}!`,
+            timestamp: firebase.database.ServerValue.TIMESTAMP,
+            type: 'system'
+        });
+        showToast(`${username} telah di-unmute!`, 'success');
+        closeUnmuteModal();
+    } catch(e) { showToast('Gagal unmute user!', 'error'); }
+}
+
+// ========== ADMIN PROMOTE/DEMOTE ==========
+async function promoteToAdmin(userId, username) {
+    if (!isOwner) { showToast('Hanya Owner yang bisa menambah admin!', 'error'); return; }
+    try {
+        await database.ref(`chat/usernames/${userId}/isAdmin`).set(true);
+        await messagesRef.push({
+            id: Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+            userId: 'system',
+            username: 'System',
+            text: `👑 ${currentUser} menjadikan ${username} sebagai Admin!`,
+            timestamp: firebase.database.ServerValue.TIMESTAMP,
+            type: 'system'
+        });
+        showToast(`${username} sekarang adalah Admin!`, 'success');
+    } catch(e) { showToast('Gagal promote user!', 'error'); }
+}
+
+async function demoteFromAdmin(userId, username) {
+    if (!isOwner) { showToast('Hanya Owner yang bisa mencopot admin!', 'error'); return; }
+    if (username === OWNER_USERNAME) { showToast('Tidak bisa mencopot Owner!', 'error'); return; }
+    try {
+        await database.ref(`chat/usernames/${userId}/isAdmin`).set(false);
+        await messagesRef.push({
+            id: Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+            userId: 'system',
+            username: 'System',
+            text: `📛 ${currentUser} mencopot jabatan Admin dari ${username}.`,
+            timestamp: firebase.database.ServerValue.TIMESTAMP,
+            type: 'system'
+        });
+        showToast(`${username} bukan lagi Admin!`, 'success');
+    } catch(e) { showToast('Gagal demote user!', 'error'); }
+}
+
+// ========== PIN MESSAGE ==========
+async function pinMessage(message) {
+    if (!isAdmin) { showToast('Hanya Admin yang bisa menyematkan pesan!', 'error'); return; }
+    try {
+        const pinData = {
+            messageId: message.id,
+            text: message.text || (message.type === 'image' ? '📷 Gambar' : 'Pesan'),
+            username: message.username,
+            pinnedBy: currentUser,
+            pinnedAt: Date.now()
+        };
+        await database.ref('chat/pinnedMessage').set(pinData);
+        showToast('Pesan disematkan!', 'success');
+    } catch(e) { showToast('Gagal menyematkan pesan!', 'error'); }
+}
+
+async function unpinMessage() {
+    if (!isAdmin) { showToast('Hanya Admin yang bisa menghapus sematan!', 'error'); return; }
+    try {
+        await database.ref('chat/pinnedMessage').remove();
+        pinMessageBar.style.display = 'none';
+        showToast('Sematan pesan dihapus!', 'success');
+    } catch(e) { showToast('Gagal menghapus sematan!', 'error'); }
+}
+
+async function loadPinnedMessage() {
+    if (!database) return;
+    const pinnedRef = database.ref('chat/pinnedMessage');
+    pinnedRef.on('value', (snapshot) => {
+        const pinned = snapshot.val();
+        if (pinned && pinned.messageId) {
+            pinMessageText.innerText = `${pinned.username}: ${pinned.text.substring(0, 50)}${pinned.text.length > 50 ? '...' : ''}`;
+            pinMessageBar.style.display = 'flex';
+        } else {
+            pinMessageBar.style.display = 'none';
+        }
+    });
 }
 
 // ========== SCROLL ==========
@@ -286,12 +478,12 @@ function setupFirebase() {
     
     database.ref(`chat/usernames/${currentUserId}`).set({
         username: currentUser, deviceId: currentDeviceId, online: true,
-        isAdmin: isAdmin, joinedAt: firebase.database.ServerValue.TIMESTAMP
+        isAdmin: isAdmin, isOwner: isOwner, joinedAt: firebase.database.ServerValue.TIMESTAMP
     }).catch(e => console.error(e));
     
     onlineRef = database.ref('chat/online');
     const userOnlineRef = onlineRef.child(currentUserId);
-    userOnlineRef.set({ username: currentUser, isAdmin: isAdmin, lastSeen: firebase.database.ServerValue.TIMESTAMP }).catch(e => console.error(e));
+    userOnlineRef.set({ username: currentUser, isAdmin: isAdmin, isOwner: isOwner, lastSeen: firebase.database.ServerValue.TIMESTAMP }).catch(e => console.error(e));
     userOnlineRef.onDisconnect().remove();
     
     onlineRef.on('value', (snapshot) => {
@@ -302,21 +494,27 @@ function setupFirebase() {
             const userList = [];
             for (let id in users) {
                 if (users[id]) {
-                    userList.push({ id, username: users[id].username, isAdmin: users[id].isAdmin || false });
+                    userList.push({ id, username: users[id].username, isAdmin: users[id].isAdmin || false, isOwner: users[id].isOwner || false });
                     count++;
                 }
             }
             userList.sort((a, b) => a.username.localeCompare(b.username));
-            userList.forEach(user => {
-                const isUserAdmin = (user.username === ADMIN_USERNAME);
+            for (let user of userList) {
+                const isUserOwner = (user.username === OWNER_USERNAME);
+                const isUserAdmin = (user.isAdmin || isUserOwner);
                 usersHtml += `
                     <div class="online-user">
                         <i class="fas fa-circle"></i>
-                        <span>${escapeHtml(user.username)}${isUserAdmin ? '<span class="admin-badge"><i class="fas fa-crown"></i> Admin</span>' : ''}${user.username === currentUser ? '<span style="margin-left: auto; font-size: 0.6rem; opacity: 0.5;">(You)</span>' : ''}</span>
-                        ${isAdmin && user.id !== currentUserId ? `<button class="kick-btn" onclick="openKickModal('${user.id}', '${escapeHtml(user.username)}')"><i class="fas fa-gavel"></i></button>` : ''}
+                        <span>${escapeHtml(user.username)}${isUserOwner ? '<span class="owner-badge"><i class="fas fa-crown"></i> Owner</span>' : (isUserAdmin ? '<span class="admin-badge"><i class="fas fa-shield-alt"></i> Admin</span>' : '')}${user.username === currentUser ? '<span style="margin-left: auto; font-size: 0.6rem; opacity: 0.5;">(You)</span>' : ''}</span>
+                        <div class="online-user-actions">
+                            ${isAdmin && user.id !== currentUserId ? `<button class="kick-btn" onclick="openKickModal('${user.id}', '${escapeHtml(user.username)}')"><i class="fas fa-gavel"></i></button>` : ''}
+                            ${isAdmin && user.id !== currentUserId ? `<button class="mute-btn" onclick="openMuteModal('${user.id}', '${escapeHtml(user.username)}')"><i class="fas fa-volume-mute"></i></button>` : ''}
+                            ${isOwner && !isUserOwner && user.id !== currentUserId ? `<button class="admin-action-btn" onclick="promoteToAdmin('${user.id}', '${escapeHtml(user.username)}')"><i class="fas fa-crown"></i></button>` : ''}
+                            ${isOwner && isUserAdmin && !isUserOwner && user.id !== currentUserId ? `<button class="admin-action-btn" onclick="demoteFromAdmin('${user.id}', '${escapeHtml(user.username)}')" style="background:rgba(220,53,69,0.2);color:#dc3545;"><i class="fas fa-user-minus"></i></button>` : ''}
+                        </div>
                     </div>
                 `;
-            });
+            }
         }
         if (usersHtml === '') usersHtml = '<div class="loading-users">Tidak ada user online</div>';
         if (onlineUsersList) onlineUsersList.innerHTML = usersHtml;
@@ -336,23 +534,28 @@ function setupFirebase() {
     typingRef = database.ref('chat/typing');
     typingRef.on('value', (snapshot) => {
         const typing = snapshot.val();
-        const existing = document.querySelector('.typing-indicator-global');
-        if (existing) existing.remove();
         if (typing) {
-            let typingUsers = [];
             for (let id in typing) {
-                if (id !== currentUserId && typing[id].isTyping) typingUsers.push(typing[id].username);
+                if (id !== currentUserId && typing[id].isTyping && typing[id].username) {
+                    const existingTyping = document.querySelector(`.message[data-typing-user="${typing[id].username}"]`);
+                    if (!existingTyping && messagesContainer) {
+                        const typingHtml = document.createElement('div');
+                        typingHtml.className = `message other typing-individual`;
+                        typingHtml.setAttribute('data-typing-user', typing[id].username);
+                        typingHtml.innerHTML = `
+                            <div class="message-avatar"><i class="fas fa-user"></i></div>
+                            <div class="message-content"><div class="message-bubble typing-bubble"><div class="typing-dots"><span></span><span></span><span></span></div><div class="typing-text">${escapeHtml(typing[id].username)} sedang mengetik...</div></div></div>
+                        `;
+                        messagesContainer.appendChild(typingHtml);
+                        scrollToBottom();
+                    }
+                } else {
+                    const existingTyping = document.querySelector(`.message[data-typing-user="${typing[id]?.username}"]`);
+                    if (existingTyping) existingTyping.remove();
+                }
             }
-            if (typingUsers.length > 0 && messagesContainer) {
-                const typingHtml = document.createElement('div');
-                typingHtml.className = 'message bot typing-indicator-global';
-                typingHtml.innerHTML = `
-                    <div class="message-avatar"><i class="fas fa-robot"></i></div>
-                    <div class="message-content"><div class="message-bubble"><div class="typing-dots"><span></span><span></span><span></span></div><div class="typing-text">${typingUsers.join(', ')} ${typingUsers.length === 1 ? 'sedang' : 'sedang'} mengetik...</div></div></div>
-                `;
-                messagesContainer.appendChild(typingHtml);
-                scrollToBottom();
-            }
+        } else {
+            document.querySelectorAll('.typing-individual').forEach(el => el.remove());
         }
     });
 }
@@ -367,7 +570,16 @@ async function uploadImageToImgbb(file) {
     return data.data.url;
 }
 
-async function sendMessageWithImage(file, caption = '') {
+async function uploadVoiceToImgbb(blob) {
+    const formData = new FormData();
+    formData.append('image', blob, 'voice.wav');
+    const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: 'POST', body: formData });
+    const data = await response.json();
+    if (!data.success) throw new Error('Upload voice gagal');
+    return data.data.url;
+}
+
+async function sendMessageWithImage(file, caption = '', replyTo = null) {
     if (!file) return false;
     if (!file.type.startsWith('image/')) { showToast('Hanya file gambar!'); return false; }
     if (file.size > 10 * 1024 * 1024) { showToast('Maksimal 10MB!'); return false; }
@@ -375,12 +587,16 @@ async function sendMessageWithImage(file, caption = '') {
     try {
         const imageUrl = await uploadImageToImgbb(file);
         if (uploadProgress) uploadProgress.style.display = 'none';
-        await messagesRef.push({
+        
+        const messageData = {
             id: Date.now() + '_' + Math.random().toString(36).substr(2, 6),
-            userId: currentUserId, username: currentUser, isAdmin: isAdmin,
+            userId: currentUserId, username: currentUser, isAdmin: isAdmin, isOwner: isOwner,
             text: caption || '', imageUrl: imageUrl,
             timestamp: firebase.database.ServerValue.TIMESTAMP, type: 'image'
-        });
+        };
+        if (replyTo) messageData.replyTo = replyTo;
+        
+        await messagesRef.push(messageData);
         showToast('Gambar berhasil dikirim!', 'success');
         return true;
     } catch (error) {
@@ -390,42 +606,314 @@ async function sendMessageWithImage(file, caption = '') {
     }
 }
 
-async function sendTextMessage(text) {
+async function sendVoiceMessage(blob, duration, replyTo = null) {
+    if (!blob) return false;
+    if (uploadProgress) uploadProgress.style.display = 'flex';
+    try {
+        const voiceUrl = await uploadVoiceToImgbb(blob);
+        if (uploadProgress) uploadProgress.style.display = 'none';
+        
+        const messageData = {
+            id: Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+            userId: currentUserId, username: currentUser, isAdmin: isAdmin, isOwner: isOwner,
+            voiceUrl: voiceUrl, duration: duration,
+            timestamp: firebase.database.ServerValue.TIMESTAMP, type: 'voice'
+        };
+        if (replyTo) messageData.replyTo = replyTo;
+        
+        await messagesRef.push(messageData);
+        showToast('Pesan suara terkirim!', 'success');
+        return true;
+    } catch (error) {
+        if (uploadProgress) uploadProgress.style.display = 'none';
+        showToast('Gagal kirim voice: ' + error.message, 'error');
+        return false;
+    }
+}
+
+async function sendTextMessage(text, replyTo = null) {
     if (!text.trim() || !messagesRef) return false;
-    await messagesRef.push({
+    
+    const isMuted = await isUserMuted(currentUserId);
+    if (isMuted) {
+        showToast('Anda sedang di-mute! Tidak bisa kirim pesan.', 'error');
+        return false;
+    }
+    
+    const messageData = {
         id: Date.now() + '_' + Math.random().toString(36).substr(2, 6),
-        userId: currentUserId, username: currentUser, isAdmin: isAdmin,
+        userId: currentUserId, username: currentUser, isAdmin: isAdmin, isOwner: isOwner,
         text: text, timestamp: firebase.database.ServerValue.TIMESTAMP, type: 'text'
-    });
+    };
+    if (replyTo) messageData.replyTo = replyTo;
+    
+    await messagesRef.push(messageData);
     return true;
 }
 
-// ========== FIX: SEND MESSAGE HANDLER (Kirim foto & teks) ==========
+// ========== REPLY HANDLER ==========
+function setReplyTo(message) {
+    currentReplyTo = message;
+    replyMessagePreview.innerText = `${message.username}: ${message.text || (message.type === 'image' ? '📷 Gambar' : 'Pesan')}`;
+    replyIndicator.style.display = 'flex';
+    const drawerMessageInput = document.getElementById('drawerMessageInput');
+    if (drawerMessageInput) drawerMessageInput.focus();
+}
+
+function cancelReply() {
+    currentReplyTo = null;
+    replyIndicator.style.display = 'none';
+}
+
+// ========== HANDLE SEND MESSAGE ==========
 async function handleSendMessage() {
     const drawerMessageInput = document.getElementById('drawerMessageInput');
     const text = drawerMessageInput?.value.trim() || '';
     
-    // CASE 1: Ada foto pending
     if (pendingImageFile) {
-        // Kirim foto dengan caption (text)
-        await sendMessageWithImage(pendingImageFile, text);
-        // Reset setelah kirim
+        await sendMessageWithImage(pendingImageFile, text, currentReplyTo);
         pendingImageFile = null;
-        pendingImageCaption = '';
         if (drawerMessageInput) drawerMessageInput.value = '';
-        // Reset tinggi textarea
-        if (drawerMessageInput) {
-            drawerMessageInput.style.height = 'auto';
-        }
+        if (drawerMessageInput) drawerMessageInput.style.height = 'auto';
+        cancelReply();
         return;
     }
     
-    // CASE 2: Kirim teks biasa
     if (text) {
-        await sendTextMessage(text);
+        await sendTextMessage(text, currentReplyTo);
         if (drawerMessageInput) drawerMessageInput.value = '';
         if (drawerMessageInput) drawerMessageInput.style.height = 'auto';
+        cancelReply();
     }
+}
+
+// ========== TYPING INDICATOR ==========
+function startTyping() {
+    if (!typingRef || !currentUserId) return;
+    typingRef.child(currentUserId).set({ username: currentUser, isTyping: true });
+    if (window.typingTimeout) clearTimeout(window.typingTimeout);
+    window.typingTimeout = setTimeout(() => {
+        typingRef.child(currentUserId).remove();
+    }, 2000);
+}
+
+function stopTyping() {
+    if (!typingRef || !currentUserId) return;
+    typingRef.child(currentUserId).remove();
+    if (window.typingTimeout) clearTimeout(window.typingTimeout);
+}
+
+// ========== VOICE RECORDER ==========
+function setupVoiceRecorder() {
+    const drawerVoiceBtn = document.getElementById('drawerVoiceBtn');
+    const closeVoiceModalBtn = document.getElementById('closeVoiceModalBtn');
+    const stopVoiceBtn = document.getElementById('stopVoiceBtn');
+    const cancelVoiceBtn = document.getElementById('cancelVoiceBtn');
+    
+    if (drawerVoiceBtn) {
+        drawerVoiceBtn.addEventListener('click', startVoiceRecording);
+    }
+    if (closeVoiceModalBtn) {
+        closeVoiceModalBtn.addEventListener('click', stopVoiceRecording);
+    }
+    if (stopVoiceBtn) {
+        stopVoiceBtn.addEventListener('click', finishVoiceRecording);
+    }
+    if (cancelVoiceBtn) {
+        cancelVoiceBtn.addEventListener('click', cancelVoiceRecording);
+    }
+}
+
+async function startVoiceRecording() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+        
+        mediaRecorder.ondataavailable = (event) => {
+            audioChunks.push(event.data);
+        };
+        
+        mediaRecorder.onstop = async () => {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+            const duration = Math.floor((Date.now() - recordingStartTime) / 1000);
+            if (duration >= 1) {
+                await sendVoiceMessage(audioBlob, duration, currentReplyTo);
+                cancelReply();
+            } else {
+                showToast('Rekaman terlalu pendek!', 'error');
+            }
+            stream.getTracks().forEach(track => track.stop());
+            voiceModal.style.display = 'none';
+            const drawerVoiceBtn = document.getElementById('drawerVoiceBtn');
+            if (drawerVoiceBtn) drawerVoiceBtn.classList.remove('recording');
+        };
+        
+        mediaRecorder.start();
+        isRecording = true;
+        recordingStartTime = Date.now();
+        
+        voiceModal.style.display = 'flex';
+        startVoiceTimer();
+        startVoiceWaveAnimation();
+        
+        const drawerVoiceBtn = document.getElementById('drawerVoiceBtn');
+        if (drawerVoiceBtn) drawerVoiceBtn.classList.add('recording');
+        
+    } catch (error) {
+        showToast('Tidak bisa akses mikrofon: ' + error.message, 'error');
+    }
+}
+
+function stopVoiceRecording() {
+    if (mediaRecorder && isRecording) {
+        mediaRecorder.stop();
+        isRecording = false;
+        if (recordingTimer) clearInterval(recordingTimer);
+    }
+    voiceModal.style.display = 'none';
+    const drawerVoiceBtn = document.getElementById('drawerVoiceBtn');
+    if (drawerVoiceBtn) drawerVoiceBtn.classList.remove('recording');
+}
+
+function finishVoiceRecording() {
+    if (mediaRecorder && isRecording) {
+        mediaRecorder.stop();
+        isRecording = false;
+        if (recordingTimer) clearInterval(recordingTimer);
+    }
+}
+
+function cancelVoiceRecording() {
+    if (mediaRecorder && isRecording) {
+        mediaRecorder.onstop = null;
+        mediaRecorder.stop();
+        isRecording = false;
+        if (recordingTimer) clearInterval(recordingTimer);
+    }
+    voiceModal.style.display = 'none';
+    const drawerVoiceBtn = document.getElementById('drawerVoiceBtn');
+    if (drawerVoiceBtn) drawerVoiceBtn.classList.remove('recording');
+}
+
+function startVoiceTimer() {
+    let seconds = 0;
+    if (recordingTimer) clearInterval(recordingTimer);
+    recordingTimer = setInterval(() => {
+        seconds++;
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        if (voiceTimer) voiceTimer.innerText = `${mins}:${secs.toString().padStart(2, '0')}`;
+        if (seconds >= 60) {
+            finishVoiceRecording();
+        }
+    }, 1000);
+}
+
+function startVoiceWaveAnimation() {
+    if (!voiceWave) return;
+    const bars = voiceWave.querySelectorAll('.wave-bar');
+    bars.forEach((bar, index) => {
+        bar.style.animation = `waveAnim ${0.3 + index * 0.05}s ease infinite alternate`;
+    });
+}
+
+// ========== CONTEXT MENU ==========
+function setupContextMenu() {
+    const contextMenu = document.getElementById('contextMenu');
+    const replyMenuItem = document.getElementById('replyMenuItem');
+    const pinMenuItem = document.getElementById('pinMenuItem');
+    const muteMenuItem = document.getElementById('muteMenuItem');
+    const adminMenuItem = document.getElementById('adminMenuItem');
+    const unadminMenuItem = document.getElementById('unadminMenuItem');
+    
+    document.addEventListener('click', () => {
+        if (contextMenu) contextMenu.style.display = 'none';
+    });
+    
+    if (replyMenuItem) {
+        replyMenuItem.addEventListener('click', () => {
+            if (currentContextMessage) setReplyTo(currentContextMessage);
+            contextMenu.style.display = 'none';
+        });
+    }
+    
+    if (pinMenuItem) {
+        pinMenuItem.addEventListener('click', () => {
+            if (currentContextMessage) pinMessage(currentContextMessage);
+            contextMenu.style.display = 'none';
+        });
+    }
+    
+    if (muteMenuItem) {
+        muteMenuItem.addEventListener('click', () => {
+            if (currentContextMessage && currentContextMessage.userId !== currentUserId) {
+                openMuteModal(currentContextMessage.userId, currentContextMessage.username);
+            }
+            contextMenu.style.display = 'none';
+        });
+    }
+    
+    if (adminMenuItem) {
+        adminMenuItem.addEventListener('click', () => {
+            if (currentContextMessage && isOwner && currentContextMessage.username !== OWNER_USERNAME) {
+                promoteToAdmin(currentContextMessage.userId, currentContextMessage.username);
+            }
+            contextMenu.style.display = 'none';
+        });
+    }
+    
+    if (unadminMenuItem) {
+        unadminMenuItem.addEventListener('click', () => {
+            if (currentContextMessage && isOwner && currentContextMessage.isAdmin && currentContextMessage.username !== OWNER_USERNAME) {
+                demoteFromAdmin(currentContextMessage.userId, currentContextMessage.username);
+            }
+            contextMenu.style.display = 'none';
+        });
+    }
+}
+
+function showContextMenu(e, message) {
+    e.preventDefault();
+    e.stopPropagation();
+    currentContextMessage = message;
+    
+    const contextMenu = document.getElementById('contextMenu');
+    const muteMenuItem = document.getElementById('muteMenuItem');
+    const adminMenuItem = document.getElementById('adminMenuItem');
+    const unadminMenuItem = document.getElementById('unadminMenuItem');
+    const pinMenuItem = document.getElementById('pinMenuItem');
+    
+    if (contextMenu) {
+        if (muteMenuItem) muteMenuItem.style.display = isAdmin && message.userId !== currentUserId ? 'flex' : 'none';
+        if (adminMenuItem) adminMenuItem.style.display = isOwner && message.username !== OWNER_USERNAME ? 'flex' : 'none';
+        if (unadminMenuItem) unadminMenuItem.style.display = isOwner && message.isAdmin && message.username !== OWNER_USERNAME ? 'flex' : 'none';
+        if (pinMenuItem) pinMenuItem.style.display = isAdmin ? 'flex' : 'none';
+        
+        contextMenu.style.left = `${Math.min(e.clientX, window.innerWidth - 200)}px`;
+        contextMenu.style.top = `${Math.min(e.clientY, window.innerHeight - 150)}px`;
+        contextMenu.style.display = 'block';
+        
+        setTimeout(() => {
+            document.addEventListener('click', function hideMenu() {
+                if (contextMenu) contextMenu.style.display = 'none';
+                document.removeEventListener('click', hideMenu);
+            }, { once: true });
+        }, 10);
+    }
+}
+
+// ========== PLAY VOICE ==========
+let currentAudio = null;
+function playVoice(voiceUrl) {
+    if (currentAudio) {
+        currentAudio.pause();
+        currentAudio = null;
+    }
+    const audio = new Audio(voiceUrl);
+    currentAudio = audio;
+    audio.play();
+    audio.onended = () => { currentAudio = null; };
 }
 
 // ========== DRAWER HANDLERS ==========
@@ -437,28 +925,23 @@ function setupDrawerEvents() {
     const chatDrawer = document.getElementById('chatDrawer');
     const closeDrawerBtn = document.getElementById('closeDrawerBtn');
     const floatingChatBtn = document.getElementById('floatingChatBtn');
-    const imageInput = document.getElementById('imageInput');
+    const imageInput = document.getElementById('drawerImageInput');
     
-    // Open drawer
     if (floatingChatBtn) {
         floatingChatBtn.addEventListener('click', () => {
             if (chatDrawer) chatDrawer.classList.add('open');
             setTimeout(() => {
-                if (drawerMessageInput) {
-                    drawerMessageInput.focus();
-                }
+                if (drawerMessageInput) drawerMessageInput.focus();
             }, 150);
         });
     }
     
-    // Close drawer
     if (closeDrawerBtn) {
         closeDrawerBtn.addEventListener('click', () => {
             if (chatDrawer) chatDrawer.classList.remove('open');
         });
     }
     
-    // FIX: Send message button - pake handleSendMessage
     if (drawerSendBtn) {
         drawerSendBtn.addEventListener('click', async (e) => {
             e.preventDefault();
@@ -466,7 +949,6 @@ function setupDrawerEvents() {
         });
     }
     
-    // Enter key
     if (drawerMessageInput) {
         drawerMessageInput.addEventListener('keypress', async (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
@@ -478,10 +960,16 @@ function setupDrawerEvents() {
         drawerMessageInput.addEventListener('input', function() {
             this.style.height = 'auto';
             this.style.height = Math.min(this.scrollHeight, 80) + 'px';
+            if (this.value.trim().length > 0) {
+                startTyping();
+            } else {
+                stopTyping();
+            }
         });
+        
+        drawerMessageInput.addEventListener('blur', () => stopTyping());
     }
     
-    // Emoji button
     if (drawerEmojiBtn) {
         drawerEmojiBtn.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -489,34 +977,26 @@ function setupDrawerEvents() {
         });
     }
     
-    // FIX: Image button - pilih gambar
     if (drawerImageBtn && imageInput) {
         drawerImageBtn.addEventListener('click', () => {
             imageInput.click();
         });
     }
     
-    // FIX: Image input change - simpan pending image
     if (imageInput) {
         imageInput.addEventListener('change', (e) => {
             if (e.target.files && e.target.files[0]) {
-                const file = e.target.files[0];
-                pendingImageFile = file;
-                showToast(`📷 Gambar "${file.name}" siap dikirim! Tekan kirim.`, 'success');
-                // Fokus ke input untuk tambah caption
-                if (drawerMessageInput) {
-                    drawerMessageInput.focus();
-                }
+                pendingImageFile = e.target.files[0];
+                showToast(`📷 Gambar siap dikirim! Tekan kirim.`, 'success');
+                if (drawerMessageInput) drawerMessageInput.focus();
             }
-            imageInput.value = ''; // Reset biar bisa upload file sama lagi
+            imageInput.value = '';
         });
     }
 }
 
-// Floating Emoji Picker
+// ========== FLOATING EMOJI PICKER ==========
 function toggleFloatingEmojiPicker() {
-    const drawerMessageInput = document.getElementById('drawerMessageInput');
-    
     if (floatingEmojiPicker && floatingEmojiPicker.style.display === 'block') {
         floatingEmojiPicker.style.display = 'none';
         return;
@@ -531,7 +1011,6 @@ function toggleFloatingEmojiPicker() {
                 <span class="emoji">😆</span><span class="emoji">😅</span><span class="emoji">😂</span><span class="emoji">🤣</span>
                 <span class="emoji">😊</span><span class="emoji">😇</span><span class="emoji">🙂</span><span class="emoji">🙃</span>
                 <span class="emoji">😉</span><span class="emoji">😌</span><span class="emoji">😍</span><span class="emoji">🥰</span>
-                <span class="emoji">😘</span><span class="emoji">😗</span><span class="emoji">😙</span><span class="emoji">😚</span>
                 <span class="emoji">❤️</span><span class="emoji">🧡</span><span class="emoji">💛</span><span class="emoji">💚</span>
                 <span class="emoji">💙</span><span class="emoji">💜</span><span class="emoji">🖤</span><span class="emoji">🤍</span>
                 <span class="emoji">👍</span><span class="emoji">👎</span><span class="emoji">🙏</span><span class="emoji">🎉</span>
@@ -546,6 +1025,7 @@ function toggleFloatingEmojiPicker() {
                 if (drawerMessageInput) {
                     drawerMessageInput.value += emoji.textContent;
                     drawerMessageInput.focus();
+                    startTyping();
                 }
                 if (floatingEmojiPicker) floatingEmojiPicker.style.display = 'none';
             });
@@ -555,7 +1035,6 @@ function toggleFloatingEmojiPicker() {
     floatingEmojiPicker.style.display = 'block';
 }
 
-// Close emoji picker on click outside
 document.addEventListener('click', (e) => {
     const drawerEmojiBtn = document.getElementById('drawerEmojiBtn');
     if (floatingEmojiPicker && !floatingEmojiPicker.contains(e.target) && e.target !== drawerEmojiBtn) {
@@ -580,22 +1059,52 @@ function addMessageToUI(message) {
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${isOwn ? 'own' : 'other'}`;
     messageDiv.setAttribute('data-id', message.id);
-    const isUserAdmin = (message.username === ADMIN_USERNAME);
+    messageDiv.setAttribute('data-user-id', message.userId);
+    const isUserOwner = (message.username === OWNER_USERNAME);
+    const isUserAdmin = (message.isAdmin || isUserOwner);
+    
+    let replyHtml = '';
+    if (message.replyTo) {
+        replyHtml = `
+            <div class="reply-preview">
+                <span class="reply-sender"><i class="fas fa-reply-all"></i> ${escapeHtml(message.replyTo.username)}</span>
+                <div class="reply-text-preview">${escapeHtml(message.replyTo.text || (message.replyTo.type === 'image' ? '📷 Gambar' : 'Pesan')).substring(0, 50)}${(message.replyTo.text || '').length > 50 ? '...' : ''}</div>
+            </div>
+        `;
+    }
     
     let contentHtml = '';
     if (message.type === 'image') {
         contentHtml = `
-            <div class="message-bubble">
-                <div class="message-sender">${escapeHtml(message.username)}${isOwn ? ' (You)' : ''}${isUserAdmin ? '<span class="admin-badge"><i class="fas fa-crown"></i> Admin</span>' : ''}</div>
+            <div class="message-bubble" oncontextmenu="showContextMenu(event, ${JSON.stringify(message).replace(/"/g, '&quot;')})">
+                ${replyHtml}
+                <div class="message-sender">${escapeHtml(message.username)}${isOwn ? ' (You)' : ''}${isUserOwner ? '<span class="owner-badge"><i class="fas fa-crown"></i> Owner</span>' : (isUserAdmin ? '<span class="admin-badge"><i class="fas fa-shield-alt"></i> Admin</span>' : '')}</div>
                 <img src="${message.imageUrl}" class="message-image" onclick="previewImage('${message.imageUrl}')" loading="lazy">
                 ${message.text ? `<div class="message-text" style="margin-top: 8px;">${escapeHtml(message.text)}</div>` : ''}
                 <div class="message-time">${formatTime(message.timestamp)}</div>
             </div>
         `;
+    } else if (message.type === 'voice') {
+        contentHtml = `
+            <div class="message-bubble" oncontextmenu="showContextMenu(event, ${JSON.stringify(message).replace(/"/g, '&quot;')})">
+                ${replyHtml}
+                <div class="message-sender">${escapeHtml(message.username)}${isOwn ? ' (You)' : ''}${isUserOwner ? '<span class="owner-badge"><i class="fas fa-crown"></i> Owner</span>' : (isUserAdmin ? '<span class="admin-badge"><i class="fas fa-shield-alt"></i> Admin</span>' : '')}</div>
+                <div class="voice-message">
+                    <button class="voice-play-btn" onclick="playVoice('${message.voiceUrl}')"><i class="fas fa-play"></i></button>
+                    <div class="voice-waveform">
+                        <div class="wave"></div><div class="wave"></div><div class="wave"></div>
+                        <div class="wave"></div><div class="wave"></div><div class="wave"></div>
+                    </div>
+                    <span class="voice-duration">${Math.floor(message.duration / 60)}:${(message.duration % 60).toString().padStart(2, '0')}</span>
+                </div>
+                <div class="message-time">${formatTime(message.timestamp)}</div>
+            </div>
+        `;
     } else {
         contentHtml = `
-            <div class="message-bubble">
-                <div class="message-sender">${escapeHtml(message.username)}${isOwn ? ' (You)' : ''}${isUserAdmin ? '<span class="admin-badge"><i class="fas fa-crown"></i> Admin</span>' : ''}</div>
+            <div class="message-bubble" oncontextmenu="showContextMenu(event, ${JSON.stringify(message).replace(/"/g, '&quot;')})">
+                ${replyHtml}
+                <div class="message-sender">${escapeHtml(message.username)}${isOwn ? ' (You)' : ''}${isUserOwner ? '<span class="owner-badge"><i class="fas fa-crown"></i> Owner</span>' : (isUserAdmin ? '<span class="admin-badge"><i class="fas fa-shield-alt"></i> Admin</span>' : '')}</div>
                 <div class="message-text">${escapeHtml(message.text).replace(/\n/g, '<br>')}</div>
                 <div class="message-time">${formatTime(message.timestamp)}</div>
             </div>
@@ -648,7 +1157,8 @@ async function checkSavedUser() {
         if (!taken) {
             currentUser = savedUser;
             currentUserId = savedUserId;
-            isAdmin = (savedUser === ADMIN_USERNAME);
+            isOwner = (savedUser === OWNER_USERNAME);
+            isAdmin = isOwner;
             loginSuccess();
         } else {
             localStorage.removeItem('chat_username');
@@ -679,6 +1189,18 @@ window.navigateTo = navigateTo;
 window.openKickModal = openKickModal;
 window.closeKickModal = closeKickModal;
 window.confirmKick = confirmKick;
+window.openMuteModal = openMuteModal;
+window.closeMuteModal = closeMuteModal;
+window.confirmMute = confirmMute;
+window.openUnmuteModal = openUnmuteModal;
+window.closeUnmuteModal = closeUnmuteModal;
+window.confirmUnmute = confirmUnmute;
+window.promoteToAdmin = promoteToAdmin;
+window.demoteFromAdmin = demoteFromAdmin;
+window.unpinMessage = unpinMessage;
+window.cancelReply = cancelReply;
+window.playVoice = playVoice;
+window.showContextMenu = showContextMenu;
 window.handleSendMessage = handleSendMessage;
 
-console.log('💬 Chat System Ready - Fixed!');
+console.log('💬 Chat System FULL UPGRADE Ready!');

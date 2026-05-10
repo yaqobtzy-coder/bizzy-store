@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Global Chat | Bizzy Impact</title>
+    <title>Global Chat+ | Bizzy Impact</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="chat.css">
@@ -14,7 +14,7 @@
         <div class="login-card">
             <div class="login-logo">
                 <i class="fas fa-comments"></i>
-                <h2>Global Chat</h2>
+                <h2>Global Chat+</h2>
                 <p>Bizzy Impact Official</p>
             </div>
             <div class="login-form">
@@ -29,7 +29,7 @@
                     <i class="fas fa-info-circle"></i> 1 username = 1 device | Dilarang double login
                 </div>
                 <div class="login-info">
-                    <i class="fas fa-crown"></i> Username "Rayy" memiliki akses Admin
+                    <i class="fas fa-crown"></i> Username "Rayy" adalah Owner (Full Akses)
                 </div>
             </div>
         </div>
@@ -42,7 +42,7 @@
             <button class="back-btn" onclick="goBackToTools()"><i class="fas fa-arrow-left"></i></button>
             <div class="chat-title">
                 <i class="fas fa-comments"></i>
-                <span>Global Chat</span>
+                <span>Global Chat+</span>
             </div>
             <div class="online-badge" id="onlineBadge">
                 <i class="fas fa-circle"></i>
@@ -63,132 +63,183 @@
             </div>
         </div>
 
+        <!-- Pin Message Display -->
+        <div id="pinMessageBar" class="pin-message-bar" style="display: none;">
+            <div class="pin-content">
+                <i class="fas fa-thumbtack"></i>
+                <div class="pin-text">
+                    <span class="pin-label">Pesan Disematkan</span>
+                    <span class="pin-message-text" id="pinMessageText"></span>
+                </div>
+                <button id="unpinBtn" class="unpin-btn"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+
         <!-- Messages Container -->
         <div class="messages-container" id="messagesContainer">
             <div class="welcome-message">
                 <i class="fas fa-hand-peace"></i>
-                <h3>Selamat Datang di Global Chat!</h3>
-                <p>Gunakan dengan bijak dan hormati sesama pengguna.</p>
-                <p class="small">💡 Kamu bisa kirim teks, emoji, dan foto dari galeri!</p>
-                <p class="small">👑 User "Rayy" adalah Admin - memiliki akses kick user</p>
+                <h3>Selamat Datang di Global Chat+!</h3>
+                <p>✨ Fitur Baru: Reply, Pin Message, Mute User, Voice Note!</p>
+                <p class="small">👑 Owner: Rayy | Admin bisa promote/demote user</p>
             </div>
         </div>
 
-        <!-- Input Area LAMA (Disembunyikan via CSS) -->
-        <div class="input-area">
-            <div class="input-actions">
-                <button id="emojiBtn" class="action-btn" title="Emoji">
-                    <i class="far fa-smile-wink"></i>
+        <!-- Context Menu (Reply, Pin, Mute, dll) -->
+        <div id="contextMenu" class="context-menu" style="display: none;">
+            <div class="context-menu-item" id="replyMenuItem">
+                <i class="fas fa-reply"></i> Balas
+            </div>
+            <div class="context-menu-item" id="pinMenuItem">
+                <i class="fas fa-thumbtack"></i> Sematkan
+            </div>
+            <div class="context-menu-item" id="muteMenuItem">
+                <i class="fas fa-volume-mute"></i> Mute User
+            </div>
+            <div class="context-menu-item" id="adminMenuItem">
+                <i class="fas fa-crown"></i> Jadikan Admin
+            </div>
+            <div class="context-menu-item" id="unadminMenuItem">
+                <i class="fas fa-user-minus"></i> Copot Admin
+            </div>
+        </div>
+
+        <!-- Reply Indicator -->
+        <div id="replyIndicator" class="reply-indicator" style="display: none;">
+            <div class="reply-content">
+                <i class="fas fa-reply-all"></i>
+                <div class="reply-text">
+                    <span class="reply-to-label">Membalas:</span>
+                    <span class="reply-message-preview" id="replyMessagePreview"></span>
+                </div>
+                <button id="cancelReplyBtn" class="cancel-reply-btn"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+
+        <!-- Input Area LAMA (Disembunyikan) -->
+        <div class="input-area" style="display: none;"></div>
+
+        <!-- Floating Chat Button & Drawer -->
+        <button id="floatingChatBtn" class="floating-chat-btn">
+            <i class="fas fa-comment-dots"></i>
+        </button>
+
+        <div id="chatDrawer" class="chat-drawer">
+            <div class="drawer-header">
+                <span><i class="fas fa-comment"></i> Kirim Pesan</span>
+                <button id="closeDrawerBtn" class="close-drawer"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="drawer-input-area">
+                <!-- Left: Emoji, Image, Voice -->
+                <div class="drawer-actions-left">
+                    <button id="drawerEmojiBtn" class="drawer-action-btn" title="Emoji">
+                        <i class="far fa-smile-wink"></i>
+                    </button>
+                    <button id="drawerImageBtn" class="drawer-action-btn" title="Kirim Foto">
+                        <i class="fas fa-image"></i>
+                    </button>
+                    <button id="drawerVoiceBtn" class="drawer-action-btn voice-btn" title="Rekam Suara">
+                        <i class="fas fa-microphone"></i>
+                    </button>
+                    <input type="file" id="drawerImageInput" accept="image/*" style="display: none;">
+                </div>
+                <!-- Middle: Text Input -->
+                <div class="drawer-input-wrapper">
+                    <textarea id="drawerMessageInput" placeholder="Ketik pesan..." rows="1"></textarea>
+                </div>
+                <!-- Right: Send Button -->
+                <button id="drawerSendBtn" class="drawer-send-btn">
+                    <i class="fas fa-paper-plane"></i>
                 </button>
-                <button id="imageBtn" class="action-btn" title="Kirim Foto">
-                    <i class="fas fa-image"></i>
-                </button>
-                <input type="file" id="imageInput" accept="image/*" style="display: none;">
-            </div>
-            <div class="message-input-wrapper">
-                <textarea id="messageInput" placeholder="Ketik pesan..." rows="1"></textarea>
-            </div>
-            <button id="sendBtn" class="send-btn">
-                <i class="fas fa-paper-plane"></i>
-            </button>
-        </div>
-
-        <!-- Emoji Picker -->
-        <div id="emojiPicker" class="emoji-picker" style="display: none;">
-            <div class="emoji-list">
-                <span class="emoji">😀</span><span class="emoji">😃</span><span class="emoji">😄</span><span class="emoji">😁</span>
-                <span class="emoji">😆</span><span class="emoji">😅</span><span class="emoji">😂</span><span class="emoji">🤣</span>
-                <span class="emoji">😊</span><span class="emoji">😇</span><span class="emoji">🙂</span><span class="emoji">🙃</span>
-                <span class="emoji">😉</span><span class="emoji">😌</span><span class="emoji">😍</span><span class="emoji">🥰</span>
-                <span class="emoji">😘</span><span class="emoji">😗</span><span class="emoji">😙</span><span class="emoji">😚</span>
-                <span class="emoji">😋</span><span class="emoji">😛</span><span class="emoji">😝</span><span class="emoji">😜</span>
-                <span class="emoji">🤪</span><span class="emoji">🤨</span><span class="emoji">🧐</span><span class="emoji">🤓</span>
-                <span class="emoji">😎</span><span class="emoji">🤩</span><span class="emoji">🥳</span><span class="emoji">😏</span>
-                <span class="emoji">😒</span><span class="emoji">😞</span><span class="emoji">😔</span><span class="emoji">😟</span>
-                <span class="emoji">😕</span><span class="emoji">🙁</span><span class="emoji">😣</span><span class="emoji">😖</span>
-                <span class="emoji">😫</span><span class="emoji">😩</span><span class="emoji">🥺</span><span class="emoji">😢</span>
-                <span class="emoji">😭</span><span class="emoji">😤</span><span class="emoji">😠</span><span class="emoji">😡</span>
-                <span class="emoji">🤬</span><span class="emoji">🤯</span><span class="emoji">😳</span><span class="emoji">🥵</span>
-                <span class="emoji">🥶</span><span class="emoji">😱</span><span class="emoji">😨</span><span class="emoji">😰</span>
-                <span class="emoji">😥</span><span class="emoji">😓</span><span class="emoji">🤗</span><span class="emoji">🤔</span>
-                <span class="emoji">🤭</span><span class="emoji">🤫</span><span class="emoji">🤥</span><span class="emoji">😶</span>
-                <span class="emoji">😐</span><span class="emoji">😑</span><span class="emoji">😬</span><span class="emoji">🙄</span>
-                <span class="emoji">😯</span><span class="emoji">😦</span><span class="emoji">😧</span><span class="emoji">😮</span>
-                <span class="emoji">😲</span><span class="emoji">🥱</span><span class="emoji">😴</span><span class="emoji">🤤</span>
-                <span class="emoji">😪</span><span class="emoji">😵</span><span class="emoji">🤐</span><span class="emoji">🥴</span>
-                <span class="emoji">🤢</span><span class="emoji">🤮</span><span class="emoji">🤧</span><span class="emoji">😷</span>
-                <span class="emoji">🤒</span><span class="emoji">🤕</span><span class="emoji">🤑</span><span class="emoji">🤠</span>
-                <span class="emoji">😈</span><span class="emoji">👿</span><span class="emoji">👹</span><span class="emoji">👺</span>
-                <span class="emoji">🤡</span><span class="emoji">💩</span><span class="emoji">👻</span><span class="emoji">💀</span>
-                <span class="emoji">☠️</span><span class="emoji">👽</span><span class="emoji">🤖</span><span class="emoji">🎃</span>
-                <span class="emoji">😺</span><span class="emoji">😸</span><span class="emoji">😹</span><span class="emoji">😻</span>
-                <span class="emoji">😼</span><span class="emoji">😽</span><span class="emoji">🙀</span><span class="emoji">😿</span>
-                <span class="emoji">😾</span><span class="emoji">❤️</span><span class="emoji">🧡</span><span class="emoji">💛</span>
-                <span class="emoji">💚</span><span class="emoji">💙</span><span class="emoji">💜</span><span class="emoji">🤎</span>
-                <span class="emoji">🖤</span><span class="emoji">🤍</span><span class="emoji">💔</span><span class="emoji">❤️‍🔥</span>
-                <span class="emoji">💕</span><span class="emoji">💞</span><span class="emoji">💓</span><span class="emoji">💗</span>
-                <span class="emoji">💖</span><span class="emoji">💘</span><span class="emoji">💝</span><span class="emoji">🎉</span>
-                <span class="emoji">🎊</span><span class="emoji">🎈</span><span class="emoji">🎁</span><span class="emoji">🎀</span>
-                <span class="emoji">🌟</span><span class="emoji">⭐</span><span class="emoji">🌙</span><span class="emoji">☀️</span>
-                <span class="emoji">⚡</span><span class="emoji">🔥</span><span class="emoji">💧</span><span class="emoji">❄️</span>
-                <span class="emoji">🌈</span><span class="emoji">☁️</span>
             </div>
         </div>
-    </div>
 
-    <!-- Upload Progress -->
-    <div id="uploadProgress" class="upload-progress" style="display: none;">
-        <div class="upload-progress-content">
-            <i class="fas fa-spinner fa-pulse"></i>
-            <span>Mengunggah gambar...</span>
-        </div>
-    </div>
-
-    <!-- Kick Confirmation Modal -->
-    <div id="kickModal" class="kick-modal" style="display: none;">
-        <div class="kick-modal-content">
-            <div class="kick-modal-header">
-                <i class="fas fa-gavel"></i>
-                <h3>Kick User</h3>
-                <button onclick="closeKickModal()" class="close-modal-btn"><i class="fas fa-times"></i></button>
-            </div>
-            <p>Yakin ingin mengeluarkan <strong id="kickUserName"></strong> dari chat?</p>
-            <div class="kick-modal-buttons">
-                <button onclick="confirmKick()" class="btn-danger">Kick User</button>
-                <button onclick="closeKickModal()" class="btn-secondary">Batal</button>
+        <!-- Voice Recording Modal -->
+        <div id="voiceModal" class="voice-modal" style="display: none;">
+            <div class="voice-modal-content">
+                <div class="voice-header">
+                    <i class="fas fa-microphone-alt"></i>
+                    <span>Merekam Suara...</span>
+                    <button id="closeVoiceModalBtn" class="close-voice-btn"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="voice-wave" id="voiceWave">
+                    <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+                    <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+                    <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+                    <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+                </div>
+                <div class="voice-timer" id="voiceTimer">0:00</div>
+                <div class="voice-actions">
+                    <button id="stopVoiceBtn" class="stop-voice-btn"><i class="fas fa-stop"></i> Hentikan & Kirim</button>
+                    <button id="cancelVoiceBtn" class="cancel-voice-btn"><i class="fas fa-trash"></i> Batal</button>
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- Floating Chat Button & Drawer (Layout: Kiri Emoji+Image, Tengah Input, Kanan Send) -->
-    <button id="floatingChatBtn" class="floating-chat-btn">
-        <i class="fas fa-comment-dots"></i>
-    </button>
-
-    <div id="chatDrawer" class="chat-drawer">
-        <div class="drawer-header">
-            <span><i class="fas fa-comment"></i> Kirim Pesan</span>
-            <button id="closeDrawerBtn" class="close-drawer"><i class="fas fa-times"></i></button>
+        <!-- Upload Progress -->
+        <div id="uploadProgress" class="upload-progress" style="display: none;">
+            <div class="upload-progress-content">
+                <i class="fas fa-spinner fa-pulse"></i>
+                <span>Mengunggah...</span>
+            </div>
         </div>
-        <div class="drawer-input-area">
-            <!-- Kiri: Tombol Emoji + Gambar -->
-            <div class="drawer-actions-left">
-                <button id="drawerEmojiBtn" class="drawer-action-btn" title="Emoji">
-                    <i class="far fa-smile-wink"></i>
-                </button>
-                <button id="drawerImageBtn" class="drawer-action-btn" title="Kirim Foto">
-                    <i class="fas fa-image"></i>
-                </button>
-                <input type="file" id="drawerImageInput" accept="image/*" style="display: none;">
+
+        <!-- Kick Modal -->
+        <div id="kickModal" class="kick-modal" style="display: none;">
+            <div class="kick-modal-content">
+                <div class="kick-modal-header">
+                    <i class="fas fa-gavel"></i>
+                    <h3>Kick User</h3>
+                    <button onclick="closeKickModal()" class="close-modal-btn"><i class="fas fa-times"></i></button>
+                </div>
+                <p>Yakin ingin mengeluarkan <strong id="kickUserName"></strong> dari chat?</p>
+                <div class="kick-modal-buttons">
+                    <button onclick="confirmKick()" class="btn-danger">Kick User</button>
+                    <button onclick="closeKickModal()" class="btn-secondary">Batal</button>
+                </div>
             </div>
-            <!-- Tengah: Input Teks -->
-            <div class="drawer-input-wrapper">
-                <textarea id="drawerMessageInput" placeholder="Ketik pesan..." rows="1"></textarea>
+        </div>
+
+        <!-- Mute Modal -->
+        <div id="muteModal" class="mute-modal" style="display: none;">
+            <div class="mute-modal-content">
+                <div class="mute-modal-header">
+                    <i class="fas fa-volume-mute"></i>
+                    <h3>Mute User</h3>
+                    <button onclick="closeMuteModal()" class="close-modal-btn"><i class="fas fa-times"></i></button>
+                </div>
+                <p>Mute <strong id="muteUserName"></strong>? User tidak bisa kirim pesan.</p>
+                <div class="mute-duration">
+                    <label>Durasi:</label>
+                    <select id="muteDuration">
+                        <option value="5">5 menit</option>
+                        <option value="30">30 menit</option>
+                        <option value="60">1 jam</option>
+                        <option value="1440">24 jam</option>
+                        <option value="0">Permanen</option>
+                    </select>
+                </div>
+                <div class="mute-modal-buttons">
+                    <button onclick="confirmMute()" class="btn-warning">Mute User</button>
+                    <button onclick="closeMuteModal()" class="btn-secondary">Batal</button>
+                </div>
             </div>
-            <!-- Kanan: Tombol Kirim -->
-            <button id="drawerSendBtn" class="drawer-send-btn">
-                <i class="fas fa-paper-plane"></i>
-            </button>
+        </div>
+
+        <!-- Unmute Modal -->
+        <div id="unmuteModal" class="unmute-modal" style="display: none;">
+            <div class="unmute-modal-content">
+                <div class="unmute-modal-header">
+                    <i class="fas fa-volume-up"></i>
+                    <h3>Unmute User</h3>
+                    <button onclick="closeUnmuteModal()" class="close-modal-btn"><i class="fas fa-times"></i></button>
+                </div>
+                <p>Buka mute untuk <strong id="unmuteUserName"></strong>?</p>
+                <div class="unmute-modal-buttons">
+                    <button onclick="confirmUnmute()" class="btn-success">Unmute</button>
+                    <button onclick="closeUnmuteModal()" class="btn-secondary">Batal</button>
+                </div>
+            </div>
         </div>
     </div>
 
