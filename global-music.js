@@ -1,12 +1,11 @@
 // ========== GLOBAL MUSIC PLAYER - PERSISTENT ==========
-// Dynamic Island - RESIZABLE + INTEGRASI CHAT
-// FIX: MUSIK TETAP BERJALAN SAAT PINDAH HALAMAN
+// Dynamic Island - RESIZABLE + INTEGRASI CHAT + DOWNLOADER
 
 (function() {
     if (window.__globalMusicInitialized) return;
     window.__globalMusicInitialized = true;
 
-    console.log('🎵 Global Music Player - PERSISTENT VERSION');
+    console.log('🎵 Global Music Player - PERSISTENT VERSION + DOWNLOADER');
 
     let audio = null;
     let currentTrack = null;
@@ -288,7 +287,7 @@
                 transition: max-height 0.3s ease;
             }
             .dynamic-island:not(.minimized) .island-nav-buttons {
-                max-height: 200px;
+                max-height: 260px;
             }
             .island-nav-btn {
                 background: rgba(255,215,0,0.12);
@@ -339,6 +338,9 @@
             body.light .island-title { color: #0d47a1; }
             body.light .island-btn { background: rgba(30,136,229,0.15); color: #0d47a1; }
             body.light .island-nav-btn { background: rgba(30,136,229,0.1); color: #0d47a1; }
+            body.light .resize-btn { background: rgba(30,136,229,0.15); color: #0d47a1; }
+            body.light .resize-value { color: #0d47a1; }
+            body.light .chat-share-btn { background: rgba(30,136,229,0.15); color: #0d47a1; }
         `;
         document.head.appendChild(style);
     }
@@ -419,7 +421,7 @@
         if (left && top) {
             return { left: parseInt(left), top: parseInt(top) };
         }
-        return { left: window.innerWidth - 180, top: window.innerHeight - 220 };
+        return { left: window.innerWidth - 180, top: window.innerHeight - 260 };
     }
     
     function applyPosition() {
@@ -530,6 +532,7 @@
                 <button class="island-nav-btn" id="navToChat"><i class="fas fa-comments"></i> Chat</button>
                 <button class="island-nav-btn" id="navToGames"><i class="fas fa-gamepad"></i> Games</button>
                 <button class="island-nav-btn" id="navToMaker"><i class="fas fa-magic"></i> Maker</button>
+                <button class="island-nav-btn" id="navToDownloader"><i class="fas fa-download"></i> Downloader</button>
             </div>
         `;
         document.body.appendChild(islandElement);
@@ -643,13 +646,14 @@
             islandElement.classList.toggle('minimized');
         });
         
-        // NAVIGATION
+        // NAVIGATION - SEMUA HALAMAN TERMASUK DOWNLOADER
         document.getElementById('navToTools').addEventListener('click', (e) => { e.stopPropagation(); goToPage('tools.html'); });
         document.getElementById('navToMusic').addEventListener('click', (e) => { e.stopPropagation(); goToPage('music.html'); });
         document.getElementById('navToAnime').addEventListener('click', (e) => { e.stopPropagation(); goToPage('anime.html'); });
         document.getElementById('navToChat').addEventListener('click', (e) => { e.stopPropagation(); goToPage('chat.html'); });
         document.getElementById('navToGames').addEventListener('click', (e) => { e.stopPropagation(); goToPage('games.html'); });
         document.getElementById('navToMaker').addEventListener('click', (e) => { e.stopPropagation(); goToPage('maker.html'); });
+        document.getElementById('navToDownloader').addEventListener('click', (e) => { e.stopPropagation(); goToPage('downloader.html'); });
         
         applyPosition();
         loadSize();
@@ -753,6 +757,7 @@
         }, 3000);
         
         console.log('🎵 Dynamic Island PERSISTENT siap - Musik TIDAK BERHENTI saat pindah halaman!');
+        console.log('📱 Navigasi tersedia: Tools, Music, Anime, Chat, Games, Maker, Downloader');
     }
     
     window.GlobalMusic = {
