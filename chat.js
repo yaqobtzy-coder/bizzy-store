@@ -1,7 +1,7 @@
 // ========== GLOBAL CHAT SYSTEM - FULL ULTIMATE UPGRADE ==========
 // Fitur Lengkap: Reply, Pin, Mute/Unmute, Promote/Demote Admin, Voice Note,
 // Group Profile, Group Status, User Profile (HANYA PEMILIK YANG BISA EDIT),
-// Prayer Schedule, Notifications
+// Prayer Schedule, Notifications, FOTO PROFIL (IMGBB)
 
 // Firebase Configuration
 const firebaseConfig = {
@@ -29,7 +29,7 @@ try {
     console.error('❌ Firebase init error:', error);
 }
 
-// ImgBB API Key
+// ImgBB API Key (untuk SEMUA upload: chat images, voice, status gambar, foto profil)
 const IMGBB_API_KEY = 'a60507c67d4d1a5d3f6b0cecbb168314';
 
 // Owner username
@@ -203,7 +203,7 @@ async function isUserMuted(userId) {
     }
 }
 
-// ========== UPLOAD FUNCTIONS ==========
+// ========== UPLOAD FUNCTIONS (SEMUA KE IMGBB) ==========
 async function uploadToImgBB(file) {
     const formData = new FormData();
     formData.append('image', file);
@@ -231,7 +231,6 @@ async function loadUserProfile(userId) {
 
 async function updateUserProfile(profileData) {
     // HANYA user yang sedang login yang bisa update profilnya sendiri
-    // Fungsi ini hanya dipanggil untuk currentUserId
     try {
         if (profileData.photo && profileData.photo instanceof File) {
             showToast('Mengunggah foto profil...', 'info');
@@ -250,6 +249,7 @@ async function updateUserProfile(profileData) {
         showToast('Profil berhasil diperbarui!', 'success');
         return true;
     } catch (error) {
+        console.error('Update profile error:', error);
         showToast('Gagal update profil: ' + error.message, 'error');
         return false;
     }
@@ -262,6 +262,9 @@ async function openUserProfile(userId, username) {
     // HANYA pemilik akun yang bisa edit profilnya sendiri
     const canEdit = isOwnProfile;
     
+    // Ambil foto dari Firebase atau default
+    const profilePhoto = profile.photo || null;
+    
     const modalHtml = `
         <div id="userProfileModal" class="profile-modal">
             <div class="profile-modal-content" style="max-width: 400px;">
@@ -272,17 +275,17 @@ async function openUserProfile(userId, username) {
                 </div>
                 <div class="profile-modal-body" style="text-align: center;">
                     <div class="profile-photo-section">
-                        ${profile.photo ? 
-                            `<img src="${profile.photo}" class="user-profile-photo" id="userProfilePhoto" ${canEdit ? 'onclick="document.getElementById(\'userPhotoInput\').click()"' : ''}>` : 
-                            `<div class="user-profile-photo-placeholder" ${canEdit ? 'onclick="document.getElementById(\'userPhotoInput\').click()"' : ''}><i class="fas fa-user fa-3x"></i></div>`
+                        ${profilePhoto ? 
+                            `<img src="${profilePhoto}" class="user-profile-photo" id="userProfilePhoto" ${canEdit ? 'onclick="document.getElementById(\'userPhotoInput\').click()"' : ''} style="cursor: ${canEdit ? 'pointer' : 'default'};">` : 
+                            `<div class="user-profile-photo-placeholder" ${canEdit ? 'onclick="document.getElementById(\'userPhotoInput\').click()"' : ''} style="cursor: ${canEdit ? 'pointer' : 'default'};"><i class="fas fa-user fa-3x"></i></div>`
                         }
                         ${canEdit ? `<input type="file" id="userPhotoInput" accept="image/*" style="display: none;">` : ''}
                     </div>
-                    <div class="user-bio" id="userBioDisplay">${profile.bio || 'Belum ada bio'}</div>
+                    <div class="user-bio" id="userBioDisplay">${escapeHtml(profile.bio) || 'Belum ada bio'}</div>
                     ${canEdit ? `
                         <div class="edit-profile-section">
                             <h4><i class="fas fa-edit"></i> Edit Profil (Hanya untuk Anda)</h4>
-                            <textarea id="editBioInput" class="edit-profile-input" placeholder="Tulis bio..." rows="3" maxlength="200">${profile.bio || ''}</textarea>
+                            <textarea id="editBioInput" class="edit-profile-input" placeholder="Tulis bio..." rows="3" maxlength="200">${escapeHtml(profile.bio) || ''}</textarea>
                             <div class="edit-profile-actions">
                                 <button onclick="saveUserProfile()" class="btn-primary"><i class="fas fa-save"></i> Simpan</button>
                                 <button onclick="closeUserProfileModal()" class="btn-secondary">Batal</button>
@@ -307,7 +310,16 @@ async function openUserProfile(userId, username) {
         if (photoInput) {
             photoInput.addEventListener('change', async (e) => {
                 if (e.target.files && e.target.files[0]) {
-                    await updateUserProfile({ photo: e.target.files[0] });
+                    const file = e.target.files[0];
+                    if (!file.type.startsWith('image/')) {
+                        showToast('Harus file gambar!', 'error');
+                        return;
+                    }
+                    if (file.size > 2 * 1024 * 1024) {
+                        showToast('Maksimal 2MB!', 'error');
+                        return;
+                    }
+                    await updateUserProfile({ photo: file });
                     closeUserProfileModal();
                     setTimeout(() => openUserProfile(userId, username), 500);
                 }
@@ -343,8 +355,8 @@ async function updateGroupProfile(type, value) {
                 showToast('Harus file gambar!', 'error');
                 return false;
             }
-            if (value.size > 5 * 1024 * 1024) {
-                showToast('Maksimal 5MB!', 'error');
+            if (value.size > 2 * 1024 * 1024) {
+                showToast('Maksimal 2MB!', 'error');
                 return false;
             }
             
@@ -368,6 +380,7 @@ async function updateGroupProfile(type, value) {
             return true;
         }
     } catch (error) {
+        console.error('Update group profile error:', error);
         showToast('Gagal update profil grup: ' + error.message, 'error');
         return false;
     }
@@ -443,14 +456,18 @@ async function deleteGroupStatus() {
 }
 
 function updateGroupProfileUI() {
-    if (groupNameHeader) groupNameHeader.textContent = groupProfile.name;
-    if (groupAvatarHeader) {
-        if (groupProfile.photo) {
-            groupAvatarHeader.src = groupProfile.photo;
-            groupAvatarHeader.style.display = 'inline-block';
-        } else {
-            groupAvatarHeader.style.display = 'none';
-        }
+    if (groupNameHeader) {
+        groupNameHeader.textContent = groupProfile.name;
+    }
+    if (groupAvatarHeader && groupProfile.photo) {
+        groupAvatarHeader.src = groupProfile.photo;
+        groupAvatarHeader.style.display = 'inline-block';
+        groupAvatarHeader.style.borderRadius = '50%';
+        groupAvatarHeader.style.width = '28px';
+        groupAvatarHeader.style.height = '28px';
+        groupAvatarHeader.style.objectFit = 'cover';
+    } else if (groupAvatarHeader) {
+        groupAvatarHeader.style.display = 'none';
     }
 }
 
@@ -519,7 +536,7 @@ async function showGroupProfileDetail() {
                 </div>
                 <div class="profile-modal-body group-profile-detail">
                     ${groupProfile.photo ? 
-                        `<img src="${groupProfile.photo}" class="group-profile-detail-photo">` : 
+                        `<img src="${groupProfile.photo}" class="group-profile-detail-photo" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover;">` : 
                         `<div class="group-profile-detail-photo" style="background: linear-gradient(135deg, var(--primary), var(--primary-dark)); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; width: 100px; height: 100px; border-radius: 50%;"><i class="fas fa-users fa-3x" style="color: #1a1a2e;"></i></div>`
                     }
                     <div class="group-profile-detail-name">${escapeHtml(groupProfile.name)}</div>
@@ -1310,11 +1327,21 @@ function previewImage(url) {
 // ========== MODALS ==========
 function showGroupProfileModal() {
     if (!isAdmin && !isOwner) { showToast('Hanya Admin/Owner yang bisa mengubah profil grup!', 'error'); return; }
-    const modalHtml = `<div id="groupProfileModal" class="profile-modal"><div class="profile-modal-content"><div class="profile-modal-header"><i class="fas fa-users"></i><h3>Profil Grup</h3><button onclick="closeProfileModal()" class="close-modal-btn"><i class="fas fa-times"></i></button></div><div class="profile-modal-body"><div class="profile-image-section"><div class="current-profile-image">${groupProfile.photo ? `<img src="${groupProfile.photo}" id="groupPhotoPreview">` : '<i class="fas fa-users fa-3x"></i>'}</div><button onclick="document.getElementById(\'groupPhotoInput\').click()" class="btn-secondary"><i class="fas fa-camera"></i> Ganti Foto Grup</button><input type="file" id="groupPhotoInput" accept="image/*" style="display: none;"></div><div class="profile-name-section"><label>Nama Grup</label><input type="text" id="groupNameInput" value="${groupProfile.name}" maxlength="30"></div><div class="profile-actions"><button onclick="saveGroupProfile()" class="btn-primary"><i class="fas fa-save"></i> Simpan</button></div></div></div></div>`;
+    const modalHtml = `<div id="groupProfileModal" class="profile-modal"><div class="profile-modal-content"><div class="profile-modal-header"><i class="fas fa-users"></i><h3>Profil Grup</h3><button onclick="closeProfileModal()" class="close-modal-btn"><i class="fas fa-times"></i></button></div><div class="profile-modal-body"><div class="profile-image-section"><div class="current-profile-image">${groupProfile.photo ? `<img src="${groupProfile.photo}" id="groupPhotoPreview" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover;">` : '<i class="fas fa-users fa-3x"></i>'}</div><button onclick="document.getElementById(\'groupPhotoInput\').click()" class="btn-secondary"><i class="fas fa-camera"></i> Ganti Foto Grup</button><input type="file" id="groupPhotoInput" accept="image/*" style="display: none;"></div><div class="profile-name-section"><label>Nama Grup</label><input type="text" id="groupNameInput" value="${groupProfile.name}" maxlength="30"></div><div class="profile-actions"><button onclick="saveGroupProfile()" class="btn-primary"><i class="fas fa-save"></i> Simpan</button></div></div></div></div>`;
     const oldModal = document.getElementById('groupProfileModal');
     if (oldModal) oldModal.remove();
     document.body.insertAdjacentHTML('beforeend', modalHtml);
-    document.getElementById('groupPhotoInput').addEventListener('change', (e) => { if (e.target.files && e.target.files[0]) { const reader = new FileReader(); reader.onload = (event) => { const preview = document.getElementById('groupPhotoPreview'); if (preview) preview.src = event.target.result; }; reader.readAsDataURL(e.target.files[0]); window.pendingGroupPhoto = e.target.files[0]; } });
+    document.getElementById('groupPhotoInput').addEventListener('change', (e) => { 
+        if (e.target.files && e.target.files[0]) { 
+            const reader = new FileReader(); 
+            reader.onload = (event) => { 
+                const preview = document.getElementById('groupPhotoPreview'); 
+                if (preview) preview.src = event.target.result; 
+            }; 
+            reader.readAsDataURL(e.target.files[0]); 
+            window.pendingGroupPhoto = e.target.files[0]; 
+        } 
+    });
 }
 async function saveGroupProfile() {
     const newName = document.getElementById('groupNameInput')?.value.trim();
@@ -1409,3 +1436,4 @@ window.closeGroupProfileDetail = closeGroupProfileDetail;
 window.deleteGroupStatus = deleteGroupStatus;
 
 console.log('💬 Chat System FULL ULTIMATE UPGRADE Ready!');
+console.log('📸 Semua upload menggunakan ImgBB (foto profil, gambar chat, voice, status)');
