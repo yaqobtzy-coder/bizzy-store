@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>RPG Adventure - Battle & Explore</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="rpg-game.css">
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-screen">
+        <div class="login-card">
+            <div class="login-logo">
+                <i class="fas fa-dragon"></i>
+                <h2>RPG Adventure</h2>
+                <p>Masukkan username untuk memulai petualangan</p>
+            </div>
+            <div class="login-form">
+                <div class="input-group">
+                    <i class="fas fa-user"></i>
+                    <input type="text" id="usernameInput" placeholder="Username" maxlength="20">
+                </div>
+                <div class="input-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="passwordInput" placeholder="Kode Rahasia (opsional)">
+                </div>
+                <button id="loginBtn" class="login-btn">
+                    <i class="fas fa-gamepad"></i> Mulai Petualangan
+                </button>
+                <div class="login-info">
+                    <i class="fas fa-info-circle"></i> Username akan tersimpan otomatis
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Game Screen -->
+    <div id="gameScreen" class="game-screen" style="display: none;">
+        <!-- Header -->
+        <div class="game-header">
+            <button class="back-btn" onclick="goBackToTools()"><i class="fas fa-arrow-left"></i></button>
+            <div class="player-info-header">
+                <i class="fas fa-user-circle"></i>
+                <span id="headerUsername">Loading...</span>
+                <span class="level-badge" id="headerLevel">Lv 1</span>
+            </div>
+            <button class="theme-toggle" onclick="toggleTheme()"><i class="fas fa-moon"></i></button>
+        </div>
+
+        <!-- Player Stats Card -->
+        <div class="stats-card" id="statsCard">
+            <div class="stats-header">
+                <div class="player-avatar">
+                    <i class="fas fa-user-astronaut"></i>
+                </div>
+                <div class="player-name-box">
+                    <h3 id="playerName">-</h3>
+                    <p id="playerClass" class="player-class">Warrior</p>
+                </div>
+                <div class="player-gold">
+                    <i class="fas fa-coins"></i>
+                    <span id="playerGold">0</span>
+                </div>
+            </div>
+            <div class="stats-bars">
+                <div class="stat-bar">
+                    <div class="stat-label"><i class="fas fa-heart"></i> HP</div>
+                    <div class="bar-bg">
+                        <div class="bar-fill hp-bar" id="hpBar" style="width: 100%"></div>
+                    </div>
+                    <div class="stat-numbers" id="hpText">0/0</div>
+                </div>
+                <div class="stat-bar">
+                    <div class="stat-label"><i class="fas fa-bolt"></i> MP</div>
+                    <div class="bar-bg">
+                        <div class="bar-fill mp-bar" id="mpBar" style="width: 100%"></div>
+                    </div>
+                    <div class="stat-numbers" id="mpText">0/0</div>
+                </div>
+                <div class="stat-bar">
+                    <div class="stat-label"><i class="fas fa-chart-line"></i> EXP</div>
+                    <div class="bar-bg">
+                        <div class="bar-fill exp-bar" id="expBar" style="width: 0%"></div>
+                    </div>
+                    <div class="stat-numbers" id="expText">0/100</div>
+                </div>
+            </div>
+            <div class="stats-details">
+                <div class="stat-detail"><span>⚔️ Attack</span><strong id="playerAttack">0</strong></div>
+                <div class="stat-detail"><span>🛡️ Defense</span><strong id="playerDefense">0</strong></div>
+                <div class="stat-detail"><span>🌀 Agility</span><strong id="playerAgility">0</strong></div>
+                <div class="stat-detail"><span>🏆 PvP</span><strong id="playerPvp">0/0</strong></div>
+            </div>
+        </div>
+
+        <!-- Location & Action Cards -->
+        <div class="location-card" id="locationCard">
+            <div class="location-header" onclick="showLocationModal()">
+                <i class="fas fa-map-marker-alt"></i>
+                <span id="currentLocation">Desa Pemula</span>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="location-desc" id="locationDesc">Desa kecil yang tenang, tempat awal petualanganmu.</div>
+        </div>
+
+        <div class="action-grid">
+            <div class="action-card" onclick="explore()">
+                <i class="fas fa-tree"></i>
+                <span>Eksplorasi</span>
+                <small>Cari monster</small>
+            </div>
+            <div class="action-card" onclick="showInventory()">
+                <i class="fas fa-backpack"></i>
+                <span>Inventory</span>
+                <small>Lihat barang</small>
+            </div>
+            <div class="action-card" onclick="showShop()">
+                <i class="fas fa-store"></i>
+                <span>Toko</span>
+                <small>Beli item</small>
+            </div>
+            <div class="action-card" onclick="showQuest()">
+                <i class="fas fa-scroll"></i>
+                <span>Quest</span>
+                <small>Ambil misi</small>
+            </div>
+            <div class="action-card" onclick="heal()">
+                <i class="fas fa-bed"></i>
+                <span>Istirahat</span>
+                <small>Pulihkan HP/MP</small>
+            </div>
+            <div class="action-card" onclick="dailyReward()">
+                <i class="fas fa-gift"></i>
+                <span>Daily</span>
+                <small>Claim hadiah</small>
+            </div>
+            <div class="action-card" onclick="showLeaderboard()">
+                <i class="fas fa-trophy"></i>
+                <span>Leaderboard</span>
+                <small>Top player</small>
+            </div>
+            <div class="action-card" onclick="showPvp()">
+                <i class="fas fa-fist-raised"></i>
+                <span>PvP Arena</span>
+                <small>Tantang player</small>
+            </div>
+            <div class="action-card" onclick="doWork()">
+                <i class="fas fa-briefcase"></i>
+                <span>Kerja</span>
+                <small>Dapat gold</small>
+            </div>
+            <div class="action-card" onclick="doMining()">
+                <i class="fas fa-hammer"></i>
+                <span>Menambang</span>
+                <small>Cari mineral</small>
+            </div>
+        </div>
+
+        <!-- Battle Modal -->
+        <div id="battleModal" class="modal" style="display: none;">
+            <div class="modal-content battle-modal">
+                <div class="battle-header">
+                    <div class="battle-player">
+                        <i class="fas fa-user"></i>
+                        <span id="battlePlayerName">You</span>
+                        <div class="battle-hp-bar">
+                            <div class="battle-hp-fill" id="battlePlayerHpFill" style="width: 100%"></div>
+                        </div>
+                        <span id="battlePlayerHp">0/0</span>
+                    </div>
+                    <div class="vs">VS</div>
+                    <div class="battle-enemy">
+                        <i class="fas fa-dragon"></i>
+                        <span id="battleEnemyName">Monster</span>
+                        <div class="battle-hp-bar">
+                            <div class="battle-hp-fill" id="battleEnemyHpFill" style="width: 100%"></div>
+                        </div>
+                        <span id="battleEnemyHp">0/0</span>
+                    </div>
+                </div>
+                <div class="battle-log" id="battleLog">
+                    <p>⚔️ Pertempuran dimulai!</p>
+                </div>
+                <div class="battle-actions">
+                    <button class="battle-btn" onclick="battleAttack()"><i class="fas fa-fist-raised"></i> Attack</button>
+                    <button class="battle-btn" onclick="battleSkill()" id="skillBtn"><i class="fas fa-magic"></i> Skill</button>
+                    <button class="battle-btn" onclick="battleUseItem()"><i class="fas fa-flask"></i> Item</button>
+                    <button class="battle-btn" onclick="battleFlee()"><i class="fas fa-running"></i> Flee</button>
+                </div>
+                <button class="close-modal-btn" onclick="closeBattleModal()"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+
+        <!-- Inventory Modal -->
+        <div id="inventoryModal" class="modal" style="display: none;">
+            <div class="modal-content inventory-modal">
+                <div class="modal-header">
+                    <h3><i class="fas fa-backpack"></i> Inventory</h3>
+                    <button class="modal-close" onclick="closeInventoryModal()"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="inventory-list" id="inventoryList"></div>
+                <div class="modal-footer">
+                    <button class="btn-secondary" onclick="closeInventoryModal()">Tutup</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Shop Modal -->
+        <div id="shopModal" class="modal" style="display: none;">
+            <div class="modal-content shop-modal">
+                <div class="modal-header">
+                    <h3><i class="fas fa-store"></i> Toko Petualang</h3>
+                    <button class="modal-close" onclick="closeShopModal()"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="shop-list" id="shopList"></div>
+                <div class="modal-footer">
+                    <button class="btn-secondary" onclick="closeShopModal()">Tutup</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quest Modal -->
+        <div id="questModal" class="modal" style="display: none;">
+            <div class="modal-content quest-modal">
+                <div class="modal-header">
+                    <h3><i class="fas fa-scroll"></i> Quest</h3>
+                    <button class="modal-close" onclick="closeQuestModal()"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="quest-list" id="questList"></div>
+                <div class="modal-footer">
+                    <button class="btn-secondary" onclick="closeQuestModal()">Tutup</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- PvP Modal -->
+        <div id="pvpModal" class="modal" style="display: none;">
+            <div class="modal-content pvp-modal">
+                <div class="modal-header">
+                    <h3><i class="fas fa-fist-raised"></i> PvP Arena</h3>
+                    <button class="modal-close" onclick="closePvpModal()"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="pvp-search">
+                    <input type="text" id="pvpSearch" placeholder="Cari username..." onkeyup="filterPvpPlayers()">
+                </div>
+                <div class="pvp-list" id="pvpList"></div>
+                <div class="modal-footer">
+                    <button class="btn-secondary" onclick="closePvpModal()">Tutup</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Leaderboard Modal -->
+        <div id="leaderboardModal" class="modal" style="display: none;">
+            <div class="modal-content leaderboard-modal">
+                <div class="modal-header">
+                    <h3><i class="fas fa-trophy"></i> Leaderboard</h3>
+                    <button class="modal-close" onclick="closeLeaderboardModal()"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="leaderboard-tabs">
+                    <button class="lb-tab active" onclick="loadLeaderboard('level')">🏆 Level</button>
+                    <button class="lb-tab" onclick="loadLeaderboard('gold')">💰 Gold</button>
+                    <button class="lb-tab" onclick="loadLeaderboard('pvp')">⚔️ PvP</button>
+                </div>
+                <div class="leaderboard-list" id="leaderboardList"></div>
+                <div class="modal-footer">
+                    <button class="btn-secondary" onclick="closeLeaderboardModal()">Tutup</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Location Modal -->
+        <div id="locationModal" class="modal" style="display: none;">
+            <div class="modal-content location-modal">
+                <div class="modal-header">
+                    <h3><i class="fas fa-map"></i> Pindah Lokasi</h3>
+                    <button class="modal-close" onclick="closeLocationModal()"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="location-list" id="locationList"></div>
+                <div class="modal-footer">
+                    <button class="btn-secondary" onclick="closeLocationModal()">Tutup</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast Notification -->
+        <div id="toast" class="toast" style="display: none;"></div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+    <script src="global-music.js"></script>
+    <script src="rpg-game.js"></script>
+</body>
+</html>
