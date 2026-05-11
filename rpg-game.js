@@ -1,4 +1,4 @@
-// ========== RPG GAME - FULL FEATURE WITH FIREBASE & REAL-TIME PVP ==========
+// ========== RPG GAME - FULL FEATURE WITH FIREBASE & REAL-TIME PVP (FIXED) ==========
 
 // Firebase Configuration
 const firebaseConfig = {
@@ -17,17 +17,30 @@ let onlinePlayersRef = null;
 let pvpRequestsRef = null;
 let pvpBattlesRef = null;
 
-try {
-    if (!firebase.apps || firebase.apps.length === 0) {
-        firebase.initializeApp(firebaseConfig);
-    }
-    database = firebase.database();
-    onlinePlayersRef = database.ref('rpg_online_players');
-    pvpRequestsRef = database.ref('rpg_pvp_requests');
-    pvpBattlesRef = database.ref('rpg_pvp_battles');
-    console.log('✅ Firebase connected');
-} catch (error) {
-    console.error('Firebase init error:', error);
+// Wait for Firebase to load
+function initFirebase() {
+    return new Promise((resolve, reject) => {
+        if (typeof firebase === 'undefined') {
+            console.log('Waiting for Firebase...');
+            setTimeout(() => initFirebase().then(resolve).catch(reject), 500);
+            return;
+        }
+        
+        try {
+            if (!firebase.apps || firebase.apps.length === 0) {
+                firebase.initializeApp(firebaseConfig);
+            }
+            database = firebase.database();
+            onlinePlayersRef = database.ref('rpg_online_players');
+            pvpRequestsRef = database.ref('rpg_pvp_requests');
+            pvpBattlesRef = database.ref('rpg_pvp_battles');
+            console.log('✅ Firebase connected');
+            resolve();
+        } catch (error) {
+            console.error('Firebase init error:', error);
+            reject(error);
+        }
+    });
 }
 
 // Game Variables
@@ -41,6 +54,9 @@ let battleTimer = null;
 let currentPvpBattleId = null;
 let pendingPvpInvite = null;
 let onlineStatusInterval = null;
+let pvpRequestListener = null;
+let pvpBattleListener1 = null;
+let pvpBattleListener2 = null;
 
 // Locations Data
 const locations = {
@@ -75,7 +91,9 @@ const quests = {
 let loginScreen, gameScreen, usernameInput, loginBtn;
 
 // ========== INITIALIZATION ==========
-function init() {
+async function init() {
+    console.log('Initializing RPG Game...');
+    
     loginScreen = document.getElementById('loginScreen');
     gameScreen = document.getElementById('gameScreen');
     usernameInput = document.getElementById('usernameInput');
@@ -93,12 +111,16 @@ function init() {
     }
     
     loadTheme();
-    checkSavedUser();
     
-    // Listen for PvP requests
-    listenForPvpRequests();
-    
-    console.log('✅ RPG Game initialized');
+    // Initialize Firebase first
+    try {
+        await initFirebase();
+        checkSavedUser();
+        console.log('✅ RPG Game initialized');
+    } catch (error) {
+        console.error('Failed to initialize Firebase:', error);
+        showToast('Gagal terhubung ke database! Silahkan refresh halaman.', 'error');
+    }
 }
 
 // ========== ONLINE STATUS MANAGEMENT ==========
@@ -130,6 +152,9 @@ function startOnlineStatusUpdates() {
         if (currentUserId && database) {
             database.ref(`rpg_online_players/${currentUserId}`).remove();
         }
+        if (pvpRequestListener) pvpRequestListener.off();
+        if (pvpBattleListener1) pvpBattleListener1.off();
+        if (pvpBattleListener2) pvpBattleListener2.off();
     });
 }
 
@@ -164,27 +189,28 @@ async function getOnlinePlayers() {
 
 // ========== PVP REQUEST SYSTEM ==========
 function listenForPvpRequests() {
-    if (!database) return;
+    if (!database || !currentUserId) return;
     
-    pvpRequestsRef.orderByChild('targetId').equalTo(currentUserId).on('child_added', (snapshot) => {
+    // Remove old listener if exists
+    if (pvpRequestListener) pvpRequestListener.off();
+    
+    pvpRequestListener = pvpRequestsRef.orderByChild('targetId').equalTo(currentUserId).on('child_added', (snapshot) => {
         const request = snapshot.val();
+        console.log('PvP request received:', request);
+        
         if (request && request.status === 'pending' && request.targetId === currentUserId) {
             pendingPvpInvite = {
                 id: snapshot.key,
                 challengerId: request.challengerId,
-                challengerName: request.challengerName
+                challengerName: request.challengerName,
+                challengerLevel: request.challengerLevel,
+                challengerClass: request.challengerClass
             };
             
-            const inviteText = document.getElementById('inviteText');
-            if (inviteText) {
-                inviteText.innerHTML = `${request.challengerName} menantangmu bertarung!<br>Level: ${request.challengerLevel}<br>Class: ${request.challengerClass}`;
-            }
+            // Show invite modal
+            showPvpInviteModal(request.challengerName, request.challengerLevel, request.challengerClass);
             
-            const pvpInviteModal = document.getElementById('pvpInviteModal');
-            if (pvpInviteModal) {
-                pvpInviteModal.style.display = 'flex';
-            }
-            
+            // Auto reject after 30 seconds
             setTimeout(() => {
                 if (pendingPvpInvite && pendingPvpInvite.id === snapshot.key) {
                     declinePvpInvite();
@@ -192,15 +218,58 @@ function listenForPvpRequests() {
             }, 30000);
         }
     });
+}
+
+function showPvpInviteModal(challengerName, challengerLevel, challengerClass) {
+    // Ensure modal exists
+    let pvpInviteModal = document.getElementById('pvpInviteModal');
+    if (!pvpInviteModal) {
+        const modalHtml = `
+            <div id="pvpInviteModal" class="modal" style="display: none;">
+                <div class="modal-content invite-modal">
+                    <div class="modal-header">
+                        <h3><i class="fas fa-bell"></i> PvP Invitation</h3>
+                        <button class="modal-close" onclick="declinePvpInvite()"><i class="fas fa-times"></i></button>
+                    </div>
+                    <div class="invite-content" id="inviteContent">
+                        <p id="inviteText">Player menantangmu bertarung!</p>
+                    </div>
+                    <div class="invite-actions">
+                        <button class="battle-btn" onclick="acceptPvpInvite()"><i class="fas fa-check"></i> Terima</button>
+                        <button class="battle-btn" onclick="declinePvpInvite()"><i class="fas fa-times"></i> Tolak</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        pvpInviteModal = document.getElementById('pvpInviteModal');
+    }
     
-    pvpBattlesRef.orderByChild('player1Id').equalTo(currentUserId).on('child_changed', (snapshot) => {
+    const inviteText = document.getElementById('inviteText');
+    if (inviteText) {
+        inviteText.innerHTML = `${challengerName} menantangmu bertarung!<br>Level: ${challengerLevel}<br>Class: ${challengerClass}`;
+    }
+    
+    if (pvpInviteModal) {
+        pvpInviteModal.style.display = 'flex';
+    }
+}
+
+function setupPvpBattleListeners() {
+    if (!database || !currentUserId) return;
+    
+    // Remove old listeners
+    if (pvpBattleListener1) pvpBattleListener1.off();
+    if (pvpBattleListener2) pvpBattleListener2.off();
+    
+    pvpBattleListener1 = pvpBattlesRef.orderByChild('player1Id').equalTo(currentUserId).on('child_changed', (snapshot) => {
         const battle = snapshot.val();
         if (battle && battle.currentTurn && battle.currentTurn !== currentUserId && currentPvpBattleId === snapshot.key) {
             updatePvpBattleUI(battle);
         }
     });
     
-    pvpBattlesRef.orderByChild('player2Id').equalTo(currentUserId).on('child_changed', (snapshot) => {
+    pvpBattleListener2 = pvpBattlesRef.orderByChild('player2Id').equalTo(currentUserId).on('child_changed', (snapshot) => {
         const battle = snapshot.val();
         if (battle && battle.currentTurn && battle.currentTurn !== currentUserId && currentPvpBattleId === snapshot.key) {
             updatePvpBattleUI(battle);
@@ -408,7 +477,47 @@ async function startPvpBattle(battleId, battleData) {
         log: battleData.log || ['⚔️ PvP Pertempuran dimulai!']
     };
     
-    const pvpBattleModal = document.getElementById('pvpBattleModal');
+    // Ensure PvP battle modal exists
+    let pvpBattleModal = document.getElementById('pvpBattleModal');
+    if (!pvpBattleModal) {
+        const modalHtml = `
+            <div id="pvpBattleModal" class="modal" style="display: none;">
+                <div class="modal-content battle-modal">
+                    <div class="battle-header">
+                        <div class="battle-player">
+                            <i class="fas fa-user"></i>
+                            <span id="pvpPlayerName">You</span>
+                            <div class="battle-hp-bar">
+                                <div class="battle-hp-fill" id="pvpPlayerHpFill" style="width: 100%"></div>
+                            </div>
+                            <span id="pvpPlayerHp">0/0</span>
+                        </div>
+                        <div class="vs">VS</div>
+                        <div class="battle-enemy">
+                            <i class="fas fa-user"></i>
+                            <span id="pvpEnemyName">Opponent</span>
+                            <div class="battle-hp-bar">
+                                <div class="battle-hp-fill" id="pvpEnemyHpFill" style="width: 100%"></div>
+                            </div>
+                            <span id="pvpEnemyHp">0/0</span>
+                        </div>
+                    </div>
+                    <div class="battle-log" id="pvpBattleLog">
+                        <p>⚔️ PvP Pertempuran dimulai!</p>
+                    </div>
+                    <div class="battle-actions">
+                        <button class="battle-btn" onclick="pvpAttack()"><i class="fas fa-fist-raised"></i> Attack</button>
+                        <button class="battle-btn" onclick="pvpSkill()" id="pvpSkillBtn"><i class="fas fa-magic"></i> Skill</button>
+                        <button class="battle-btn" onclick="pvpUseItem()"><i class="fas fa-flask"></i> Item</button>
+                    </div>
+                    <button class="close-modal-btn" onclick="closePvpBattleModal()"><i class="fas fa-times"></i></button>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        pvpBattleModal = document.getElementById('pvpBattleModal');
+    }
+    
     const pvpPlayerName = document.getElementById('pvpPlayerName');
     const pvpEnemyName = document.getElementById('pvpEnemyName');
     const pvpPlayerHp = document.getElementById('pvpPlayerHp');
@@ -470,7 +579,7 @@ async function updatePvpBattleUI(battleData) {
     updatePvpButtons();
     
     if (battleData.winner) {
-        await handlePvpVictory(battleData.winner);
+        await endPvpBattle(battleData.winner);
     }
 }
 
@@ -635,7 +744,7 @@ async function endPvpBattle(winnerId) {
     
     if (isWinner) {
         playerData.pvpWins = (playerData.pvpWins || 0) + 1;
-        const goldStolen = Math.floor(playerData.gold * 0.05);
+        const goldStolen = Math.floor((battle.player2Id === winnerId ? battle.player1Gold || 0 : battle.player2Gold || 0) * 0.05);
         playerData.gold += goldStolen;
         showToast(`🏆 Kemenangan PvP! +${formatGold(goldStolen)} Gold`, 'success');
     } else {
@@ -737,6 +846,8 @@ async function loadPlayerData() {
             updateUI();
             startGame();
             startOnlineStatusUpdates();
+            listenForPvpRequests();
+            setupPvpBattleListeners();
         } else {
             showClassSelection();
         }
@@ -848,6 +959,8 @@ async function createPlayer(className) {
         updateUI();
         startGame();
         startOnlineStatusUpdates();
+        listenForPvpRequests();
+        setupPvpBattleListeners();
         showToast(`🎉 Selamat datang, ${className.toUpperCase()}!`, 'success');
     } catch (error) {
         console.error('Error creating player:', error);
@@ -1516,7 +1629,7 @@ async function showPvp() {
                         <div>
                             <div class="item-name">${p.username}</div>
                             <div class="item-desc">Level ${p.level} - ${p.class}</div>
-                            <div class="online-badge online"></div> Online
+                            <span class="online-badge online"></span> Online
                         </div>
                         <button class="pvp-challenge-btn" onclick="challengePvp('${p.id}', '${p.username}', ${p.level}, '${p.class}')">Tantang</button>
                     </div>
@@ -1779,8 +1892,3 @@ window.pvpSkill = pvpSkill;
 window.pvpUseItem = pvpUseItem;
 window.acceptPvpInvite = acceptPvpInvite;
 window.declinePvpInvite = declinePvpInvite;
-
-// Handle PvP battle winner
-async function handlePvpVictory(winnerId) {
-    // Already handled in endPvpBattle
-}
