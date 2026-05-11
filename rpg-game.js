@@ -1,4 +1,4 @@
-// ========== RPG GAME - FULL FEATURE WITH FIREBASE (FIXED) ==========
+// ========== RPG GAME - FULL FEATURE WITH FIREBASE & REAL-TIME PVP ==========
 
 // Firebase Configuration
 const firebaseConfig = {
@@ -13,12 +13,18 @@ const firebaseConfig = {
 
 // Initialize Firebase
 let database = null;
+let onlinePlayersRef = null;
+let pvpRequestsRef = null;
+let pvpBattlesRef = null;
 
 try {
     if (!firebase.apps || firebase.apps.length === 0) {
         firebase.initializeApp(firebaseConfig);
     }
     database = firebase.database();
+    onlinePlayersRef = database.ref('rpg_online_players');
+    pvpRequestsRef = database.ref('rpg_pvp_requests');
+    pvpBattlesRef = database.ref('rpg_pvp_battles');
     console.log('✅ Firebase connected');
 } catch (error) {
     console.error('Firebase init error:', error);
@@ -29,8 +35,12 @@ let currentUser = null;
 let currentUserId = null;
 let playerData = null;
 let battleState = null;
+let pvpBattleState = null;
 let battleCooldown = false;
 let battleTimer = null;
+let currentPvpBattleId = null;
+let pendingPvpInvite = null;
+let onlineStatusInterval = null;
 
 // Locations Data
 const locations = {
@@ -66,13 +76,11 @@ let loginScreen, gameScreen, usernameInput, loginBtn;
 
 // ========== INITIALIZATION ==========
 function init() {
-    // Get DOM elements
     loginScreen = document.getElementById('loginScreen');
     gameScreen = document.getElementById('gameScreen');
     usernameInput = document.getElementById('usernameInput');
     loginBtn = document.getElementById('loginBtn');
     
-    // Add event listeners
     if (loginBtn) {
         loginBtn.addEventListener('click', login);
         console.log('✅ Login button registered');
@@ -84,13 +92,580 @@ function init() {
         });
     }
     
-    // Load theme
     loadTheme();
-    
-    // Check saved user
     checkSavedUser();
     
+    // Listen for PvP requests
+    listenForPvpRequests();
+    
     console.log('✅ RPG Game initialized');
+}
+
+// ========== ONLINE STATUS MANAGEMENT ==========
+async function updateOnlineStatus() {
+    if (!currentUserId || !database) return;
+    
+    try {
+        await database.ref(`rpg_online_players/${currentUserId}`).set({
+            username: currentUser,
+            lastSeen: Date.now(),
+            level: playerData?.level || 1,
+            class: playerData?.class || 'Warrior'
+        });
+    } catch (error) {
+        console.error('Error updating online status:', error);
+    }
+}
+
+function startOnlineStatusUpdates() {
+    if (onlineStatusInterval) clearInterval(onlineStatusInterval);
+    
+    onlineStatusInterval = setInterval(() => {
+        updateOnlineStatus();
+    }, 30000);
+    
+    updateOnlineStatus();
+    
+    window.addEventListener('beforeunload', () => {
+        if (currentUserId && database) {
+            database.ref(`rpg_online_players/${currentUserId}`).remove();
+        }
+    });
+}
+
+async function getOnlinePlayers() {
+    if (!database) return [];
+    
+    try {
+        const snapshot = await database.ref('rpg_online_players').once('value');
+        const players = snapshot.val() || {};
+        const now = Date.now();
+        const onlinePlayers = [];
+        
+        for (const [id, data] of Object.entries(players)) {
+            if (now - (data.lastSeen || 0) < 60000 && id !== currentUserId) {
+                onlinePlayers.push({
+                    id: id,
+                    username: data.username,
+                    level: data.level,
+                    class: data.class
+                });
+            } else if (now - (data.lastSeen || 0) >= 60000) {
+                database.ref(`rpg_online_players/${id}`).remove();
+            }
+        }
+        
+        return onlinePlayers;
+    } catch (error) {
+        console.error('Error getting online players:', error);
+        return [];
+    }
+}
+
+// ========== PVP REQUEST SYSTEM ==========
+function listenForPvpRequests() {
+    if (!database) return;
+    
+    pvpRequestsRef.orderByChild('targetId').equalTo(currentUserId).on('child_added', (snapshot) => {
+        const request = snapshot.val();
+        if (request && request.status === 'pending' && request.targetId === currentUserId) {
+            pendingPvpInvite = {
+                id: snapshot.key,
+                challengerId: request.challengerId,
+                challengerName: request.challengerName
+            };
+            
+            const inviteText = document.getElementById('inviteText');
+            if (inviteText) {
+                inviteText.innerHTML = `${request.challengerName} menantangmu bertarung!<br>Level: ${request.challengerLevel}<br>Class: ${request.challengerClass}`;
+            }
+            
+            const pvpInviteModal = document.getElementById('pvpInviteModal');
+            if (pvpInviteModal) {
+                pvpInviteModal.style.display = 'flex';
+            }
+            
+            setTimeout(() => {
+                if (pendingPvpInvite && pendingPvpInvite.id === snapshot.key) {
+                    declinePvpInvite();
+                }
+            }, 30000);
+        }
+    });
+    
+    pvpBattlesRef.orderByChild('player1Id').equalTo(currentUserId).on('child_changed', (snapshot) => {
+        const battle = snapshot.val();
+        if (battle && battle.currentTurn && battle.currentTurn !== currentUserId && currentPvpBattleId === snapshot.key) {
+            updatePvpBattleUI(battle);
+        }
+    });
+    
+    pvpBattlesRef.orderByChild('player2Id').equalTo(currentUserId).on('child_changed', (snapshot) => {
+        const battle = snapshot.val();
+        if (battle && battle.currentTurn && battle.currentTurn !== currentUserId && currentPvpBattleId === snapshot.key) {
+            updatePvpBattleUI(battle);
+        }
+    });
+}
+
+async function sendPvpChallenge(targetId, targetName, targetLevel, targetClass) {
+    if (!database) {
+        showToast('Database tidak terhubung!', 'error');
+        return false;
+    }
+    
+    const onlinePlayers = await getOnlinePlayers();
+    const isOnline = onlinePlayers.some(p => p.id === targetId);
+    
+    if (!isOnline) {
+        showToast(`${targetName} sedang offline! Tidak bisa menantang PvP.`, 'error');
+        return false;
+    }
+    
+    const now = Date.now();
+    if (playerData.lastPvp && (now - playerData.lastPvp) < 300000) {
+        const remaining = Math.ceil((300000 - (now - playerData.lastPvp)) / 1000);
+        showToast(`Cooldown PvP! Tunggu ${remaining} detik lagi.`, 'error');
+        return false;
+    }
+    
+    const requestId = Date.now() + '_' + currentUserId;
+    
+    const requestData = {
+        challengerId: currentUserId,
+        challengerName: currentUser,
+        challengerLevel: playerData.level,
+        challengerClass: playerData.class,
+        targetId: targetId,
+        targetName: targetName,
+        targetLevel: targetLevel,
+        targetClass: targetClass,
+        status: 'pending',
+        timestamp: now
+    };
+    
+    try {
+        await database.ref(`rpg_pvp_requests/${requestId}`).set(requestData);
+        showToast(`Mengirim tantangan ke ${targetName}...`, 'success');
+        
+        setTimeout(async () => {
+            const snapshot = await database.ref(`rpg_pvp_requests/${requestId}`).once('value');
+            const req = snapshot.val();
+            if (req && req.status === 'pending') {
+                await database.ref(`rpg_pvp_requests/${requestId}`).remove();
+                showToast(`Tantangan ke ${targetName} kadaluarsa.`, 'info');
+            }
+        }, 30000);
+        
+        return true;
+    } catch (error) {
+        console.error('Error sending PvP challenge:', error);
+        showToast('Gagal mengirim tantangan!', 'error');
+        return false;
+    }
+}
+
+async function acceptPvpInvite() {
+    if (!pendingPvpInvite) return;
+    
+    const pvpInviteModal = document.getElementById('pvpInviteModal');
+    if (pvpInviteModal) pvpInviteModal.style.display = 'none';
+    
+    try {
+        await database.ref(`rpg_pvp_requests/${pendingPvpInvite.id}`).update({
+            status: 'accepted'
+        });
+        
+        const battleId = Date.now() + '_pvp';
+        const challengerData = await database.ref(`rpg_players/${pendingPvpInvite.challengerId}`).once('value');
+        const targetData = await database.ref(`rpg_players/${currentUserId}`).once('value');
+        
+        const challenger = challengerData.val();
+        const target = targetData.val();
+        
+        const battleData = {
+            player1Id: pendingPvpInvite.challengerId,
+            player1Name: pendingPvpInvite.challengerName,
+            player1Hp: challenger.hp,
+            player1MaxHp: challenger.maxHp,
+            player1Mp: challenger.mp,
+            player1MaxMp: challenger.maxMp,
+            player1Attack: getTotalStatsFromData(challenger).attack,
+            player1Defense: getTotalStatsFromData(challenger).defense,
+            player1Class: challenger.class,
+            player2Id: currentUserId,
+            player2Name: currentUser,
+            player2Hp: target.hp,
+            player2MaxHp: target.maxHp,
+            player2Mp: target.mp,
+            player2MaxMp: target.maxMp,
+            player2Attack: getTotalStatsFromData(target).attack,
+            player2Defense: getTotalStatsFromData(target).defense,
+            player2Class: target.class,
+            currentTurn: challenger.agility > target.agility ? pendingPvpInvite.challengerId : currentUserId,
+            status: 'active',
+            winner: null,
+            log: ['⚔️ PvP Pertempuran dimulai!'],
+            timestamp: Date.now()
+        };
+        
+        await database.ref(`rpg_pvp_battles/${battleId}`).set(battleData);
+        
+        startPvpBattle(battleId, battleData);
+        
+        await database.ref(`rpg_pvp_requests/${pendingPvpInvite.id}`).remove();
+        pendingPvpInvite = null;
+        
+    } catch (error) {
+        console.error('Error accepting PvP invite:', error);
+        showToast('Gagal memulai pertarungan!', 'error');
+    }
+}
+
+function declinePvpInvite() {
+    if (!pendingPvpInvite) return;
+    
+    const pvpInviteModal = document.getElementById('pvpInviteModal');
+    if (pvpInviteModal) pvpInviteModal.style.display = 'none';
+    
+    if (database) {
+        database.ref(`rpg_pvp_requests/${pendingPvpInvite.id}`).update({
+            status: 'declined'
+        }).then(() => {
+            database.ref(`rpg_pvp_requests/${pendingPvpInvite.id}`).remove();
+        });
+    }
+    
+    showToast('Menolak tantangan PvP.', 'info');
+    pendingPvpInvite = null;
+}
+
+function getTotalStatsFromData(playerData) {
+    let attack = playerData.attack || 10;
+    let defense = playerData.defense || 5;
+    
+    if (playerData.equipment) {
+        if (playerData.equipment.weapon && shopItems[playerData.equipment.weapon]) {
+            attack += shopItems[playerData.equipment.weapon].attack || 0;
+        }
+        if (playerData.equipment.armor && shopItems[playerData.equipment.armor]) {
+            defense += shopItems[playerData.equipment.armor].defense || 0;
+        }
+    }
+    
+    return { attack, defense };
+}
+
+async function startPvpBattle(battleId, battleData) {
+    currentPvpBattleId = battleId;
+    
+    pvpBattleState = {
+        battleId: battleId,
+        isPlayer1: battleData.player1Id === currentUserId,
+        player: battleData.player1Id === currentUserId ? {
+            id: battleData.player1Id,
+            name: battleData.player1Name,
+            hp: battleData.player1Hp,
+            maxHp: battleData.player1MaxHp,
+            mp: battleData.player1Mp,
+            maxMp: battleData.player1MaxMp,
+            attack: battleData.player1Attack,
+            defense: battleData.player1Defense,
+            class: battleData.player1Class
+        } : {
+            id: battleData.player2Id,
+            name: battleData.player2Name,
+            hp: battleData.player2Hp,
+            maxHp: battleData.player2MaxHp,
+            mp: battleData.player2Mp,
+            maxMp: battleData.player2MaxMp,
+            attack: battleData.player2Attack,
+            defense: battleData.player2Defense,
+            class: battleData.player2Class
+        },
+        opponent: battleData.player1Id === currentUserId ? {
+            id: battleData.player2Id,
+            name: battleData.player2Name,
+            hp: battleData.player2Hp,
+            maxHp: battleData.player2MaxHp,
+            mp: battleData.player2Mp,
+            maxMp: battleData.player2MaxMp,
+            attack: battleData.player2Attack,
+            defense: battleData.player2Defense,
+            class: battleData.player2Class
+        } : {
+            id: battleData.player1Id,
+            name: battleData.player1Name,
+            hp: battleData.player1Hp,
+            maxHp: battleData.player1MaxHp,
+            mp: battleData.player1Mp,
+            maxMp: battleData.player1MaxMp,
+            attack: battleData.player1Attack,
+            defense: battleData.player1Defense,
+            class: battleData.player1Class
+        },
+        currentTurn: battleData.currentTurn,
+        log: battleData.log || ['⚔️ PvP Pertempuran dimulai!']
+    };
+    
+    const pvpBattleModal = document.getElementById('pvpBattleModal');
+    const pvpPlayerName = document.getElementById('pvpPlayerName');
+    const pvpEnemyName = document.getElementById('pvpEnemyName');
+    const pvpPlayerHp = document.getElementById('pvpPlayerHp');
+    const pvpPlayerHpFill = document.getElementById('pvpPlayerHpFill');
+    const pvpEnemyHp = document.getElementById('pvpEnemyHp');
+    const pvpEnemyHpFill = document.getElementById('pvpEnemyHpFill');
+    const pvpBattleLog = document.getElementById('pvpBattleLog');
+    
+    if (pvpPlayerName) pvpPlayerName.innerText = pvpBattleState.player.name;
+    if (pvpEnemyName) pvpEnemyName.innerText = pvpBattleState.opponent.name;
+    if (pvpPlayerHp) pvpPlayerHp.innerText = `${pvpBattleState.player.hp}/${pvpBattleState.player.maxHp}`;
+    if (pvpPlayerHpFill) pvpPlayerHpFill.style.width = `${(pvpBattleState.player.hp / pvpBattleState.player.maxHp) * 100}%`;
+    if (pvpEnemyHp) pvpEnemyHp.innerText = `${pvpBattleState.opponent.hp}/${pvpBattleState.opponent.maxHp}`;
+    if (pvpEnemyHpFill) pvpEnemyHpFill.style.width = `${(pvpBattleState.opponent.hp / pvpBattleState.opponent.maxHp) * 100}%`;
+    if (pvpBattleLog) pvpBattleLog.innerHTML = pvpBattleState.log.map(l => `<p>${l}</p>`).join('');
+    
+    if (pvpBattleModal) pvpBattleModal.style.display = 'flex';
+    
+    updatePvpButtons();
+}
+
+function updatePvpButtons() {
+    const isMyTurn = pvpBattleState && pvpBattleState.currentTurn === currentUserId;
+    const attackBtn = document.querySelector('#pvpBattleModal .battle-actions .battle-btn:first-child');
+    const skillBtn = document.getElementById('pvpSkillBtn');
+    
+    if (attackBtn) {
+        attackBtn.style.opacity = isMyTurn ? '1' : '0.5';
+        attackBtn.disabled = !isMyTurn;
+    }
+    if (skillBtn) {
+        skillBtn.style.opacity = isMyTurn ? '1' : '0.5';
+        skillBtn.disabled = !isMyTurn;
+    }
+}
+
+async function updatePvpBattleUI(battleData) {
+    if (!pvpBattleState) return;
+    
+    pvpBattleState.player.hp = battleData.player1Id === currentUserId ? battleData.player1Hp : battleData.player2Hp;
+    pvpBattleState.opponent.hp = battleData.player1Id === currentUserId ? battleData.player2Hp : battleData.player1Hp;
+    pvpBattleState.player.mp = battleData.player1Id === currentUserId ? battleData.player1Mp : battleData.player2Mp;
+    pvpBattleState.opponent.mp = battleData.player1Id === currentUserId ? battleData.player2Mp : battleData.player1Mp;
+    pvpBattleState.currentTurn = battleData.currentTurn;
+    pvpBattleState.log = battleData.log || [];
+    
+    const pvpPlayerHp = document.getElementById('pvpPlayerHp');
+    const pvpPlayerHpFill = document.getElementById('pvpPlayerHpFill');
+    const pvpEnemyHp = document.getElementById('pvpEnemyHp');
+    const pvpEnemyHpFill = document.getElementById('pvpEnemyHpFill');
+    const pvpBattleLog = document.getElementById('pvpBattleLog');
+    
+    if (pvpPlayerHp) pvpPlayerHp.innerText = `${pvpBattleState.player.hp}/${pvpBattleState.player.maxHp}`;
+    if (pvpPlayerHpFill) pvpPlayerHpFill.style.width = `${(pvpBattleState.player.hp / pvpBattleState.player.maxHp) * 100}%`;
+    if (pvpEnemyHp) pvpEnemyHp.innerText = `${pvpBattleState.opponent.hp}/${pvpBattleState.opponent.maxHp}`;
+    if (pvpEnemyHpFill) pvpEnemyHpFill.style.width = `${(pvpBattleState.opponent.hp / pvpBattleState.opponent.maxHp) * 100}%`;
+    if (pvpBattleLog) pvpBattleLog.innerHTML = pvpBattleState.log.map(l => `<p>${l}</p>`).join('');
+    
+    updatePvpButtons();
+    
+    if (battleData.winner) {
+        await handlePvpVictory(battleData.winner);
+    }
+}
+
+async function pvpAttack() {
+    if (!pvpBattleState || pvpBattleState.currentTurn !== currentUserId) {
+        showToast('Bukan giliranmu!', 'error');
+        return;
+    }
+    
+    const damage = Math.max(1, pvpBattleState.player.attack - pvpBattleState.opponent.defense);
+    const isCritical = Math.random() < 0.1;
+    const finalDamage = isCritical ? damage * 2 : damage;
+    
+    const newOpponentHp = Math.max(0, pvpBattleState.opponent.hp - finalDamage);
+    const logMessage = `${pvpBattleState.player.name} menyerang! ${isCritical ? 'CRITICAL! ' : ''}Damage: ${finalDamage}`;
+    
+    await updatePvpBattle({
+        opponentHp: newOpponentHp,
+        currentTurn: pvpBattleState.opponent.id,
+        log: logMessage
+    });
+    
+    if (newOpponentHp <= 0) {
+        await endPvpBattle(currentUserId);
+    }
+}
+
+async function pvpSkill() {
+    if (!pvpBattleState || pvpBattleState.currentTurn !== currentUserId) {
+        showToast('Bukan giliranmu!', 'error');
+        return;
+    }
+    
+    let mpCost = 15;
+    let skillDamage = 0;
+    let skillName = "Skill";
+    
+    if (pvpBattleState.player.class === 'mage') {
+        mpCost = 20;
+        skillDamage = Math.floor(pvpBattleState.player.attack * 2);
+        skillName = "Fireball";
+    } else if (pvpBattleState.player.class === 'archer') {
+        mpCost = 15;
+        const isCritical = Math.random() < 0.75;
+        skillDamage = Math.max(1, pvpBattleState.player.attack - pvpBattleState.opponent.defense);
+        if (isCritical) skillDamage *= 2;
+        skillName = "Precision Shot";
+    } else {
+        mpCost = 15;
+        skillDamage = Math.floor(pvpBattleState.player.attack * 2.5);
+        skillName = "Rage Slash";
+    }
+    
+    if (pvpBattleState.player.mp < mpCost) {
+        showToast(`MP tidak cukup! Butuh ${mpCost} MP.`, 'error');
+        return;
+    }
+    
+    const newPlayerMp = pvpBattleState.player.mp - mpCost;
+    const newOpponentHp = Math.max(0, pvpBattleState.opponent.hp - skillDamage);
+    const logMessage = `${pvpBattleState.player.name} menggunakan ${skillName}! Damage: ${skillDamage}`;
+    
+    await updatePvpBattle({
+        opponentHp: newOpponentHp,
+        playerMp: newPlayerMp,
+        currentTurn: pvpBattleState.opponent.id,
+        log: logMessage
+    });
+    
+    if (newOpponentHp <= 0) {
+        await endPvpBattle(currentUserId);
+    }
+}
+
+async function pvpUseItem() {
+    if (!pvpBattleState || pvpBattleState.currentTurn !== currentUserId) {
+        showToast('Bukan giliranmu!', 'error');
+        return;
+    }
+    
+    if (!playerData.inventory?.potion || playerData.inventory.potion < 1) {
+        showToast('Tidak memiliki Potion!', 'error');
+        return;
+    }
+    
+    const healAmount = 30;
+    const newPlayerHp = Math.min(pvpBattleState.player.maxHp, pvpBattleState.player.hp + healAmount);
+    playerData.inventory.potion--;
+    
+    await savePlayerData();
+    
+    const logMessage = `${pvpBattleState.player.name} menggunakan Potion! HP +${healAmount}`;
+    
+    await updatePvpBattle({
+        playerHp: newPlayerHp,
+        currentTurn: pvpBattleState.opponent.id,
+        log: logMessage
+    });
+}
+
+async function updatePvpBattle(updates) {
+    if (!currentPvpBattleId || !database) return;
+    
+    const battleRef = database.ref(`rpg_pvp_battles/${currentPvpBattleId}`);
+    const snapshot = await battleRef.once('value');
+    const battle = snapshot.val();
+    
+    if (!battle) return;
+    
+    const newBattleData = { ...battle };
+    
+    if (updates.opponentHp !== undefined) {
+        if (currentUserId === battle.player1Id) {
+            newBattleData.player2Hp = updates.opponentHp;
+        } else {
+            newBattleData.player1Hp = updates.opponentHp;
+        }
+    }
+    
+    if (updates.playerHp !== undefined) {
+        if (currentUserId === battle.player1Id) {
+            newBattleData.player1Hp = updates.playerHp;
+        } else {
+            newBattleData.player2Hp = updates.playerHp;
+        }
+    }
+    
+    if (updates.playerMp !== undefined) {
+        if (currentUserId === battle.player1Id) {
+            newBattleData.player1Mp = updates.playerMp;
+        } else {
+            newBattleData.player2Mp = updates.playerMp;
+        }
+    }
+    
+    if (updates.currentTurn !== undefined) {
+        newBattleData.currentTurn = updates.currentTurn;
+    }
+    
+    if (updates.log !== undefined) {
+        newBattleData.log = [...(battle.log || []), updates.log];
+    }
+    
+    await battleRef.update(newBattleData);
+}
+
+async function endPvpBattle(winnerId) {
+    if (!currentPvpBattleId || !database) return;
+    
+    const battleRef = database.ref(`rpg_pvp_battles/${currentPvpBattleId}`);
+    const snapshot = await battleRef.once('value');
+    const battle = snapshot.val();
+    
+    if (!battle) return;
+    
+    await battleRef.update({
+        winner: winnerId,
+        status: 'finished'
+    });
+    
+    const isWinner = winnerId === currentUserId;
+    
+    if (isWinner) {
+        playerData.pvpWins = (playerData.pvpWins || 0) + 1;
+        const goldStolen = Math.floor(playerData.gold * 0.05);
+        playerData.gold += goldStolen;
+        showToast(`🏆 Kemenangan PvP! +${formatGold(goldStolen)} Gold`, 'success');
+    } else {
+        playerData.pvpLosses = (playerData.pvpLosses || 0) + 1;
+        const goldLost = Math.floor(playerData.gold * 0.05);
+        playerData.gold -= goldLost;
+        showToast(`💀 Kalah PvP! Uang berkurang ${formatGold(goldLost)}`, 'error');
+    }
+    
+    playerData.lastPvp = Date.now();
+    await savePlayerData();
+    updateUI();
+    
+    const winnerName = battle.player1Id === winnerId ? battle.player1Name : battle.player2Name;
+    const logMessage = `🏆 ${winnerName} memenangkan pertarungan! 🏆`;
+    
+    await battleRef.update({
+        log: [...(battle.log || []), logMessage]
+    });
+    
+    setTimeout(() => {
+        closePvpBattleModal();
+    }, 3000);
+}
+
+function closePvpBattleModal() {
+    const pvpBattleModal = document.getElementById('pvpBattleModal');
+    if (pvpBattleModal) pvpBattleModal.style.display = 'none';
+    currentPvpBattleId = null;
+    pvpBattleState = null;
 }
 
 // ========== LOGIN SYSTEM ==========
@@ -114,16 +689,14 @@ async function login() {
         return;
     }
     
-    // Disable button while processing
     if (loginBtn) {
         loginBtn.disabled = true;
         loginBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Memproses...';
     }
     
     currentUser = username;
-    currentUserId = 'rpg_' + username.toLowerCase().replace(/[^a-z0-9]/g, '_') + '_' + Date.now();
+    currentUserId = 'rpg_' + username.toLowerCase().replace(/[^a-z0-9]/g, '_');
     
-    // Save to localStorage
     localStorage.setItem('rpg_username', currentUser);
     localStorage.setItem('rpg_userId', currentUserId);
     
@@ -163,6 +736,7 @@ async function loadPlayerData() {
             playerData = data;
             updateUI();
             startGame();
+            startOnlineStatusUpdates();
         } else {
             showClassSelection();
         }
@@ -177,10 +751,8 @@ async function loadPlayerData() {
 }
 
 function showClassSelection() {
-    // Close login screen first
     if (loginScreen) loginScreen.style.display = 'none';
     
-    // Remove existing modal if any
     const existingModal = document.getElementById('classModal');
     if (existingModal) existingModal.remove();
     
@@ -225,7 +797,6 @@ function showClassSelection() {
 function closeClassModal() {
     const modal = document.getElementById('classModal');
     if (modal) modal.remove();
-    // Go back to login if class not selected
     if (loginScreen) loginScreen.style.display = 'flex';
     if (gameScreen) gameScreen.style.display = 'none';
     if (loginBtn) {
@@ -268,13 +839,15 @@ async function createPlayer(className) {
         pvpWins: 0,
         pvpLosses: 0,
         quests: {},
-        createdAt: Date.now()
+        createdAt: Date.now(),
+        lastPvp: 0
     };
     
     try {
         await database.ref(`rpg_players/${currentUserId}`).set(playerData);
         updateUI();
         startGame();
+        startOnlineStatusUpdates();
         showToast(`🎉 Selamat datang, ${className.toUpperCase()}!`, 'success');
     } catch (error) {
         console.error('Error creating player:', error);
@@ -286,32 +859,33 @@ function startGame() {
     if (loginScreen) loginScreen.style.display = 'none';
     if (gameScreen) gameScreen.style.display = 'block';
     
-    // Re-get DOM elements after game screen shown
     refreshUIData();
-    
     updateUI();
     console.log('🎮 Game started for:', currentUser);
 }
 
 function refreshUIData() {
-    // Re-get DOM elements that might have been recreated
-    document.getElementById('headerUsername').innerText = playerData?.username || 'Loading...';
-    document.getElementById('headerLevel').innerText = `Lv ${playerData?.level || 1}`;
-    document.getElementById('playerName').innerText = playerData?.username || '-';
-    document.getElementById('playerClass').innerText = playerData?.class?.toUpperCase() || '-';
-    document.getElementById('playerGold').innerText = formatGold(playerData?.gold || 0);
+    const headerUsername = document.getElementById('headerUsername');
+    const headerLevel = document.getElementById('headerLevel');
+    const playerName = document.getElementById('playerName');
+    const playerClass = document.getElementById('playerClass');
+    const playerGold = document.getElementById('playerGold');
+    
+    if (headerUsername) headerUsername.innerText = playerData?.username || 'Loading...';
+    if (headerLevel) headerLevel.innerText = `Lv ${playerData?.level || 1}`;
+    if (playerName) playerName.innerText = playerData?.username || '-';
+    if (playerClass) playerClass.innerText = playerData?.class?.toUpperCase() || '-';
+    if (playerGold) playerGold.innerText = formatGold(playerData?.gold || 0);
 }
 
 function updateUI() {
     if (!playerData) return;
     
-    // Header
     const headerUsername = document.getElementById('headerUsername');
     const headerLevel = document.getElementById('headerLevel');
     if (headerUsername) headerUsername.innerText = playerData.username;
     if (headerLevel) headerLevel.innerText = `Lv ${playerData.level}`;
     
-    // Stats Card
     const playerName = document.getElementById('playerName');
     const playerClass = document.getElementById('playerClass');
     const playerGold = document.getElementById('playerGold');
@@ -319,7 +893,6 @@ function updateUI() {
     if (playerClass) playerClass.innerText = playerData.class.toUpperCase();
     if (playerGold) playerGold.innerText = formatGold(playerData.gold);
     
-    // HP Bar
     const hpPercent = (playerData.hp / playerData.maxHp) * 100;
     const mpPercent = (playerData.mp / playerData.maxMp) * 100;
     const expPercent = (playerData.exp / playerData.expToNext) * 100;
@@ -928,31 +1501,24 @@ async function doMining() {
     showToast(`⛏️ Mendapatkan ${ores[index]}! +${goldGain} Gold`, 'success');
 }
 
-// ========== PVP ==========
+// ========== PVP UI ==========
 async function showPvp() {
     try {
-        const snapshot = await database.ref('rpg_players').once('value');
-        const players = snapshot.val();
-        const playerList = [];
-        
-        for (const [id, data] of Object.entries(players)) {
-            if (id !== currentUserId && data.username !== playerData.username) {
-                playerList.push({ id, username: data.username, level: data.level });
-            }
-        }
+        const onlinePlayers = await getOnlinePlayers();
         
         const container = document.getElementById('pvpList');
         if (container) {
-            if (playerList.length === 0) {
-                container.innerHTML = '<div style="text-align:center;padding:20px;">Tidak ada player lain</div>';
+            if (onlinePlayers.length === 0) {
+                container.innerHTML = '<div style="text-align:center;padding:20px;">Tidak ada player online</div>';
             } else {
-                container.innerHTML = playerList.map(p => `
+                container.innerHTML = onlinePlayers.map(p => `
                     <div class="pvp-item" data-username="${p.username}">
                         <div>
                             <div class="item-name">${p.username}</div>
-                            <div class="item-desc">Level ${p.level}</div>
+                            <div class="item-desc">Level ${p.level} - ${p.class}</div>
+                            <div class="online-badge online"></div> Online
                         </div>
-                        <button class="pvp-challenge-btn" onclick="challengePvp('${p.id}', '${p.username}')">Tantang</button>
+                        <button class="pvp-challenge-btn" onclick="challengePvp('${p.id}', '${p.username}', ${p.level}, '${p.class}')">Tantang</button>
                     </div>
                 `).join('');
             }
@@ -961,7 +1527,7 @@ async function showPvp() {
         if (pvpModal) pvpModal.style.display = 'flex';
     } catch (error) {
         console.error('Error loading PvP:', error);
-        showToast('Gagal memuat daftar player!', 'error');
+        showToast('Gagal memuat daftar player online!', 'error');
     }
 }
 
@@ -978,80 +1544,19 @@ function filterPvpPlayers() {
     });
 }
 
-async function challengePvp(opponentId, opponentName) {
-    try {
-        const snapshot = await database.ref(`rpg_players/${opponentId}`).once('value');
-        const opponent = snapshot.val();
-        
-        if (!opponent) {
-            showToast('Player tidak ditemukan!', 'error');
-            return;
-        }
-        
-        let playerCurrent = playerData.hp;
-        let opponentCurrent = opponent.hp;
-        let turn = playerData.agility > opponent.agility ? 'player' : 'opponent';
-        let log = `⚔️ DUEL VS ${opponentName} ⚔️\n\n`;
-        
-        while (playerCurrent > 0 && opponentCurrent > 0) {
-            if (turn === 'player') {
-                const damage = Math.max(1, getTotalAttack() - getOpponentDefense(opponent));
-                opponentCurrent -= damage;
-                log += `🗡️ Kamu menyerang! Damage: ${damage}\n`;
-                turn = 'opponent';
-            } else {
-                const damage = Math.max(1, getOpponentAttack(opponent) - getTotalDefense());
-                playerCurrent -= damage;
-                log += `🛡️ ${opponentName} menyerang! Damage: ${damage}\n`;
-                turn = 'player';
-            }
-        }
-        
-        if (playerCurrent <= 0) {
-            log += `\n💀 KAMU KALAH! 💀`;
-            playerData.pvpLosses = (playerData.pvpLosses || 0) + 1;
-            const goldStolen = Math.floor(playerData.gold * 0.05);
-            playerData.gold -= goldStolen;
-            log += `\n💰 Uangmu berkurang ${formatGold(goldStolen)}!`;
-        } else {
-            log += `\n🏆 KAMU MENANG! 🏆`;
-            playerData.pvpWins = (playerData.pvpWins || 0) + 1;
-            const goldStolen = Math.floor(opponent.gold * 0.05);
-            playerData.gold += goldStolen;
-            log += `\n💰 Kamu mendapat ${formatGold(goldStolen)} dari lawan!`;
-        }
-        
-        playerData.hp = Math.floor(playerCurrent);
-        await savePlayerData();
-        updateUI();
-        
-        showToast(log, 'info');
-        closePvpModal();
-    } catch (error) {
-        console.error('PvP error:', error);
-        showToast('Gagal melakukan PvP!', 'error');
-    }
-}
-
-function getOpponentAttack(opponent) {
-    let attack = opponent.attack;
-    if (opponent.equipment?.weapon && shopItems[opponent.equipment.weapon]) {
-        attack += shopItems[opponent.equipment.weapon].attack || 0;
-    }
-    return attack;
-}
-
-function getOpponentDefense(opponent) {
-    let defense = opponent.defense;
-    if (opponent.equipment?.armor && shopItems[opponent.equipment.armor]) {
-        defense += shopItems[opponent.equipment.armor].defense || 0;
-    }
-    return defense;
+async function challengePvp(opponentId, opponentName, opponentLevel, opponentClass) {
+    await sendPvpChallenge(opponentId, opponentName, opponentLevel, opponentClass);
+    closePvpModal();
 }
 
 function closePvpModal() {
     const pvpModal = document.getElementById('pvpModal');
     if (pvpModal) pvpModal.style.display = 'none';
+}
+
+function closeOnlinePlayersModal() {
+    const modal = document.getElementById('onlinePlayersModal');
+    if (modal) modal.style.display = 'none';
 }
 
 // ========== LEADERBOARD ==========
@@ -1062,12 +1567,14 @@ async function loadLeaderboard(type) {
         const playerList = [];
         
         for (const [id, data] of Object.entries(players)) {
-            playerList.push({
-                username: data.username,
-                level: data.level,
-                gold: data.gold,
-                pvpWins: data.pvpWins || 0
-            });
+            if (data && data.username) {
+                playerList.push({
+                    username: data.username,
+                    level: data.level || 1,
+                    gold: data.gold || 0,
+                    pvpWins: data.pvpWins || 0
+                });
+            }
         }
         
         if (type === 'level') playerList.sort((a,b) => b.level - a.level);
@@ -1089,7 +1596,6 @@ async function loadLeaderboard(type) {
             `).join('');
         }
         
-        // Update active tab
         document.querySelectorAll('.lb-tab').forEach(btn => btn.classList.remove('active'));
         const activeTab = document.querySelector(`.lb-tab[onclick*="${type}"]`);
         if (activeTab) activeTab.classList.add('active');
@@ -1173,6 +1679,7 @@ async function savePlayerData() {
             pvpWins: playerData.pvpWins,
             pvpLosses: playerData.pvpLosses,
             quests: playerData.quests,
+            lastPvp: playerData.lastPvp,
             lastUpdated: Date.now()
         });
     } catch (error) {
@@ -1216,6 +1723,9 @@ function goBackToTools() {
     if (window.GlobalMusic && window.GlobalMusic.saveState) {
         window.GlobalMusic.saveState();
     }
+    if (currentUserId && database) {
+        database.ref(`rpg_online_players/${currentUserId}`).remove();
+    }
     document.body.style.opacity = '0';
     setTimeout(() => {
         window.location.href = 'tools.html';
@@ -1251,6 +1761,8 @@ window.closePvpModal = closePvpModal;
 window.closeLeaderboardModal = closeLeaderboardModal;
 window.closeLocationModal = closeLocationModal;
 window.closeClassModal = closeClassModal;
+window.closeOnlinePlayersModal = closeOnlinePlayersModal;
+window.closePvpBattleModal = closePvpBattleModal;
 window.useItem = useItem;
 window.buyItem = buyItem;
 window.takeQuest = takeQuest;
@@ -1262,3 +1774,13 @@ window.showLocationModal = showLocationModal;
 window.loadLeaderboard = loadLeaderboard;
 window.challengePvp = challengePvp;
 window.createPlayer = createPlayer;
+window.pvpAttack = pvpAttack;
+window.pvpSkill = pvpSkill;
+window.pvpUseItem = pvpUseItem;
+window.acceptPvpInvite = acceptPvpInvite;
+window.declinePvpInvite = declinePvpInvite;
+
+// Handle PvP battle winner
+async function handlePvpVictory(winnerId) {
+    // Already handled in endPvpBattle
+}
