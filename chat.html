@@ -7,43 +7,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="chat.css">
-    <style>
-        /* Additional styles for new features */
-        .group-actions { display: flex; gap: 5px; margin-right: 5px; }
-        .group-profile-btn, .group-status-btn, .notification-toggle-btn {
-            background: rgba(255, 255, 255, 0.1);
-            border: none;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--primary);
-            transition: all 0.2s ease;
-        }
-        .group-profile-btn:active, .group-status-btn:active, .notification-toggle-btn:active {
-            transform: scale(0.95);
-        }
-        .group-avatar-small {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            object-fit: cover;
-            margin-right: 8px;
-        }
-        .group-name {
-            font-size: 0.9rem;
-            font-weight: 600;
-        }
-        body.light .group-profile-btn,
-        body.light .group-status-btn,
-        body.light .notification-toggle-btn {
-            background: rgba(0, 0, 0, 0.08);
-            color: #ff8c00;
-        }
-    </style>
 </head>
 <body>
     <!-- LOGIN SCREEN -->
@@ -77,9 +40,10 @@
         <!-- Header -->
         <div class="chat-header">
             <button class="back-btn" onclick="goBackToTools()"><i class="fas fa-arrow-left"></i></button>
-            <div class="chat-title">
+            <div class="chat-title" id="chatTitleBtn" onclick="showGroupProfileDetail()">
                 <img id="groupAvatarHeader" class="group-avatar-small" src="" style="display: none;">
                 <span id="groupNameHeader" class="group-name">Global Chat+</span>
+                <i class="fas fa-chevron-down" style="font-size: 0.6rem; opacity: 0.6;"></i>
             </div>
             <div class="group-actions">
                 <button class="group-status-btn" onclick="showGroupStatusModal()" title="Buat Status Grup">
@@ -125,7 +89,11 @@
         </div>
 
         <!-- Group Status Container -->
-        <div class="group-status-container" id="groupStatusContainer" style="display: none;"></div>
+        <div class="group-status-container" id="groupStatusContainer" style="display: none;">
+            <button class="delete-status-btn" id="deleteStatusBtn" style="display: none;" onclick="deleteGroupStatus()">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
 
         <!-- Prayer Schedule Container -->
         <div class="prayer-schedule-container" id="prayerScheduleContainer"></div>
@@ -224,7 +192,7 @@
                 <div class="voice-header">
                     <i class="fas fa-microphone-alt"></i>
                     <span>Merekam Suara...</span>
-                    <button id="closeVoiceModalBtn" class="close-voice-btn"><i class="fas fa-times"></i></button>
+                    <button id="closeVoiceModalBtn" class="close-modal-btn"><i class="fas fa-times"></i></button>
                 </div>
                 <div class="voice-wave" id="voiceWave">
                     <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
