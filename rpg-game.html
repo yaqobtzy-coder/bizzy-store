@@ -22,10 +22,6 @@
                     <i class="fas fa-user"></i>
                     <input type="text" id="usernameInput" placeholder="Username" maxlength="20">
                 </div>
-                <div class="input-group">
-                    <i class="fas fa-lock"></i>
-                    <input type="password" id="passwordInput" placeholder="Kode Rahasia (opsional)">
-                </div>
                 <button id="loginBtn" class="login-btn">
                     <i class="fas fa-gamepad"></i> Mulai Petualangan
                 </button>
@@ -50,7 +46,7 @@
         </div>
 
         <!-- Player Stats Card -->
-        <div class="stats-card" id="statsCard">
+        <div class="stats-card">
             <div class="stats-header">
                 <div class="player-avatar">
                     <i class="fas fa-user-astronaut"></i>
@@ -95,9 +91,9 @@
             </div>
         </div>
 
-        <!-- Location & Action Cards -->
-        <div class="location-card" id="locationCard">
-            <div class="location-header" onclick="showLocationModal()">
+        <!-- Location Card -->
+        <div class="location-card" onclick="showLocationModal()">
+            <div class="location-header">
                 <i class="fas fa-map-marker-alt"></i>
                 <span id="currentLocation">Desa Pemula</span>
                 <i class="fas fa-chevron-down"></i>
@@ -105,6 +101,7 @@
             <div class="location-desc" id="locationDesc">Desa kecil yang tenang, tempat awal petualanganmu.</div>
         </div>
 
+        <!-- Action Grid -->
         <div class="action-grid">
             <div class="action-card" onclick="explore()">
                 <i class="fas fa-tree"></i>
@@ -141,7 +138,7 @@
                 <span>Leaderboard</span>
                 <small>Top player</small>
             </div>
-            <div class="action-card" onclick="showPvp()">
+            <div class="action-card" onclick="showPvpArena()">
                 <i class="fas fa-fist-raised"></i>
                 <span>PvP Arena</span>
                 <small>Tantang player</small>
@@ -193,97 +190,131 @@
             </div>
         </div>
 
-        <!-- Inventory Modal -->
-        <div id="inventoryModal" class="modal" style="display: none;">
-            <div class="modal-content inventory-modal">
-                <div class="modal-header">
-                    <h3><i class="fas fa-backpack"></i> Inventory</h3>
-                    <button class="modal-close" onclick="closeInventoryModal()"><i class="fas fa-times"></i></button>
-                </div>
-                <div class="inventory-list" id="inventoryList"></div>
-                <div class="modal-footer">
-                    <button class="btn-secondary" onclick="closeInventoryModal()">Tutup</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Shop Modal -->
-        <div id="shopModal" class="modal" style="display: none;">
-            <div class="modal-content shop-modal">
-                <div class="modal-header">
-                    <h3><i class="fas fa-store"></i> Toko Petualang</h3>
-                    <button class="modal-close" onclick="closeShopModal()"><i class="fas fa-times"></i></button>
-                </div>
-                <div class="shop-list" id="shopList"></div>
-                <div class="modal-footer">
-                    <button class="btn-secondary" onclick="closeShopModal()">Tutup</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Quest Modal -->
-        <div id="questModal" class="modal" style="display: none;">
-            <div class="modal-content quest-modal">
-                <div class="modal-header">
-                    <h3><i class="fas fa-scroll"></i> Quest</h3>
-                    <button class="modal-close" onclick="closeQuestModal()"><i class="fas fa-times"></i></button>
-                </div>
-                <div class="quest-list" id="questList"></div>
-                <div class="modal-footer">
-                    <button class="btn-secondary" onclick="closeQuestModal()">Tutup</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- PvP Modal -->
-        <div id="pvpModal" class="modal" style="display: none;">
+        <!-- PvP Arena Modal -->
+        <div id="pvpArenaModal" class="modal" style="display: none;">
             <div class="modal-content pvp-modal">
                 <div class="modal-header">
                     <h3><i class="fas fa-fist-raised"></i> PvP Arena</h3>
-                    <button class="modal-close" onclick="closePvpModal()"><i class="fas fa-times"></i></button>
+                    <button class="modal-close" onclick="closePvpArenaModal()"><i class="fas fa-times"></i></button>
                 </div>
-                <div class="pvp-search">
-                    <input type="text" id="pvpSearch" placeholder="Cari username..." onkeyup="filterPvpPlayers()">
+                
+                <div class="pvp-join-section">
+                    <div class="section-title">
+                        <i class="fas fa-link"></i> Join Battle dengan Link
+                    </div>
+                    <div class="join-input-group">
+                        <input type="text" id="joinLinkInput" placeholder="Masukkan link invite...">
+                        <button class="join-btn" onclick="joinPvpByLink()">
+                            <i class="fas fa-sign-in-alt"></i> Join
+                        </button>
+                    </div>
+                    <small class="input-hint">Contoh: pvp-invite-Rayy</small>
                 </div>
-                <div class="pvp-list" id="pvpList"></div>
+
+                <div class="pvp-create-section">
+                    <div class="section-title">
+                        <i class="fas fa-plus-circle"></i> Buat Link Tantangan
+                    </div>
+                    <button class="create-invite-btn" onclick="createPvpInviteLink()">
+                        <i class="fas fa-link"></i> Buat Link Undangan PvP
+                    </button>
+                    <div id="inviteLinkContainer" class="invite-link-container" style="display: none;">
+                        <p>Link tantanganmu:</p>
+                        <div class="invite-link-box">
+                            <input type="text" id="inviteLinkInput" readonly>
+                            <button class="copy-btn" onclick="copyInviteLink()">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                        <small>Kirim link ini ke player yang ingin kamu tantang</small>
+                    </div>
+                </div>
+
+                <div class="pvp-online-section">
+                    <div class="section-title">
+                        <i class="fas fa-users"></i> Player Online
+                        <span id="onlineCount" class="online-count">0</span>
+                    </div>
+                    <div class="online-players-list" id="onlinePlayersList">
+                        <div style="text-align:center;padding:20px;">Memuat daftar player...</div>
+                    </div>
+                </div>
+
                 <div class="modal-footer">
-                    <button class="btn-secondary" onclick="closePvpModal()">Tutup</button>
+                    <button class="btn-secondary" onclick="closePvpArenaModal()">Tutup</button>
                 </div>
             </div>
         </div>
 
-        <!-- Leaderboard Modal -->
-        <div id="leaderboardModal" class="modal" style="display: none;">
-            <div class="modal-content leaderboard-modal">
+        <!-- PvP Battle Modal -->
+        <div id="pvpBattleModal" class="modal" style="display: none;">
+            <div class="modal-content battle-modal">
+                <div class="battle-header">
+                    <div class="battle-player">
+                        <i class="fas fa-user"></i>
+                        <span id="pvpPlayerName">You</span>
+                        <div class="battle-hp-bar">
+                            <div class="battle-hp-fill" id="pvpPlayerHpFill" style="width: 100%"></div>
+                        </div>
+                        <span id="pvpPlayerHp">0/0</span>
+                        <div class="battle-mp-bar">
+                            <div class="battle-mp-fill" id="pvpPlayerMpFill" style="width: 100%"></div>
+                        </div>
+                        <span id="pvpPlayerMp">0/0</span>
+                    </div>
+                    <div class="vs">VS</div>
+                    <div class="battle-enemy">
+                        <i class="fas fa-user"></i>
+                        <span id="pvpEnemyName">Opponent</span>
+                        <div class="battle-hp-bar">
+                            <div class="battle-hp-fill" id="pvpEnemyHpFill" style="width: 100%"></div>
+                        </div>
+                        <span id="pvpEnemyHp">0/0</span>
+                        <div class="battle-mp-bar">
+                            <div class="battle-mp-fill" id="pvpEnemyMpFill" style="width: 100%"></div>
+                        </div>
+                        <span id="pvpEnemyMp">0/0</span>
+                    </div>
+                </div>
+                <div class="battle-log" id="pvpBattleLog">
+                    <p>⚔️ Menunggu lawan...</p>
+                </div>
+                <div class="battle-actions">
+                    <button class="battle-btn" onclick="pvpAttack()" id="pvpAttackBtn"><i class="fas fa-fist-raised"></i> Attack</button>
+                    <button class="battle-btn" onclick="pvpSkill()" id="pvpSkillBtn"><i class="fas fa-magic"></i> Skill</button>
+                    <button class="battle-btn" onclick="pvpUseItem()" id="pvpItemBtn"><i class="fas fa-flask"></i> Item</button>
+                </div>
+                <button class="close-modal-btn" onclick="closePvpBattleModal()"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+
+        <!-- PvP Waiting Modal -->
+        <div id="pvpWaitingModal" class="modal" style="display: none;">
+            <div class="modal-content waiting-modal">
                 <div class="modal-header">
-                    <h3><i class="fas fa-trophy"></i> Leaderboard</h3>
-                    <button class="modal-close" onclick="closeLeaderboardModal()"><i class="fas fa-times"></i></button>
+                    <h3><i class="fas fa-hourglass-half"></i> Menunggu Lawan</h3>
                 </div>
-                <div class="leaderboard-tabs">
-                    <button class="lb-tab active" onclick="loadLeaderboard('level')">🏆 Level</button>
-                    <button class="lb-tab" onclick="loadLeaderboard('gold')">💰 Gold</button>
-                    <button class="lb-tab" onclick="loadLeaderboard('pvp')">⚔️ PvP</button>
+                <div class="waiting-content">
+                    <i class="fas fa-spinner fa-pulse" style="font-size: 3rem; color: var(--primary);"></i>
+                    <p id="waitingText">Menunggu lawan join...</p>
+                    <div class="waiting-link-box">
+                        <p>Kirim link ini ke lawan:</p>
+                        <input type="text" id="waitingLinkInput" readonly>
+                        <button class="copy-btn" onclick="copyWaitingLink()">Copy Link</button>
+                    </div>
                 </div>
-                <div class="leaderboard-list" id="leaderboardList"></div>
                 <div class="modal-footer">
-                    <button class="btn-secondary" onclick="closeLeaderboardModal()">Tutup</button>
+                    <button class="btn-secondary" onclick="cancelPvpWaiting()">Batal</button>
                 </div>
             </div>
         </div>
 
-        <!-- Location Modal -->
-        <div id="locationModal" class="modal" style="display: none;">
-            <div class="modal-content location-modal">
-                <div class="modal-header">
-                    <h3><i class="fas fa-map"></i> Pindah Lokasi</h3>
-                    <button class="modal-close" onclick="closeLocationModal()"><i class="fas fa-times"></i></button>
-                </div>
-                <div class="location-list" id="locationList"></div>
-                <div class="modal-footer">
-                    <button class="btn-secondary" onclick="closeLocationModal()">Tutup</button>
-                </div>
-            </div>
-        </div>
+        <!-- Other Modals -->
+        <div id="inventoryModal" class="modal" style="display: none;"><div class="modal-content inventory-modal"><div class="modal-header"><h3><i class="fas fa-backpack"></i> Inventory</h3><button class="modal-close" onclick="closeInventoryModal()"><i class="fas fa-times"></i></button></div><div class="inventory-list" id="inventoryList"></div><div class="modal-footer"><button class="btn-secondary" onclick="closeInventoryModal()">Tutup</button></div></div></div>
+        <div id="shopModal" class="modal" style="display: none;"><div class="modal-content shop-modal"><div class="modal-header"><h3><i class="fas fa-store"></i> Toko Petualang</h3><button class="modal-close" onclick="closeShopModal()"><i class="fas fa-times"></i></button></div><div class="shop-list" id="shopList"></div><div class="modal-footer"><button class="btn-secondary" onclick="closeShopModal()">Tutup</button></div></div></div>
+        <div id="questModal" class="modal" style="display: none;"><div class="modal-content quest-modal"><div class="modal-header"><h3><i class="fas fa-scroll"></i> Quest</h3><button class="modal-close" onclick="closeQuestModal()"><i class="fas fa-times"></i></button></div><div class="quest-list" id="questList"></div><div class="modal-footer"><button class="btn-secondary" onclick="closeQuestModal()">Tutup</button></div></div></div>
+        <div id="leaderboardModal" class="modal" style="display: none;"><div class="modal-content leaderboard-modal"><div class="modal-header"><h3><i class="fas fa-trophy"></i> Leaderboard</h3><button class="modal-close" onclick="closeLeaderboardModal()"><i class="fas fa-times"></i></button></div><div class="leaderboard-tabs"><button class="lb-tab active" onclick="loadLeaderboard('level')">🏆 Level</button><button class="lb-tab" onclick="loadLeaderboard('gold')">💰 Gold</button><button class="lb-tab" onclick="loadLeaderboard('pvp')">⚔️ PvP</button></div><div class="leaderboard-list" id="leaderboardList"></div><div class="modal-footer"><button class="btn-secondary" onclick="closeLeaderboardModal()">Tutup</button></div></div></div>
+        <div id="locationModal" class="modal" style="display: none;"><div class="modal-content location-modal"><div class="modal-header"><h3><i class="fas fa-map"></i> Pindah Lokasi</h3><button class="modal-close" onclick="closeLocationModal()"><i class="fas fa-times"></i></button></div><div class="location-list" id="locationList"></div><div class="modal-footer"><button class="btn-secondary" onclick="closeLocationModal()">Tutup</button></div></div></div>
 
         <!-- Toast Notification -->
         <div id="toast" class="toast" style="display: none;"></div>
@@ -291,7 +322,6 @@
 
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
-    <script src="global-music.js"></script>
     <script src="rpg-game.js"></script>
 </body>
 </html>
