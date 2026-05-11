@@ -7,6 +7,43 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="chat.css">
+    <style>
+        /* Additional styles for new features */
+        .group-actions { display: flex; gap: 5px; margin-right: 5px; }
+        .group-profile-btn, .group-status-btn, .notification-toggle-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            transition: all 0.2s ease;
+        }
+        .group-profile-btn:active, .group-status-btn:active, .notification-toggle-btn:active {
+            transform: scale(0.95);
+        }
+        .group-avatar-small {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 8px;
+        }
+        .group-name {
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        body.light .group-profile-btn,
+        body.light .group-status-btn,
+        body.light .notification-toggle-btn {
+            background: rgba(0, 0, 0, 0.08);
+            color: #ff8c00;
+        }
+    </style>
 </head>
 <body>
     <!-- LOGIN SCREEN -->
@@ -41,8 +78,32 @@
         <div class="chat-header">
             <button class="back-btn" onclick="goBackToTools()"><i class="fas fa-arrow-left"></i></button>
             <div class="chat-title">
-                <i class="fas fa-comments"></i>
-                <span>Global Chat+</span>
+                <img id="groupAvatarHeader" class="group-avatar-small" src="" style="display: none;">
+                <span id="groupNameHeader" class="group-name">Global Chat+</span>
+            </div>
+            <div class="group-actions">
+                <button class="group-status-btn" onclick="showGroupStatusModal()" title="Buat Status Grup">
+                    <i class="fas fa-star"></i>
+                </button>
+                <button class="group-profile-btn" onclick="showGroupProfileModal()" title="Profil Grup">
+                    <i class="fas fa-users"></i>
+                </button>
+                <div class="notification-panel" id="notificationPanel">
+                    <div class="notification-header" onclick="toggleNotificationDropdown()">
+                        <i class="fas fa-bell"></i>
+                        <span id="notificationBadge" class="notification-badge">0</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="notification-dropdown" id="notificationDropdown" style="display: none;">
+                        <div class="dropdown-header">
+                            <span>Notifikasi</span>
+                            <button onclick="showNotificationHistory()" class="view-all-btn">Lihat Semua</button>
+                        </div>
+                        <div class="notification-list" id="recentNotificationsList">
+                            <div class="loading-users"><i class="fas fa-spinner fa-pulse"></i> Memuat...</div>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="online-badge" id="onlineBadge">
                 <i class="fas fa-circle"></i>
@@ -63,6 +124,12 @@
             </div>
         </div>
 
+        <!-- Group Status Container -->
+        <div class="group-status-container" id="groupStatusContainer" style="display: none;"></div>
+
+        <!-- Prayer Schedule Container -->
+        <div class="prayer-schedule-container" id="prayerScheduleContainer"></div>
+
         <!-- Pin Message Display -->
         <div id="pinMessageBar" class="pin-message-bar" style="display: none;">
             <div class="pin-content">
@@ -80,12 +147,12 @@
             <div class="welcome-message">
                 <i class="fas fa-hand-peace"></i>
                 <h3>Selamat Datang di Global Chat+!</h3>
-                <p>✨ Fitur Baru: Reply, Pin Message, Mute User, Voice Note!</p>
+                <p>✨ Fitur Baru: Profil Grup, Status Grup, Jadwal Sholat, Notifikasi Lengkap!</p>
                 <p class="small">👑 Owner: Rayy | Admin bisa promote/demote user</p>
             </div>
         </div>
 
-        <!-- Context Menu (Reply, Pin, Mute, dll) -->
+        <!-- Context Menu -->
         <div id="contextMenu" class="context-menu" style="display: none;">
             <div class="context-menu-item" id="replyMenuItem">
                 <i class="fas fa-reply"></i> Balas
@@ -95,6 +162,9 @@
             </div>
             <div class="context-menu-item" id="muteMenuItem">
                 <i class="fas fa-volume-mute"></i> Mute User
+            </div>
+            <div class="context-menu-item" id="unmuteMenuItem">
+                <i class="fas fa-volume-up"></i> Unmute User
             </div>
             <div class="context-menu-item" id="adminMenuItem">
                 <i class="fas fa-crown"></i> Jadikan Admin
@@ -116,9 +186,6 @@
             </div>
         </div>
 
-        <!-- Input Area LAMA (Disembunyikan) -->
-        <div class="input-area" style="display: none;"></div>
-
         <!-- Floating Chat Button & Drawer -->
         <button id="floatingChatBtn" class="floating-chat-btn">
             <i class="fas fa-comment-dots"></i>
@@ -130,7 +197,6 @@
                 <button id="closeDrawerBtn" class="close-drawer"><i class="fas fa-times"></i></button>
             </div>
             <div class="drawer-input-area">
-                <!-- Left: Emoji, Image, Voice -->
                 <div class="drawer-actions-left">
                     <button id="drawerEmojiBtn" class="drawer-action-btn" title="Emoji">
                         <i class="far fa-smile-wink"></i>
@@ -143,11 +209,9 @@
                     </button>
                     <input type="file" id="drawerImageInput" accept="image/*" style="display: none;">
                 </div>
-                <!-- Middle: Text Input -->
                 <div class="drawer-input-wrapper">
                     <textarea id="drawerMessageInput" placeholder="Ketik pesan..." rows="1"></textarea>
                 </div>
-                <!-- Right: Send Button -->
                 <button id="drawerSendBtn" class="drawer-send-btn">
                     <i class="fas fa-paper-plane"></i>
                 </button>
