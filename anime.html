@@ -3,47 +3,217 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Anime Zone | Bizzy Tools Zone</title>
+    <title>Maintenance | Anime Zone</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="anime.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #1a0a2a, #0f0f1a);
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        body.light {
+            background: linear-gradient(135deg, #f0f4ff, #e8ecf5);
+            color: #1a1a2e;
+        }
+
+        .maintenance-container {
+            max-width: 450px;
+            text-align: center;
+            animation: fadeInUp 0.6s ease;
+        }
+
+        .maintenance-icon {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, #ff69b4, #ff1493);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 30px;
+            animation: pulse 2s infinite;
+        }
+
+        .maintenance-icon i {
+            font-size: 4rem;
+            color: #1a0a2a;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 105, 180, 0.4); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 20px rgba(255, 105, 180, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 105, 180, 0); }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #ff69b4, #ff1493);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .status-badge {
+            display: inline-block;
+            background: rgba(220, 53, 69, 0.2);
+            color: #ff6666;
+            padding: 6px 16px;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            margin-bottom: 20px;
+            border: 1px solid rgba(220, 53, 69, 0.3);
+        }
+
+        .message-box {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 24px;
+            margin: 20px 0;
+            border: 1px solid rgba(255, 105, 180, 0.3);
+        }
+
+        .message-box p {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        .anime-img {
+            width: 100%;
+            border-radius: 16px;
+            margin: 15px 0;
+            opacity: 0.7;
+        }
+
+        .back-btn {
+            background: linear-gradient(95deg, #ff69b4, #ff1493);
+            border: none;
+            padding: 12px 28px;
+            border-radius: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: white;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+
+        .back-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 15px rgba(255, 105, 180, 0.3);
+        }
+
+        .social-links {
+            margin-top: 30px;
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .social-links a {
+            color: #ff69b4;
+            font-size: 1.3rem;
+            transition: all 0.2s ease;
+            opacity: 0.7;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .social-links a:hover {
+            opacity: 1;
+            transform: translateY(-3px);
+        }
+
+        body.light .message-box {
+            background: rgba(255, 255, 255, 0.9);
+            border-color: rgba(0, 0, 0, 0.1);
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <button class="back-btn" onclick="goBack()"><i class="fas fa-arrow-left"></i> Kembali</button>
-            <h1><i class="fas fa-tv"></i> Anime Zone</h1>
+    <div class="maintenance-container">
+        <div class="maintenance-icon">
+            <i class="fas fa-tv"></i>
         </div>
         
-        <div id="resultArea" class="result-area" style="display: none;"></div>
-        
-        <h2 class="section-title"><i class="fas fa-search"></i> Pencarian Anime</h2>
-        <div class="menu-grid" id="searchMenusGrid"></div>
-        
-        <h2 class="section-title"><i class="fas fa-images"></i> Random Gambar Anime</h2>
-        <div class="menu-grid" id="imageMenusGrid"></div>
-        
-        <h2 class="section-title"><i class="fas fa-info-circle"></i> Info Anime</h2>
-        <div class="menu-grid" id="infoMenusGrid"></div>
-    </div>
-    
-    <div id="queryModal" class="query-modal">
-        <div class="query-modal-content">
-            <div class="query-modal-header">
-                <h3 id="modalTitle">Masukkan Data</h3>
-                <button class="close-modal-btn" onclick="closeQueryModal()"><i class="fas fa-times"></i></button>
-            </div>
-            <div id="queryFields"></div>
-            <button class="btn-primary" id="submitQueryBtn">Proses</button>
+        <div class="status-badge">
+            <i class="fas fa-tools"></i> Anime Zone - Maintenance
         </div>
-    </div>
-    
-    <div class="back-to-top" onclick="scrollToTop()">
-        <i class="fas fa-chevron-up"></i>
+        
+        <h1>Sedang Perbaikan</h1>
+        
+        <div class="message-box">
+            <p>
+                <i class="fas fa-film" style="color: #ff69b4;"></i>
+                <strong>Anime Zone</strong> sedang dalam masa maintenance.
+            </p>
+            <p>
+                Database anime sedang kami update dengan koleksi terbaru.
+                Mohon bersabar dan kembali lagi nanti ya!
+            </p>
+            <p style="font-size:0.8rem; opacity:0.7;">
+                <i class="fas fa-coldwon fa-pulse"></i> 
+            </p>
+        </div>
+        
+        <button class="back-btn" onclick="goToTools()">
+            <i class="fas fa-home"></i> Kembali ke Beranda
+        </button>
+        
+        <div class="social-links">
+            <a onclick="showToast('Hubungi @BizzyImpactBot')"><i class="fab fa-telegram"></i></a>
+            <a onclick="showToast('Follow @bizzy.tools')"><i class="fab fa-instagram"></i></a>
+            <a onclick="showToast('Bizzy Tools Zone')"><i class="fab fa-discord"></i></a>
+        </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
-    <script src="global-music.js"></script>
-    <script src="anime.js"></script>
+    <script>
+        function goToTools() {
+            window.location.href = 'tools.html';
+        }
+
+        function showToast(msg) {
+            let toast = document.createElement('div');
+            toast.style.cssText = 'position:fixed;bottom:20px;left:20px;right:20px;background:rgba(0,0,0,0.9);color:#ff69b4;padding:12px;border-radius:40px;text-align:center;z-index:9999;font-size:0.8rem;border-left:3px solid #ff69b4;animation:slideUp 0.3s ease;';
+            toast.innerHTML = `<i class="fas fa-info-circle"></i> ${msg}`;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        const savedTheme = localStorage.getItem('bizzy_theme_mode');
+        if (savedTheme === 'light') {
+            document.body.classList.add('light');
+        }
+
+        const style = document.createElement('style');
+        style.textContent = `@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}`;
+        document.head.appendChild(style);
+    </script>
 </body>
 </html>

@@ -3,67 +3,227 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>AI Assistant | Bizzy Tools Zone</title>
+    <title>Maintenance | AI Assistant</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="ai.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0a0a1a, #0f0f2a);
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        body.light {
+            background: linear-gradient(135deg, #f0f4ff, #e8ecf5);
+            color: #1a1a2e;
+        }
+
+        .maintenance-container {
+            max-width: 450px;
+            text-align: center;
+            animation: fadeInUp 0.6s ease;
+        }
+
+        .maintenance-icon {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, #ffd700, #ff8c00);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 30px;
+            animation: pulse 2s infinite;
+        }
+
+        .maintenance-icon i {
+            font-size: 4rem;
+            color: #0a0a1a;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.4); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 20px rgba(255, 215, 0, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 215, 0, 0); }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #FFD700, #FF8C00);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .status-badge {
+            display: inline-block;
+            background: rgba(220, 53, 69, 0.2);
+            color: #ff6666;
+            padding: 6px 16px;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            margin-bottom: 20px;
+            border: 1px solid rgba(220, 53, 69, 0.3);
+        }
+
+        .message-box {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 24px;
+            margin: 20px 0;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+        }
+
+        .message-box p {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        .feature-list {
+            text-align: left;
+            margin: 20px 0;
+            padding-left: 20px;
+        }
+
+        .feature-list li {
+            margin: 8px 0;
+            font-size: 0.85rem;
+        }
+
+        .back-btn {
+            background: linear-gradient(95deg, #FFD700, #FF8C00);
+            border: none;
+            padding: 12px 28px;
+            border-radius: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #1a1a2e;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+
+        .back-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+        }
+
+        .social-links {
+            margin-top: 30px;
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .social-links a {
+            color: #ffd700;
+            font-size: 1.3rem;
+            transition: all 0.2s ease;
+            opacity: 0.7;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .social-links a:hover {
+            opacity: 1;
+            transform: translateY(-3px);
+        }
+
+        body.light .message-box {
+            background: rgba(255, 255, 255, 0.9);
+            border-color: rgba(0, 0, 0, 0.1);
+        }
+
+        body.light .status-badge {
+            background: rgba(220, 53, 69, 0.1);
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <button class="back-btn" onclick="goBack()"><i class="fas fa-arrow-left"></i> Kembali</button>
-            <h1><i class="fas fa-robot"></i> AI Assistant</h1>
-            <button class="clear-btn" onclick="clearChat()"><i class="fas fa-trash-alt"></i></button>
+    <div class="maintenance-container">
+        <div class="maintenance-icon">
+            <i class="fas fa-robot"></i>
         </div>
         
-        <div class="ai-avatar">
-            <div class="ai-avatar-circle">
-                <i class="fas fa-microphone-alt"></i>
+        <div class="status-badge">
+            <i class="fas fa-tools"></i> AI Assistant - Maintenance
+        </div>
+        
+        <h1>Mohon Maaf</h1>
+        
+        <div class="message-box">
+            <p>
+                <i class="fas fa-server" style="color: #ffd700;"></i>
+                <strong>Fitur AI Assistant</strong> sedang dalam perbaikan.
+            </p>
+            <p>
+                Kami sedang meningkatkan performa dan menambahkan fitur baru.
+                Harap bersabar dan kembali lagi nanti.
+            </p>
+            <div class="feature-list">
+                <li><i class="fas fa-microphone-alt" style="color:#ffd700;"></i> Voice input</li>
+                <li><i class="fas fa-brain" style="color:#ffd700;"></i> AI lebih cerdas</li>
+                <li><i class="fas fa-history" style="color:#ffd700;"></i> Riwayat chat</li>
             </div>
         </div>
         
-        <div class="welcome-card" id="welcomeCard">
-            <h2><i class="fas fa-hand-peace"></i> Halo, Selamat Datang!</h2>
-            <p>Saya adalah <strong>Rayy Asisten</strong>, asisten pintar dari <strong>Bizzy Tools Zone</strong>.<br>
-            Saya diciptakan oleh <strong>Rayy</strong> untuk membantu Anda di sini.<br>
-            Saya ramah, asik, dan siap membantu kapan saja! 😊</p>
-        </div>
+        <button class="back-btn" onclick="goToTools()">
+            <i class="fas fa-home"></i> Kembali ke Beranda
+        </button>
         
-        <div class="suggestions" id="suggestions">
-            <div class="suggestion-chip" data-msg="Apa kabar?">Apa kabar?</div>
-            <div class="suggestion-chip" data-msg="Ceritakan tentang dirimu">Ceritakan tentang dirimu</div>
-            <div class="suggestion-chip" data-msg="Apa yang bisa kamu bantu?">Apa yang bisa kamu bantu?</div>
-            <div class="suggestion-chip" data-msg="Buatkan pantun lucu">Buatkan pantun lucu</div>
-            <div class="suggestion-chip" data-msg="Info cuaca hari ini">Info cuaca hari ini</div>
+        <div class="social-links">
+            <a onclick="showToast('Hubungi @BizzyImpactBot')"><i class="fab fa-telegram"></i></a>
+            <a onclick="showToast('Ikuti Instagram @bizzy.tools')"><i class="fab fa-instagram"></i></a>
+            <a onclick="showToast('Bizzy Tools Zone - @r_itsmyinitials')"><i class="fab fa-tiktok"></i></a>
         </div>
-        
-        <div class="chat-messages" id="chatMessages">
-            <div class="message bot">
-                <div class="message-avatar">
-                    <i class="fas fa-robot"></i>
-                </div>
-                <div class="message-content">
-                    <div class="message-name">Rayy Asisten</div>
-                    <div class="message-text">Halo! 👋 Saya Rayy, asisten pintar Bizzy Tools Zone. Ada yang bisa saya bantu hari ini? 😊</div>
-                    <div class="message-time">Now</div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="input-area">
-            <i class="fas fa-comment" style="color:#ffd700;"></i>
-            <input type="text" id="messageInput" placeholder="Tanya apa saja... (ramah ya!)" autocomplete="off">
-            <button onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
-        </div>
-    </div>
-    
-    <div id="loadingOverlay" class="loading-overlay">
-        <div class="spinner"></div>
-        <p>Rayy sedang berpikir...</p>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
-    <script src="global-music.js"></script>
-    <script src="ai.js"></script>
+    <script>
+        function goToTools() {
+            window.location.href = 'tools.html';
+        }
+
+        function showToast(msg) {
+            let toast = document.createElement('div');
+            toast.style.cssText = 'position:fixed;bottom:20px;left:20px;right:20px;background:rgba(0,0,0,0.9);color:#ffd700;padding:12px;border-radius:40px;text-align:center;z-index:9999;font-size:0.8rem;border-left:3px solid #ffd700;animation:slideUp 0.3s ease;';
+            toast.innerHTML = `<i class="fas fa-info-circle"></i> ${msg}`;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        const savedTheme = localStorage.getItem('bizzy_theme_mode');
+        if (savedTheme === 'light') {
+            document.body.classList.add('light');
+        }
+
+        const style = document.createElement('style');
+        style.textContent = `@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}`;
+        document.head.appendChild(style);
+    </script>
 </body>
 </html>
