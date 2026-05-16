@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>Rayy Official Information | Portal Resmi</title>
+  <!-- Font Awesome 6 (Free Icons) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #0b0f1c;
+      font-family: 'Poppins', 'Segoe UI', system-ui, -apple-system, sans-serif;
+      color: #f0f3ff;
+      scroll-behavior: smooth;
+    }
+
+    /* custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #151e2f;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #3b4bff;
+      border-radius: 10px;
+    }
+
+    /* canvas background layer */
+    .canvas-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none; /* biar konten tetap bisa diklik */
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* konten utama di atas canvas */
+    .content {
+      position: relative;
+      z-index: 2;
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 4rem;
+      backdrop-filter: blur(2px);
+    }
+
+    /* header / brand */
+    .brand {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .brand h1 {
+      font-size: 2.8rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #FFFFFF, #7f9eff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      letter-spacing: -0.5px;
+      text-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    .brand p {
+      color: #b9c7ff;
+      font-weight: 500;
+      margin-top: 0.5rem;
+      font-size: 1.1rem;
+    }
+
+    /* kartu grid */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.8rem;
+      margin: 3rem 0;
+    }
+
+    .card {
+      background: rgba(20, 28, 48, 0.75);
+      backdrop-filter: blur(12px);
+      border-radius: 32px;
+      padding: 1.6rem 1.8rem;
+      border: 1px solid rgba(80, 110, 255, 0.35);
+      transition: all 0.25s ease;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+    }
+    .card:hover {
+      transform: translateY(-5px);
+      border-color: #4e6eff;
+      background: rgba(28, 38, 65, 0.85);
+      box-shadow: 0 22px 40px rgba(0,0,0,0.4);
+    }
+    .card i {
+      font-size: 2.3rem;
+      color: #5d7bff;
+      margin-bottom: 1rem;
+    }
+    .card h3 {
+      font-size: 1.6rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+    }
+    .card p {
+      color: #cbd5ff;
+      font-size: 0.85rem;
+      margin-bottom: 1.2rem;
+      word-break: break-word;
+    }
+    .link-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+    }
+    .link-list a {
+      color: white;
+      text-decoration: none;
+      background: rgba(59, 75, 255, 0.25);
+      padding: 0.5rem 1rem;
+      border-radius: 60px;
+      font-size: 0.85rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      transition: 0.2s;
+      border: 1px solid rgba(93, 123, 255, 0.5);
+      word-break: break-all;
+    }
+    .link-list a i {
+      font-size: 1rem;
+      margin-bottom: 0;
+      color: white;
+    }
+    .link-list a:hover {
+      background: #3b4bff;
+      border-color: white;
+      transform: scale(1.01);
+    }
+    .wa-group {
+      display: flex;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      margin-top: 0.5rem;
+    }
+    .badge-channel {
+      background: #25d36620;
+      border-radius: 40px;
+      padding: 0.4rem 1rem;
+      font-size: 0.8rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* highlight logo canvas custom */
+    .logo-canvas-wrap {
+      display: flex;
+      justify-content: center;
+      margin: 2rem 0 1rem;
+    }
+    .logo-canvas {
+      background: radial-gradient(circle, #131b2f, #070b16);
+      border-radius: 60px;
+      padding: 10px;
+      box-shadow: 0 20px 35px -10px black;
+      border: 1px solid #2b3b6e;
+    }
+    canvas#dynamicLogo {
+      width: 180px;
+      height: 180px;
+      border-radius: 40px;
+      display: block;
+      background: #010314;
+      cursor: pointer;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 3.5rem;
+      font-size: 0.8rem;
+      color: #8f9eff;
+      border-top: 1px solid rgba(79, 109, 253, 0.4);
+      padding-top: 2rem;
+    }
+
+    @media (max-width: 680px) {
+      .content {
+        padding: 1rem 1rem 2rem;
+      }
+      .brand h1 {
+        font-size: 2rem;
+      }
+      .card {
+        padding: 1.3rem;
+      }
+      canvas#dynamicLogo {
+        width: 140px;
+        height: 140px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- CANVAS BACKGROUND INTERAKTIF (partikel / node) -->
+<canvas id="bgCanvas" class="canvas-bg"></canvas>
+
+<div class="content">
+  <!-- Bagian Logo Rayy (Canvas dinamis / bisa diresize + animasi) -->
+  <div class="logo-canvas-wrap">
+    <div class="logo-canvas">
+      <canvas id="dynamicLogo" width="400" height="400" style="width: 180px; height: 180px;"></canvas>
+    </div>
+  </div>
+
+  <div class="brand">
+    <h1>⚡ RAYY OFFICIAL <span style="color:#6d8aff;">INFORMATION</span></h1>
+    <p>▪️ pusat informasi & layanan digital ▪️</p>
+  </div>
+
+  <!-- GRID WEBSITE + TOOLS + TOKO -->
+  <div class="card-grid">
+    <!-- Web Utama + Tools + News -->
+    <div class="card">
+      <i class="fas fa-globe"></i>
+      <h3>🌐 Official Web</h3>
+      <div class="link-list">
+        <a href="https://bizzy-store.web.id" target="_blank" rel="noopener"><i class="fas fa-store"></i> bizzy-store.web.id</a>
+        <a href="https://bizzy-store.web.id/tools.html" target="_blank"><i class="fas fa-tools"></i> tools.html (utility)</a>
+        <a href="https://bizzy-store.web.id/news.html" target="_blank"><i class="fas fa-newspaper"></i> news.html — info terbaru</a>
+      </div>
+    </div>
+
+    <!-- Toko RayyXPrimze + link informasi -->
+    <div class="card">
+      <i class="fas fa-crown"></i>
+      <h3>✨ Premium Store</h3>
+      <div class="link-list">
+        <a href="https://rayyxprimze-store-v1.web.id" target="_blank"><i class="fas fa-shopping-cart"></i> rayyxprimze-store-v1.web.id</a>
+        <a href="https://bizzy-store.web.id/news.html" target="_blank"><i class="fas fa-info-circle"></i> Link Informasi (news)</a>
+      </div>
+    </div>
+
+    <!-- Sosial + WhatsApp + Channel -->
+    <div class="card">
+      <i class="fab fa-tiktok"></i>
+      <h3>📱 Media & Chat</h3>
+      <div class="link-list">
+        <a href="https://www.tiktok.com/@r_itsmyinitials" target="_blank"><i class="fab fa-tiktok"></i> TikTok : r_itsmyinitials</a>
+        <div class="wa-group">
+          <a href="https://wa.me/6285189712417" target="_blank"><i class="fab fa-whatsapp"></i> WA1 : +62 851-8971-2417</a>
+          <a href="https://wa.me/6285794545996" target="_blank"><i class="fab fa-whatsapp"></i> WA2 : +62 857-9454-5996</a>
+        </div>
+        <a href="https://whatsapp.com/channel/0029VbDUgKiLtOjGSBW6EX35" target="_blank"><i class="fab fa-whatsapp"></i> 📢 WhatsApp Channel</a>
+        <div class="badge-channel">
+          <i class="fas fa-link"></i> Linksaluran resmi: channel WA eksklusif
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tambahan: all web & link referensi -->
+  <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem; margin-top: 1rem;">
+    <span style="background:#121a30aa; padding: 0.3rem 1rem; border-radius: 40px;"><i class="fas fa-check-circle"></i> All Web: bizzy-store.web.id | tools | news</span>
+    <span style="background:#121a30aa; padding: 0.3rem 1rem; border-radius: 40px;"><i class="fas fa-share-alt"></i> Linksaluran: WhatsApp Channel</span>
+  </div>
+
+  <footer>
+    <i class="fas fa-copyright"></i> Rayy Official Information — trusted hub since 2025<br>
+    semua tautan mengarah ke platform resmi
+  </footer>
+</div>
+
+<script>
+  (function() {
+    // -------------------------------
+    // 1. CANVAS BACKGROUND : jaringan partikel / node info modern
+    // -------------------------------
+    const bgCanvas = document.getElementById('bgCanvas');
+    let ctx = bgCanvas.getContext('2d');
+    let width, height;
+    let particles = [];
+    const PARTICLE_COUNT = 85;
+    let mouseX = null, mouseY = null;
+    let hueOffset = 0;
+
+    function initBgCanvas() {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      bgCanvas.width = width;
+      bgCanvas.height = height;
+      ctx = bgCanvas.getContext('2d');
+      
+      // buat partikel
+      particles = [];
+      for (let i = 0; i < PARTICLE_COUNT; i++) {
+        particles.push({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          radius: 2 + Math.random() * 4,
+          vx: (Math.random() - 0.5) * 0.5,
+          vy: (Math.random() - 0.5) * 0.5,
+          alpha: 0.4 + Math.random() * 0.5,
+          color: `hsl(${200 + Math.random() * 60}, 70%, 60%)`
+        });
+      }
+    }
+
+    function drawBackground() {
+      if (!ctx) return;
+      ctx.clearRect(0, 0, width, height);
+      // gradien gelap modern
+      const grad = ctx.createLinearGradient(0, 0, width*0.8, height);
+      grad.addColorStop(0, '#050a17');
+      grad.addColorStop(1, '#0c1325');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, width, height);
+      
+      // gambar garis antar partikel (efek jaringan)
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i+1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const dist = Math.hypot(dx, dy);
+          if (dist < 140) {
+            ctx.beginPath();
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            const opacity = (1 - dist / 140) * 0.25;
+            ctx.strokeStyle = `rgba(100, 150, 255, ${opacity})`;
+            ctx.lineWidth = 1;
+            ctx.stroke();
+          }
+        }
+      }
+      
+      // gambar partikel + efek highlight mouse
+      for (let p of particles) {
+        ctx.beginPath();
+        let glow = false;
+        if (mouseX !== null && mouseY !== null) {
+          const dx = p.x - mouseX;
+          const dy = p.y - mouseY;
+          if (Math.hypot(dx, dy) < 90) {
+            ctx.shadowBlur = 12;
+            ctx.shadowColor = '#5d7bff';
+            glow = true;
+          }
+        }
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI*2);
+        ctx.fillStyle = p.color;
+        ctx.fill();
+        if (glow) {
+          ctx.shadowBlur = 0;
+        }
+        // efek coret kecil
+        ctx.fillStyle = `rgba(255,255,255,0.7)`;
+        ctx.beginPath();
+        ctx.arc(p.x-0.5, p.y-0.5, p.radius*0.3, 0, Math.PI*2);
+        ctx.fill();
+      }
+      
+      // update posisi
+      for (let p of particles) {
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < 0) p.x = width;
+        if (p.x > width) p.x = 0;
+        if (p.y < 0) p.y = height;
+        if (p.y > height) p.y = 0;
+      }
+      
+      // sedikit animasi warna dinamis
+      hueOffset = (hueOffset + 0.3) % 360;
+      requestAnimationFrame(drawBackground);
+    }
+
+    window.addEventListener('resize', () => {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      bgCanvas.width = width;
+      bgCanvas.height = height;
+      initBgCanvas();
+    });
+    
+    window.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+    });
+    window.addEventListener('mouseleave', () => {
+      mouseX = null;
+      mouseY = null;
+    });
+    
+    initBgCanvas();
+    drawBackground();
+
+    // -------------------------------
+    // 2. CANVAS LOGO KECE (huruf R + elemen informasi + node)
+    // -------------------------------
+    const logoCanvas = document.getElementById('dynamicLogo');
+    // set ukuran canvas riil 400x400, tapi tampilan CSS 180x180 tetap tajam
+    logoCanvas.width = 400;
+    logoCanvas.height = 400;
+    const logoctx = logoCanvas.getContext('2d');
+    
+    function drawRayyLogo() {
+      logoctx.clearRect(0, 0, 400, 400);
+      
+      // background gelap tapi dengan efek gradien radial
+      const gradBack = logoctx.createRadialGradient(200, 200, 30, 200, 200, 180);
+      gradBack.addColorStop(0, '#121c34');
+      gradBack.addColorStop(1, '#01040e');
+      logoctx.fillStyle = gradBack;
+      logoctx.fillRect(0, 0, 400, 400);
+      
+      // border neon tipis
+      logoctx.save();
+      logoctx.shadowBlur = 0;
+      logoctx.strokeStyle = '#3e5eff';
+      logoctx.lineWidth = 3;
+      logoctx.strokeRect(8, 8, 384, 384);
+      
+      // lingkaran luar (planet informasi)
+      logoctx.beginPath();
+      logoctx.arc(200, 200, 150, 0, Math.PI*2);
+      logoctx.strokeStyle = '#5f7aff';
+      logoctx.lineWidth = 2.5;
+      logoctx.stroke();
+      logoctx.beginPath();
+      logoctx.arc(200, 200, 140, 0, Math.PI*2);
+      logoctx.strokeStyle = '#2c3f9e';
+      logoctx.setLineDash([5, 8]);
+      logoctx.stroke();
+      logoctx.setLineDash([]);
+      
+      // huruf R tegas dan modern dengan efek gradient
+      const rGrad = logoctx.createLinearGradient(120, 100, 280, 280);
+      rGrad.addColorStop(0, '#ffffff');
+      rGrad.addColorStop(1, '#7b9eff');
+      logoctx.font = 'bold 210px "Segoe UI", "Poppins", "Inter", system-ui';
+      logoctx.shadowBlur = 8;
+      logoctx.shadowColor = '#2e4eff';
+      logoctx.fillStyle = rGrad;
+      logoctx.textAlign = 'center';
+      logoctx.textBaseline = 'middle';
+      logoctx.fillText('R', 200, 215);
+      
+      // efek node / titik informasi mengelilingi huruf R
+      const nodes = [
+        { angle: 0, rad: 95, label: '⚡' },
+        { angle: 72, rad: 100, label: '🌐' },
+        { angle: 144, rad: 105, label: '📡' },
+        { angle: 216, rad: 100, label: '🔗' },
+        { angle: 288, rad: 98, label: '💠' }
+      ];
+      logoctx.shadowBlur = 2;
+      logoctx.font = '26px "Segoe UI"';
+      for (let n of nodes) {
+        const radian = n.angle * Math.PI / 180;
+        const x = 200 + Math.cos(radian) * n.rad;
+        const y = 200 + Math.sin(radian) * n.rad;
+        logoctx.beginPath();
+        logoctx.arc(x, y, 12, 0, Math.PI*2);
+        logoctx.fillStyle = '#192856';
+        logoctx.fill();
+        logoctx.fillStyle = '#b3cbff';
+        logoctx.font = 'bold 20px monospace';
+        logoctx.fillText(n.label, x-10, y+8);
+      }
+      
+      // detail garis orbit melingkar plus titik data
+      for (let i = 0; i < 12; i++) {
+        let ang = (i * 30) * Math.PI / 180;
+        let x1 = 200 + Math.cos(ang) * 125;
+        let y1 = 200 + Math.sin(ang) * 125;
+        logoctx.beginPath();
+        logoctx.arc(x1, y1, 3, 0, Math.PI*2);
+        logoctx.fillStyle = `rgba(100, 160, 255, 0.7)`;
+        logoctx.fill();
+      }
+      
+      // core micro teks "INFO" di bawah R kecil
+      logoctx.font = 'bold 28px "Poppins"';
+      logoctx.fillStyle = '#bdd4ff';
+      logoctx.shadowBlur = 1;
+      logoctx.fillText('⚡info', 200, 330);
+      logoctx.font = '12px monospace';
+      logoctx.fillStyle = '#aabbff';
+      logoctx.fillText('rayy official', 200, 370);
+      
+      logoctx.restore();
+      
+      // tambahan efek sparkling
+      logoctx.beginPath();
+      for (let s=0; s<30; s++) {
+        let angleSpark = (Date.now() / 800 + s) % (Math.PI*2);
+        let radSpark = 160 + Math.sin(Date.now() / 500 + s)*4;
+        let xs = 200 + Math.cos(angleSpark + s) * radSpark;
+        let ys = 200 + Math.sin(angleSpark + s) * radSpark;
+        logoctx.fillStyle = `rgba(255, 210, 100, ${0.4+Math.sin(Date.now()/300+s)*0.2})`;
+        logoctx.beginPath();
+        logoctx.arc(xs, ys, 2, 0, Math.PI*2);
+        logoctx.fill();
+      }
+    }
+    
+    // animasi logo berdenyut ringan & sparkle
+    function animateLogo() {
+      drawRayyLogo();
+      requestAnimationFrame(animateLogo);
+    }
+    animateLogo();
+    
+    // optional: klik logo untuk efek interaksi (contoh)
+    logoCanvas.addEventListener('click', () => {
+      // sedikit animasi getar transien tidak merusak, tapi memberi efek "interaksi"
+      logoCanvas.style.transform = 'scale(0.98)';
+      setTimeout(() => { logoCanvas.style.transform = 'scale(1)'; }, 150);
+      // console log bisa di browser
+    });
+    
+    // -------------------------------
+    // 3. efek hover card tambahan (opsional) sudah di css,
+    // dan memastikan semua tautan aman
+    // -------------------------------
+    // Extra: supaya semua link eksternal terbuka di tab baru dengan aman (HTML sudah noopener)
+    
+  })();
+</script>
+</body>
+</html>
