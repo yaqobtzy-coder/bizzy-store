@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Bukti - Rayy Store</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="upload-bukti.css">
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="logo">
+                <h1>Rayy Store</h1>
+                <p>Upload Bukti Pembayaran</p>
+            </div>
+
+            <div class="order-info" id="orderInfo"></div>
+
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                <p>Klik untuk upload bukti pembayaran</p>
+                <p class="small">Format: JPG, PNG (Max 5MB)</p>
+                <input type="file" id="fileInput" accept="image/*" hidden>
+            </div>
+
+            <div class="preview-container" id="previewContainer" style="display: none;">
+                <img id="previewImage" class="preview-image" alt="Preview">
+                <button class="remove-btn" onclick="removeImage()">
+                    <i class="fas fa-times"></i> Hapus
+                </button>
+            </div>
+
+            <button class="btn-submit" id="submitBtn" disabled>
+                <i class="fas fa-arrow-right"></i> Lanjutkan ke Konfirmasi
+            </button>
+
+            <button class="back-btn" onclick="window.location.href='rayy-store.html'">
+                <i class="fas fa-arrow-left"></i> Kembali ke Toko
+            </button>
+        </div>
+    </div>
+
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="loading-content">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Mengupload bukti pembayaran...</p>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="upload-bukti.js"></script>
+</body>
+</html>

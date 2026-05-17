@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Rayy Store</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">Rayy<span>Store Admin</span></div>
+        <div class="nav-links">
+            <a href="rayy-store.html"><i class="fas fa-home"></i> Beranda</a>
+            <a href="profile.html"><i class="fas fa-user"></i> Profil</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="products">📦 Produk</button>
+            <button class="tab-btn" data-tab="categories">🏷️ Kategori</button>
+            <button class="tab-btn" data-tab="orders">📋 Pesanan</button>
+            <button class="tab-btn" data-tab="payments">💳 Pembayaran</button>
+            <button class="tab-btn" data-tab="canvas">🎨 Done Canvas</button>
+            <button class="tab-btn" data-tab="balance">💰 Cek Saldo</button>
+            <button class="tab-btn" data-tab="gateway">⚙️ Gateway</button>
+            <button class="tab-btn" data-tab="transfer">📊 Riwayat Transfer</button>
+        </div>
+
+        <!-- Products Tab -->
+        <div id="products" class="tab-content active">
+            <div class="card">
+                <h3>➕ Tambah Produk Baru</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Tipe Produk</label>
+                        <select id="productType">
+                            <option value="sewa">Sewa Bot</option>
+                            <option value="script">Script Bot</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Nama Produk</label>
+                        <input type="text" id="productName" placeholder="Nama produk">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Kategori</label>
+                        <select id="productCategory"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Durasi (khusus sewa)</label>
+                        <input type="text" id="productDuration" placeholder="Contoh: 7 Hari">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Harga (Rp)</label>
+                        <input type="number" id="productPrice" placeholder="Harga">
+                    </div>
+                    <div class="form-group">
+                        <label>Stok</label>
+                        <input type="number" id="productStock" placeholder="Stok">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Thumbnail URL</label>
+                    <input type="text" id="productThumbnail" placeholder="URL gambar">
+                </div>
+                <button class="btn" onclick="addProduct()">Tambah Produk</button>
+            </div>
+
+            <div class="card">
+                <h3>📋 Daftar Produk Sewa</h3>
+                <div id="sewaProductsList"></div>
+            </div>
+
+            <div class="card">
+                <h3>📋 Daftar Produk Script</h3>
+                <div id="scriptProductsList"></div>
+            </div>
+        </div>
+
+        <!-- Categories Tab -->
+        <div id="categories" class="tab-content">
+            <div class="card">
+                <h3>➕ Tambah Kategori Baru</h3>
+                <div class="form-group">
+                    <label>Nama Kategori</label>
+                    <input type="text" id="newCategory" placeholder="Contoh: Sewa Bot, Script Premium">
+                </div>
+                <button class="btn" onclick="addCategory()">Tambah Kategori</button>
+            </div>
+            <div class="card">
+                <h3>📁 Daftar Kategori</h3>
+                <div id="categoriesList"></div>
+            </div>
+        </div>
+
+        <!-- Orders Tab -->
+        <div id="orders" class="tab-content">
+            <div class="card">
+                <h3>📦 Pesanan Masuk</h3>
+                <div id="ordersList"></div>
+            </div>
+        </div>
+
+        <!-- Payments Tab -->
+        <div id="payments" class="tab-content">
+            <div class="card">
+                <h3>💳 Bukti Pembayaran</h3>
+                <div id="paymentsList"></div>
+            </div>
+        </div>
+
+        <!-- Canvas Tab -->
+        <div id="canvas" class="tab-content">
+            <div class="card">
+                <h3>🎨 Done Canvas yang Digenerate</h3>
+                <div id="canvasList"></div>
+            </div>
+        </div>
+
+        <!-- Balance Tab -->
+        <div id="balance" class="tab-content">
+            <div class="card balance-card">
+                <h3>💰 Saldo Payment Gateway</h3>
+                <div class="gateway-balance" id="zakkiBalance">
+                    <h4>Zakki Store</h4>
+                    <div id="zakkiBalanceAmount">Loading...</div>
+                </div>
+                <div class="gateway-balance" id="ramashopBalance">
+                    <h4>Ramashop</h4>
+                    <div id="ramashopBalanceAmount">Loading...</div>
+                </div>
+                <button class="btn" onclick="checkAllBalance()" style="margin-top: 1rem;">🔄 Refresh Semua</button>
+            </div>
+        </div>
+
+        <!-- Gateway Settings Tab -->
+        <div id="gateway" class="tab-content">
+            <div class="card">
+                <h3>⚙️ Pengaturan Payment Gateway</h3>
+                <div class="gateway-setting">
+                    <div class="gateway-info">
+                        <h4>Zakki Store QRIS</h4>
+                        <p>Status: <span id="zakkiStatus" class="status-badge status-active">Active</span></p>
+                        <button class="btn-toggle" onclick="toggleGateway('zakki')">
+                            <i class="fas fa-power-off"></i> Nonaktifkan
+                        </button>
+                    </div>
+                    <div class="gateway-info">
+                        <h4>Ramashop QRIS</h4>
+                        <p>Status: <span id="ramashopStatus" class="status-badge status-inactive">Inactive</span></p>
+                        <button class="btn-toggle" onclick="toggleGateway('ramashop')">
+                            <i class="fas fa-power-off"></i> Aktifkan
+                        </button>
+                    </div>
+                </div>
+                <p class="note"><i class="fas fa-info-circle"></i> Gateway yang aktif akan muncul di halaman pembayaran</p>
+            </div>
+        </div>
+
+        <!-- Transfer History Tab -->
+        <div id="transfer" class="tab-content">
+            <div class="card">
+                <h3>📊 Riwayat Transfer</h3>
+                <div id="transferList"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="admin.js"></script>
+</body>
+</html>

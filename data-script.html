@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Script - Rayy Store</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0a0c10, #0f1117);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 30px;
+            padding: 30px;
+            border: 1px solid rgba(79, 172, 254, 0.2);
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo h1 {
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #00f2fe, #4facfe);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        h2 {
+            color: white;
+            font-size: 20px;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 25px;
+        }
+
+        .order-summary {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            padding: 15px;
+            margin-bottom: 25px;
+        }
+
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            color: white;
+            margin-bottom: 10px;
+        }
+
+        .order-total {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 10px;
+            margin-top: 10px;
+            font-weight: 700;
+            color: #00f2fe;
+        }
+
+        .form-section {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .form-section h3 {
+            color: #4facfe;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #ccc;
+            margin-bottom: 6px;
+            font-size: 13px;
+        }
+
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(79, 172, 254, 0.3);
+            border-radius: 12px;
+            color: white;
+            font-size: 14px;
+        }
+
+        .form-group input:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #4facfe;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .optional-badge {
+            display: inline-block;
+            background: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 20px;
+            margin-left: 8px;
+        }
+
+        .btn-submit {
+            width: 100%;
+            background: linear-gradient(135deg, #00f2fe, #4facfe);
+            border: none;
+            padding: 14px;
+            border-radius: 15px;
+            color: white;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .btn-submit:hover {
+            opacity: 0.85;
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .back-link a {
+            color: #888;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        @media (max-width: 600px) {
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 0;
+            }
+            .card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="logo">
+                <h1>Rayy Store</h1>
+            </div>
+            <h2>Data Script Bot</h2>
+            <p class="subtitle">Isi data berikut untuk pembelian script bot</p>
+
+            <div class="order-summary" id="orderSummary"></div>
+
+            <form id="scriptForm">
+                <!-- WAJIB -->
+                <div class="form-section">
+                    <h3><i class="fas fa-star-of-life" style="color: #ff6b6b;"></i> Data Wajib</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nama Owner <span style="color:#ff6b6b">*</span></label>
+                            <input type="text" id="ownerName" placeholder="Nama pemilik bot">
+                        </div>
+                        <div class="form-group">
+                            <label>Nomor Owner <span style="color:#ff6b6b">*</span></label>
+                            <input type="text" id="ownerPhone" placeholder="08xxxxxxxxxx">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Nomor Bot untuk di ACC <span style="color:#ff6b6b">*</span></label>
+                        <input type="text" id="botNumber" placeholder="Nomor Telegram/WA bot">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nama Bot 1 <span style="color:#ff6b6b">*</span></label>
+                            <input type="text" id="botName1" placeholder="Contoh: Bot Utama">
+                        </div>
+                        <div class="form-group">
+                            <label>Nama Bot 2 <span style="color:#ff6b6b">*</span></label>
+                            <input type="text" id="botName2" placeholder="Contoh: Bot Cadangan">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nama Bot 3 <span style="color:#ff6b6b">*</span></label>
+                            <input type="text" id="botName3" placeholder="Contoh: Bot Admin">
+                        </div>
+                        <div class="form-group">
+                            <label>Custom Pairing <span style="color:#ff6b6b">*</span></label>
+                            <input type="text" id="customPairing" placeholder="Pairing code">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Package Sticker <span style="color:#ff6b6b">*</span></label>
+                            <input type="text" id="packageSticker" placeholder="Nama package sticker">
+                        </div>
+                        <div class="form-group">
+                            <label>Author STC <span style="color:#ff6b6b">*</span></label>
+                            <input type="text" id="authorStc" placeholder="Nama author">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- OPSIONAL -->
+                <div class="form-section">
+                    <h3><i class="fas fa-plus-circle"></i> Data Opsional <span class="optional-badge">Optional</span></h3>
+                    
+                    <div class="form-group">
+                        <label>Link Grup</label>
+                        <input type="text" id="linkGroup" placeholder="https://t.me/...">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Link Saluran</label>
+                            <input type="text" id="linkChannel" placeholder="https://t.me/...">
+                        </div>
+                        <div class="form-group">
+                            <label>Nama Saluran</label>
+                            <input type="text" id="channelName" placeholder="Nama channel Telegram">
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+            <button class="btn-submit" onclick="submitData()">
+                <i class="fas fa-arrow-right"></i> Lanjut ke Pembayaran
+            </button>
+
+            <div class="back-link">
+                <a href="rayy-store.html"><i class="fas fa-arrow-left"></i> Kembali ke Toko</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script>
+        let cart = [];
+        let total = 0;
+
+        function loadCartData() {
+            cart = JSON.parse(localStorage.getItem('checkoutCart')) || [];
+            total = parseInt(localStorage.getItem('checkoutTotal')) || 0;
+            
+            if (cart.length === 0) {
+                window.location.href = 'rayy-store.html';
+                return;
+            }
+            
+            displayOrderSummary();
+        }
+
+        function displayOrderSummary() {
+            const container = document.getElementById('orderSummary');
+            let itemsHtml = '';
+            cart.forEach(item => {
+                itemsHtml += `
+                    <div class="order-item">
+                        <span>${item.name} x${item.quantity}</span>
+                        <span>Rp ${formatNumber(item.price * item.quantity)}</span>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = `
+                ${itemsHtml}
+                <div class="order-total">
+                    <span>Total</span>
+                    <span>Rp ${formatNumber(total)}</span>
+                </div>
+            `;
+        }
+
+        function formatNumber(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        }
+
+        function submitData() {
+            // Validasi data wajib
+            const requiredFields = {
+                ownerName: 'Nama Owner',
+                ownerPhone: 'Nomor Owner',
+                botNumber: 'Nomor Bot',
+                botName1: 'Nama Bot 1',
+                botName2: 'Nama Bot 2',
+                botName3: 'Nama Bot 3',
+                customPairing: 'Custom Pairing',
+                packageSticker: 'Package Sticker',
+                authorStc: 'Author STC'
+            };
+            
+            for (const [id, name] of Object.entries(requiredFields)) {
+                const value = document.getElementById(id).value.trim();
+                if (!value) {
+                    alert(`Isi ${name} terlebih dahulu!`);
+                    return;
+                }
+            }
+            
+            // Kumpulkan data
+            const scriptData = {
+                type: 'script',
+                wajib: {
+                    ownerName: document.getElementById('ownerName').value.trim(),
+                    ownerPhone: document.getElementById('ownerPhone').value.trim(),
+                    botNumber: document.getElementById('botNumber').value.trim(),
+                    botName1: document.getElementById('botName1').value.trim(),
+                    botName2: document.getElementById('botName2').value.trim(),
+                    botName3: document.getElementById('botName3').value.trim(),
+                    customPairing: document.getElementById('customPairing').value.trim(),
+                    packageSticker: document.getElementById('packageSticker').value.trim(),
+                    authorStc: document.getElementById('authorStc').value.trim()
+                },
+                opsional: {
+                    linkGroup: document.getElementById('linkGroup').value.trim(),
+                    linkChannel: document.getElementById('linkChannel').value.trim(),
+                    channelName: document.getElementById('channelName').value.trim()
+                },
+                cart: cart,
+                total: total,
+                createdAt: new Date().toISOString()
+            };
+            
+            localStorage.setItem('orderData', JSON.stringify(scriptData));
+            localStorage.setItem('buyerName', scriptData.wajib.ownerName);
+            
+            window.location.href = 'pay.html';
+        }
+
+        loadCartData();
+    </script>
+</body>
+</html>

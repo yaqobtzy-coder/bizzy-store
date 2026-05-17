@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pembayaran - Rayy Store</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="pay.css">
+</head>
+<body>
+    <div class="container">
+        <div class="payment-card" id="paymentCard">
+            <div class="logo">
+                <h1>Rayy Store</h1>
+                <p>Pembayaran</p>
+            </div>
+
+            <div class="order-summary" id="orderSummary"></div>
+
+            <!-- Pilih Gateway Pembayaran -->
+            <div class="gateway-section">
+                <h3><i class="fas fa-credit-card"></i> Pilih Metode Pembayaran</h3>
+                <div class="gateway-options" id="gatewayOptions">
+                    <div class="gateway-option" data-gateway="zakki">
+                        <div class="gateway-radio">
+                            <input type="radio" name="gateway" value="zakki" id="gatewayZakki" checked>
+                            <label for="gatewayZakki">
+                                <strong>Zakki Store QRIS</strong>
+                                <span class="recommended">⭐ Recommended</span>
+                                <small>Rate terbaik & proses cepat</small>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="gateway-option" data-gateway="ramashop">
+                        <div class="gateway-radio">
+                            <input type="radio" name="gateway" value="ramashop" id="gatewayRamashop">
+                            <label for="gatewayRamashop">
+                                <strong>Ramashop QRIS</strong>
+                                <small>Payment gateway alternatif</small>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="qr-section" id="qrSection">
+                <div class="loading-spinner">
+                    <i class="fas fa-spinner"></i>
+                    <p>Menyiapkan QRIS...</p>
+                </div>
+            </div>
+
+            <div class="payment-info" id="paymentInfo" style="display: none;">
+                <div class="info-box">
+                    <i class="fas fa-info-circle"></i>
+                    <p>Scan QRIS menggunakan aplikasi mobile banking atau e-wallet</p>
+                </div>
+                <div class="countdown" id="countdown"></div>
+            </div>
+
+            <button class="back-btn" onclick="window.location.href='rayy-store.html'">
+                <i class="fas fa-arrow-left"></i> Kembali ke Toko
+            </button>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="pay.js"></script>
+</body>
+</html>

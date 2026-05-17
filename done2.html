@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Done - Rayy Store</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="done.css">
+</head>
+<body>
+    <div class="container">
+        <div class="done-card">
+            <div class="success-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h1>Pembayaran Berhasil!</h1>
+            <p class="subtitle">Terima kasih telah berbelanja di Rayy Store</p>
+
+            <div class="canvas-section">
+                <h3><i class="fas fa-palette"></i> Kartu Konfirmasi</h3>
+                <div class="canvas-wrapper" id="canvasWrapper">
+                    <canvas id="doneCanvas" width="1080" height="1920"></canvas>
+                </div>
+                <button class="btn-download" id="downloadBtn">
+                    <i class="fas fa-download"></i> Download Kartu PNG
+                </button>
+            </div>
+
+            <div class="whatsapp-section" id="whatsappSection" style="display: none;">
+                <div class="loading-wa">
+                    <i class="fab fa-whatsapp"></i>
+                    <p>Mengalihkan ke WhatsApp...</p>
+                    <p class="small">Mengirim kartu konfirmasi</p>
+                </div>
+            </div>
+
+            <div class="manual-section" id="manualSection" style="display: none;">
+                <button class="btn-wa" id="manualWaBtn">
+                    <i class="fab fa-whatsapp"></i> Kirim Kartu ke WhatsApp
+                </button>
+                <button class="back-btn" onclick="window.location.href='rayy-store.html'">
+                    <i class="fas fa-home"></i> Kembali ke Beranda
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="loading-content">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Membuat kartu konfirmasi...</p>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="done.js"></script>
+</body>
+</html>

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profil - Rayy Store</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="profile.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">Rayy<span>Store</span></div>
+        <div class="nav-links">
+            <a href="rayy-store.html"><i class="fas fa-home"></i> Beranda</a>
+            <a href="profile.html"><i class="fas fa-user"></i> Profil</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="profile-card">
+            <div class="avatar">
+                <i class="fas fa-user-circle"></i>
+            </div>
+            
+            <h2 id="displayName">Customer</h2>
+            <p class="email" id="userEmail">customer@rayystore.com</p>
+
+            <div class="form-group">
+                <label><i class="fas fa-pen"></i> Ganti Nama</label>
+                <input type="text" id="userNameInput" placeholder="Masukkan nama Anda">
+                <button class="btn-save" onclick="saveName()">
+                    <i class="fas fa-save"></i> Simpan Nama
+                </button>
+            </div>
+
+            <div class="info-section">
+                <h3>Informasi Akun</h3>
+                <div class="info-row">
+                    <span class="info-label">Status</span>
+                    <span class="info-value status-premium">Premium Member</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Bergabung Sejak</span>
+                    <span class="info-value" id="joinDate">2024</span>
+                </div>
+            </div>
+
+            <button class="btn-logout" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
+    </div>
+
+    <script src="profile.js"></script>
+</body>
+</html>
