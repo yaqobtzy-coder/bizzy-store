@@ -53,7 +53,7 @@ h1 {
     margin-bottom: 20px;
 }
 
-/* Canvas Section */
+/* Canvas Section - FIXED */
 .canvas-section {
     margin: 0 0 16px 0;
 }
@@ -74,15 +74,23 @@ h1 {
     display: flex;
     justify-content: center;
     align-items: center;
+    overflow-x: auto;
+    /* Batas garis - tidak akan keluar */
+    max-width: 100%;
 }
 
 canvas {
-    width: 260px;
+    /* Ukuran tetap proporsional */
+    max-width: 100%;
     height: auto;
-    border-radius: 12px;
+    width: auto;
+    /* Agar tidak melebihi container */
     display: block;
     margin: 0 auto;
+    border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    /* Batasi lebar maksimal */
+    max-height: 400px;
 }
 
 /* Download Button */
@@ -236,7 +244,7 @@ canvas {
     text-align: center;
 }
 
-/* Responsive */
+/* Responsive - FIXED */
 @media (max-width: 480px) {
     body {
         padding: 12px;
@@ -262,12 +270,15 @@ canvas {
         font-size: 10px;
     }
     
-    canvas {
-        width: 220px;
-    }
-    
     .canvas-wrapper {
         padding: 8px;
+    }
+    
+    canvas {
+        max-width: 100%;
+        max-height: 320px;
+        width: auto;
+        height: auto;
     }
     
     .btn-download, .btn-wa, .back-btn {
@@ -279,6 +290,7 @@ canvas {
 /* Untuk HP yang lebih kecil */
 @media (max-width: 360px) {
     canvas {
-        width: 200px;
+        max-width: 100%;
+        max-height: 280px;
     }
 }
