@@ -21,6 +21,7 @@
         <div class="tabs">
             <button class="tab-btn active" data-tab="products">📦 Produk</button>
             <button class="tab-btn" data-tab="categories">🏷️ Kategori</button>
+            <button class="tab-btn" data-tab="popup">🪟 Popup</button>
             <button class="tab-btn" data-tab="orders">📋 Pesanan</button>
             <button class="tab-btn" data-tab="payments">💳 Pembayaran</button>
             <button class="tab-btn" data-tab="canvas">🎨 Done Canvas</button>
@@ -29,7 +30,7 @@
             <button class="tab-btn" data-tab="transfer">📊 Riwayat Transfer</button>
         </div>
 
-        <!-- Products Tab -->
+        <!-- ==================== PRODUK TAB ==================== -->
         <div id="products" class="tab-content active">
             <div class="card">
                 <h3>➕ Tambah Produk Baru</h3>
@@ -84,7 +85,7 @@
             </div>
         </div>
 
-        <!-- Categories Tab -->
+        <!-- ==================== KATEGORI TAB ==================== -->
         <div id="categories" class="tab-content">
             <div class="card">
                 <h3>➕ Tambah Kategori Baru</h3>
@@ -100,7 +101,49 @@
             </div>
         </div>
 
-        <!-- Orders Tab -->
+        <!-- ==================== POPUP TAB ==================== -->
+        <div id="popup" class="tab-content">
+            <div class="card">
+                <h3>🪟 Pengaturan Popup Modal</h3>
+                <div class="form-group">
+                    <label>Icon Popup (Font Awesome class)</label>
+                    <input type="text" id="popupIconClass" placeholder="Contoh: fab fa-whatsapp, fab fa-telegram, fas fa-bell">
+                    <small class="form-note">Gunakan class Font Awesome. Contoh: fab fa-instagram, fas fa-gift</small>
+                </div>
+                <div class="form-group">
+                    <label>Judul Popup</label>
+                    <input type="text" id="popupTitle" placeholder="JOIN CHANNEL">
+                </div>
+                <div class="form-group">
+                    <label>Pesan Popup</label>
+                    <textarea id="popupMessage" rows="3" placeholder="Dapatkan info update produk terbaru dan promo menarik!"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Teks Tombol</label>
+                    <input type="text" id="popupButtonText" placeholder="Gabung Sekarang">
+                </div>
+                <div class="form-group">
+                    <label>Link Tombol</label>
+                    <input type="text" id="popupButtonLink" placeholder="https://wa.me/6285794545996">
+                </div>
+                <button class="btn" onclick="savePopupSettings()">💾 Simpan Pengaturan Popup</button>
+                <button class="btn btn-secondary" onclick="testPopup()" style="margin-top: 10px;">👀 Test Popup</button>
+            </div>
+            
+            <div class="card">
+                <h3>📋 Preview Popup</h3>
+                <div id="popupPreview" class="popup-preview">
+                    <div class="preview-icon">
+                        <i class="fab fa-whatsapp"></i>
+                    </div>
+                    <div class="preview-title">JOIN CHANNEL</div>
+                    <div class="preview-message">Dapatkan info update produk terbaru dan promo menarik!</div>
+                    <div class="preview-button">Gabung Sekarang</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== PESANAN TAB ==================== -->
         <div id="orders" class="tab-content">
             <div class="card">
                 <h3>📦 Pesanan Masuk</h3>
@@ -108,7 +151,7 @@
             </div>
         </div>
 
-        <!-- Payments Tab -->
+        <!-- ==================== PEMBAYARAN TAB ==================== -->
         <div id="payments" class="tab-content">
             <div class="card">
                 <h3>💳 Bukti Pembayaran</h3>
@@ -116,7 +159,7 @@
             </div>
         </div>
 
-        <!-- Canvas Tab -->
+        <!-- ==================== CANVAS TAB ==================== -->
         <div id="canvas" class="tab-content">
             <div class="card">
                 <h3>🎨 Done Canvas yang Digenerate</h3>
@@ -124,7 +167,7 @@
             </div>
         </div>
 
-        <!-- Balance Tab -->
+        <!-- ==================== CEK SALDO TAB ==================== -->
         <div id="balance" class="tab-content">
             <div class="card balance-card">
                 <h3>💰 Saldo Payment Gateway</h3>
@@ -140,7 +183,7 @@
             </div>
         </div>
 
-        <!-- Gateway Settings Tab -->
+        <!-- ==================== GATEWAY TAB ==================== -->
         <div id="gateway" class="tab-content">
             <div class="card">
                 <h3>⚙️ Pengaturan Payment Gateway</h3>
@@ -164,7 +207,7 @@
             </div>
         </div>
 
-        <!-- Transfer History Tab -->
+        <!-- ==================== RIWAYAT TRANSFER TAB ==================== -->
         <div id="transfer" class="tab-content">
             <div class="card">
                 <h3>📊 Riwayat Transfer</h3>
