@@ -62,7 +62,8 @@ h1 {
 }
 
 canvas {
-    width: 260px;
+    width: 100%;
+    max-width: 280px;
     height: auto;
     border-radius: 12px;
     display: block;
@@ -253,8 +254,11 @@ canvas {
     body {
         padding: 12px;
     }
+    .container {
+        max-width: 100%;
+    }
     canvas {
-        width: 220px;
+        max-width: 240px;
     }
     .btn {
         padding: 10px;
@@ -264,6 +268,6 @@ canvas {
 
 @media (max-width: 360px) {
     canvas {
-        width: 200px;
+        max-width: 200px;
     }
 }
