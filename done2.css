@@ -15,7 +15,7 @@ body {
 }
 
 .container {
-    max-width: 420px;
+    max-width: 450px;
     width: 100%;
     margin: 0 auto;
 }
@@ -34,40 +34,28 @@ body {
 }
 
 .success-icon i {
-    font-size: 44px;
+    font-size: 48px;
     color: #28a745;
 }
 
 h1 {
     color: white;
-    font-size: 18px;
+    font-size: 20px;
     font-weight: 700;
-    margin-bottom: 4px;
+    margin-bottom: 5px;
 }
 
 .subtitle {
     color: #888;
-    font-size: 11px;
+    font-size: 12px;
     margin-bottom: 20px;
-}
-
-.canvas-section {
-    margin: 0 0 16px 0;
-}
-
-.canvas-section h3 {
-    color: white;
-    font-size: 13px;
-    font-weight: 500;
-    margin-bottom: 10px;
-    text-align: center;
 }
 
 .canvas-wrapper {
     background: #0f1117;
     border-radius: 16px;
     padding: 12px;
-    margin-bottom: 12px;
+    margin-bottom: 16px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -82,20 +70,20 @@ canvas {
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
 
-.btn-download, .btn-upload {
+.btn {
     width: 100%;
     border: none;
-    padding: 10px;
+    padding: 12px;
     border-radius: 40px;
     font-weight: 600;
-    font-size: 13px;
+    font-size: 14px;
     cursor: pointer;
     transition: all 0.2s;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
 }
 
 .btn-download {
@@ -109,79 +97,12 @@ canvas {
     border: 1px solid #4facfe;
 }
 
-.btn-download:hover, .btn-upload:hover {
-    opacity: 0.85;
-    transform: scale(0.98);
-}
-
-.upload-loading {
-    background: rgba(79, 172, 254, 0.15);
-    border-radius: 40px;
-    padding: 12px;
-    margin: 16px 0;
-    text-align: center;
-}
-
-.upload-loading i {
-    font-size: 24px;
-    color: #4facfe;
-    margin-bottom: 6px;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-}
-
-.upload-loading p {
-    color: white;
-    font-size: 12px;
-}
-
-.result-section {
-    margin: 16px 0;
-}
-
-.upload-success {
-    background: rgba(40, 167, 69, 0.15);
-    border-radius: 40px;
-    padding: 12px;
-    margin-bottom: 12px;
-    text-align: center;
-}
-
-.upload-success i {
-    font-size: 24px;
-    color: #28a745;
-    margin-bottom: 6px;
-}
-
-.upload-success p {
-    color: #28a745;
-    font-size: 13px;
-    font-weight: 500;
-}
-
 .btn-wa {
-    width: 100%;
     background: #25D366;
-    border: none;
-    padding: 12px;
-    border-radius: 40px;
     color: white;
-    font-weight: 700;
-    font-size: 14px;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    margin-bottom: 10px;
 }
 
-.btn-wa:hover {
+.btn:hover {
     opacity: 0.85;
     transform: scale(0.98);
 }
@@ -201,11 +122,59 @@ canvas {
     align-items: center;
     justify-content: center;
     gap: 6px;
+    margin-top: 5px;
 }
 
 .back-btn:hover {
     background: rgba(255, 255, 255, 0.15);
     color: white;
+}
+
+.upload-loading {
+    background: rgba(79, 172, 254, 0.15);
+    border-radius: 40px;
+    padding: 12px;
+    margin-top: 10px;
+    text-align: center;
+}
+
+.upload-loading i {
+    font-size: 20px;
+    color: #4facfe;
+    margin-right: 8px;
+    animation: spin 1s linear infinite;
+}
+
+.upload-loading p {
+    color: white;
+    font-size: 12px;
+    display: inline;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.success-box {
+    background: rgba(40, 167, 69, 0.15);
+    border-radius: 40px;
+    padding: 12px;
+    margin-bottom: 12px;
+    text-align: center;
+}
+
+.success-box i {
+    font-size: 20px;
+    color: #28a745;
+    margin-right: 8px;
+}
+
+.success-box p {
+    color: #28a745;
+    font-size: 13px;
+    font-weight: 500;
+    display: inline;
 }
 
 .loading-overlay {
@@ -287,11 +256,8 @@ canvas {
     canvas {
         width: 220px;
     }
-    .canvas-wrapper {
-        padding: 8px;
-    }
-    .btn-download, .btn-upload, .btn-wa, .back-btn {
-        padding: 8px;
+    .btn {
+        padding: 10px;
         font-size: 12px;
     }
 }

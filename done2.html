@@ -14,35 +14,44 @@
             <div class="success-icon">
                 <i class="fas fa-check-circle"></i>
             </div>
-            <h1>Pembayaran Berhasil!</h1>
-            <p class="subtitle">Terima kasih telah berbelanja di Rayy Store</p>
+            <h1>Konfirmasi Pembayaran</h1>
+            <p class="subtitle">Kartu konfirmasi telah dibuat</p>
 
-            <div class="canvas-section">
-                <h3><i class="fas fa-palette"></i> Kartu Konfirmasi</h3>
-                <div class="canvas-wrapper" id="canvasWrapper">
-                    <canvas id="doneCanvas" width="1080" height="1920"></canvas>
+            <!-- CANVAS -->
+            <div class="canvas-wrapper">
+                <canvas id="mainCanvas" width="1080" height="1920"></canvas>
+            </div>
+
+            <!-- TOMBOL 1: DOWNLOAD -->
+            <button class="btn btn-download" id="downloadBtn">
+                <i class="fas fa-download"></i> 1. Download Kartu (PNG)
+            </button>
+
+            <!-- TOMBOL 2: UPLOAD (muncul setelah download) -->
+            <div id="uploadSection" style="display: none;">
+                <button class="btn btn-upload" id="uploadBtn">
+                    <i class="fas fa-cloud-upload-alt"></i> 2. Upload Kartu ke ImgBB
+                </button>
+                <div id="uploadLoading" class="upload-loading" style="display: none;">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Mengupload kartu...</p>
                 </div>
-                <button class="btn-download" id="downloadBtn">
-                    <i class="fas fa-download"></i> Download Kartu PNG
-                </button>
             </div>
 
-            <div class="whatsapp-section" id="whatsappSection" style="display: none;">
-                <div class="loading-wa">
-                    <i class="fab fa-whatsapp"></i>
-                    <p>Mengalihkan ke WhatsApp...</p>
-                    <p class="small">Mengirim kartu konfirmasi</p>
+            <!-- TOMBOL 3: WHATSAPP (muncul setelah upload sukses) -->
+            <div id="waSection" style="display: none;">
+                <div class="success-box">
+                    <i class="fas fa-check-circle"></i>
+                    <p>Upload Berhasil!</p>
                 </div>
+                <button class="btn btn-wa" id="waBtn">
+                    <i class="fab fa-whatsapp"></i> 3. Kirim ke WhatsApp
+                </button>
             </div>
 
-            <div class="manual-section" id="manualSection" style="display: none;">
-                <button class="btn-wa" id="manualWaBtn">
-                    <i class="fab fa-whatsapp"></i> Kirim Kartu ke WhatsApp
-                </button>
-                <button class="back-btn" onclick="window.location.href='rayy-store.html'">
-                    <i class="fas fa-home"></i> Kembali ke Beranda
-                </button>
-            </div>
+            <button class="back-btn" onclick="window.location.href='rayy-store.html'">
+                <i class="fas fa-home"></i> Kembali ke Beranda
+            </button>
         </div>
     </div>
 

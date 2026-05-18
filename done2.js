@@ -1,70 +1,96 @@
-const canvas = document.getElementById('doneCanvas');
+const canvas = document.getElementById('mainCanvas');
 const ctx = canvas.getContext('2d');
 
 let doneData = null;
 let imgbbImage = null;
-let canvasImageUrl = '';
-let whatsappUrl = '';
+let uploadedCanvasUrl = '';
 
-// Load data from localStorage
+// ========================================
+// 1. LOAD DATA DARI LOCALSTORAGE
+// ========================================
 function loadData() {
     const loadingOverlay = document.getElementById('loadingOverlay');
     loadingOverlay.style.display = 'flex';
     
     const dataStr = localStorage.getItem('doneData');
-    if (dataStr) {
-        doneData = JSON.parse(dataStr);
+    console.log('Data dari localStorage:', dataStr);
+    
+    if (!dataStr) {
+        console.error('Tidak ada data');
+        loadingOverlay.style.display = 'none';
+        drawErrorCanvas();
+        return;
     }
     
-    // If no data, try to get from old storage
-    if (!doneData) {
-        const imageUrl = localStorage.getItem('doneImageUrl');
-        const buyerName = localStorage.getItem('doneBuyerName') || localStorage.getItem('buyerName') || 'Customer';
-        const orderData = JSON.parse(localStorage.getItem('doneOrderData') || '{}');
-        
-        let productsText = '';
-        let totalAmount = 0;
-        if (orderData && orderData.cart) {
-            productsText = orderData.cart.map(item => `${item.name} x${item.quantity}`).join(', ');
-            totalAmount = orderData.total || 0;
-        }
-        
-        doneData = {
-            imgbbUrl: imageUrl,
-            buyerName: buyerName,
-            productsText: productsText,
-            totalAmount: totalAmount,
-            orderData: orderData
-        };
-    }
+    doneData = JSON.parse(dataStr);
+    console.log('doneData:', doneData);
     
-    if (doneData && doneData.imgbbUrl) {
+    if (doneData.imgbbUrl && doneData.imgbbUrl !== 'null') {
         imgbbImage = new Image();
         imgbbImage.crossOrigin = "Anonymous";
         imgbbImage.src = doneData.imgbbUrl;
         imgbbImage.onload = () => {
+            console.log('Gambar bukti berhasil dimuat');
             drawCanvas();
+            loadingOverlay.style.display = 'none';
         };
-        imgbbImage.onerror = () => {
-            console.error('Gagal load gambar dari ImgBB');
+        imgbbImage.onerror = (err) => {
+            console.error('Gagal load gambar:', err);
             drawCanvas();
+            loadingOverlay.style.display = 'none';
         };
     } else {
         drawCanvas();
+        loadingOverlay.style.display = 'none';
     }
 }
 
+// ========================================
+// 2. DRAW ERROR CANVAS (JIKA DATA TIDAK ADA)
+// ========================================
+function drawErrorCanvas() {
+    const w = 1080, h = 1920;
+    canvas.width = w;
+    canvas.height = h;
+    
+    ctx.fillStyle = '#0a0c10';
+    ctx.fillRect(0, 0, w, h);
+    
+    ctx.font = '40px "Inter"';
+    ctx.fillStyle = '#ff6b6b';
+    ctx.fillText("❌ Error", w/2 - 80, h/2);
+    
+    ctx.font = '24px "Inter"';
+    ctx.fillStyle = '#888';
+    ctx.fillText("Data tidak ditemukan", w/2 - 130, h/2 + 60);
+    ctx.fillText("Silakan upload bukti terlebih dahulu", w/2 - 200, h/2 + 100);
+}
+
+// ========================================
+// 3. FORMAT NUMBER
+// ========================================
 function formatNumber(num) {
     if (!num) return '0';
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 }
 
+// ========================================
+// 4. TRUNCATE TEXT (POTONG TEKS PANJANG)
+// ========================================
+function truncateText(text, maxLength) {
+    if (!text) return '';
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength - 3) + '...';
+}
+
+// ========================================
+// 5. DRAW MAIN CANVAS
+// ========================================
 function drawCanvas() {
     const w = 1080, h = 1920;
     canvas.width = w;
     canvas.height = h;
     
-    // Get data
     const buyerName = doneData?.buyerName || 'Customer';
     const productsText = doneData?.productsText || 'Produk Digital';
     const totalAmount = doneData?.totalAmount || 0;
@@ -77,7 +103,7 @@ function drawCanvas() {
         minute: '2-digit'
     });
     
-    // Background gradient premium
+    // BACKGROUND GRADIENT
     const gradient = ctx.createLinearGradient(0, 0, w, h);
     gradient.addColorStop(0, '#0a0c10');
     gradient.addColorStop(0.5, '#0f1220');
@@ -85,16 +111,15 @@ function drawCanvas() {
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, w, h);
     
-    // Border double
+    // BORDER DOUBLE
     ctx.strokeStyle = '#4facfe';
     ctx.lineWidth = 8;
     ctx.strokeRect(40, 40, w-80, h-80);
-    
     ctx.strokeStyle = '#00f2fe';
     ctx.lineWidth = 3;
     ctx.strokeRect(52, 52, w-104, h-104);
     
-    // Header dengan efek glow
+    // HEADER
     ctx.shadowColor = '#4facfe';
     ctx.shadowBlur = 10;
     ctx.font = '800 72px "Inter"';
@@ -110,7 +135,7 @@ function drawCanvas() {
     ctx.fillStyle = '#ffffff';
     ctx.fillText("Rayy Store", 80, 300);
     
-    // Garis dekoratif
+    // GARIS PEMISAH
     ctx.beginPath();
     ctx.moveTo(80, 340);
     ctx.lineTo(w - 80, 340);
@@ -118,66 +143,67 @@ function drawCanvas() {
     ctx.lineWidth = 1;
     ctx.stroke();
     
-    // Foto bukti dari ImgBB di tengah
+    // FOTO BUKTI DARI IMGBBB DI TENGAH
     const imgW = 600, imgH = 600;
     const imgX = (w - imgW) / 2;
     const imgY = 400;
     
-    // Background foto
     ctx.fillStyle = '#1a1d24';
     ctx.fillRect(imgX, imgY, imgW, imgH);
     ctx.strokeStyle = '#4facfe';
     ctx.lineWidth = 3;
     ctx.strokeRect(imgX, imgY, imgW, imgH);
     
-    // Draw image from ImgBB
+    ctx.font = '500 24px "Inter"';
+    ctx.fillStyle = '#4facfe';
+    ctx.fillText("📷 BUKTI PEMBAYARAN", imgX + 160, imgY - 15);
+    
     if (imgbbImage && imgbbImage.complete && imgbbImage.naturalWidth > 0) {
-        const imgRatio = imgbbImage.width / imgbbImage.height;
-        const targetRatio = imgW / imgH;
-        let drawW, drawH, offX, offY;
-        
-        if (imgRatio > targetRatio) {
-            drawH = imgH;
-            drawW = imgbbImage.width * (imgH / imgbbImage.height);
-            offX = imgX + (imgW - drawW) / 2;
-            offY = imgY;
-        } else {
-            drawW = imgW;
-            drawH = imgbbImage.height * (imgW / imgbbImage.width);
-            offX = imgX;
-            offY = imgY + (imgH - drawH) / 2;
+        try {
+            const imgRatio = imgbbImage.width / imgbbImage.height;
+            const targetRatio = imgW / imgH;
+            let drawW, drawH, offX, offY;
+            
+            if (imgRatio > targetRatio) {
+                drawH = imgH;
+                drawW = imgbbImage.width * (imgH / imgbbImage.height);
+                offX = imgX + (imgW - drawW) / 2;
+                offY = imgY;
+            } else {
+                drawW = imgW;
+                drawH = imgbbImage.height * (imgW / imgbbImage.width);
+                offX = imgX;
+                offY = imgY + (imgH - drawH) / 2;
+            }
+            ctx.drawImage(imgbbImage, offX, offY, drawW, drawH);
+        } catch(e) {
+            console.error('Error drawing image:', e);
         }
-        ctx.drawImage(imgbbImage, offX, offY, drawW, drawH);
     } else {
         ctx.font = '36px "Inter"';
         ctx.fillStyle = '#888';
         ctx.fillText("📷 Bukti Pembayaran", imgX + 150, imgY + 300);
     }
     
-    // Data section
+    // DATA PEMBELI
     let startY = imgY + imgH + 80;
     
-    // Pembeli
     ctx.font = '600 28px "Inter"';
     ctx.fillStyle = '#00f2fe';
     ctx.fillText("👤 PEMBELI", 80, startY);
     ctx.font = '700 36px "Inter"';
     ctx.fillStyle = '#ffffff';
-    const buyerText = buyerName.length > 30 ? buyerName.substring(0, 27) + '...' : buyerName;
-    ctx.fillText(buyerText, 80, startY + 55);
+    ctx.fillText(truncateText(buyerName, 28), 80, startY + 55);
     startY += 110;
     
-    // Produk
     ctx.font = '600 28px "Inter"';
     ctx.fillStyle = '#00f2fe';
     ctx.fillText("📦 PRODUK", 80, startY);
     ctx.font = '600 32px "Inter"';
     ctx.fillStyle = '#ffffff';
-    const productTextWrapped = productsText.length > 40 ? productsText.substring(0, 37) + '...' : productsText;
-    ctx.fillText(productTextWrapped, 80, startY + 50);
+    ctx.fillText(truncateText(productsText, 35), 80, startY + 50);
     startY += 100;
     
-    // Total
     ctx.font = '600 28px "Inter"';
     ctx.fillStyle = '#00f2fe';
     ctx.fillText("💰 TOTAL", 80, startY);
@@ -186,7 +212,6 @@ function drawCanvas() {
     ctx.fillText(`Rp ${formatNumber(totalAmount)}`, 80, startY + 55);
     startY += 110;
     
-    // Tanggal
     ctx.font = '600 28px "Inter"';
     ctx.fillStyle = '#00f2fe';
     ctx.fillText("⏱️ TANGGAL", 80, startY);
@@ -194,102 +219,18 @@ function drawCanvas() {
     ctx.fillStyle = '#ffffff';
     ctx.fillText(tanggal, 80, startY + 50);
     
-    // Footer
+    // FOOTER
     ctx.font = '400 20px "Inter"';
-    ctx.fillStyle = '#888888';
-    ctx.fillText("verified by Rayy Store • rayystore.com", w/2 - 220, h - 80);
+    ctx.fillStyle = '#666';
+    ctx.fillText("verified by Rayy Store", w/2 - 150, h - 80);
     
-    // Save canvas to admin
+    // SAVE KE ADMIN
     saveToAdmin(buyerName, productsText, totalAmount, tanggal);
-    
-    // Hide loading overlay
-    const loadingOverlay = document.getElementById('loadingOverlay');
-    loadingOverlay.style.display = 'none';
-    
-    // Convert canvas to URL and send to WhatsApp
-    setTimeout(() => {
-        convertCanvasToUrlAndSendToWA();
-    }, 500);
 }
 
-// Convert canvas to URL (data URL / base64)
-function convertCanvasToUrlAndSendToWA() {
-    try {
-        // Convert canvas to data URL (PNG base64)
-        canvasImageUrl = canvas.toDataURL('image/png');
-        
-        // Build WhatsApp message with canvas image URL
-        const buyerName = doneData?.buyerName || 'Customer';
-        const productsText = doneData?.productsText || 'Produk Digital';
-        const totalAmount = doneData?.totalAmount || 0;
-        
-        // Kirim URL canvas (bukan URL ImgBB)
-        const message = `Halo Rayy Store saya *${buyerName}*%0A%0A` +
-            `Saya membeli produk:%0A` +
-            `📦 *${productsText}*%0A` +
-            `💰 *Rp ${formatNumber(totalAmount)}*%0A%0A` +
-            `Ini kartu konfirmasi pembayaran saya:%0A` +
-            `${canvasImageUrl}%0A%0A` +
-            `Mohon untuk diproses 🙏`;
-        
-        whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`;
-        
-        // Show WhatsApp section and redirect
-        const whatsappSection = document.getElementById('whatsappSection');
-        const manualSection = document.getElementById('manualSection');
-        const downloadBtn = document.getElementById('downloadBtn');
-        
-        // Hide download button initially
-        if (downloadBtn) downloadBtn.style.display = 'none';
-        
-        // Show loading WA
-        whatsappSection.style.display = 'block';
-        
-        // Redirect after 2 seconds
-        setTimeout(() => {
-            window.open(whatsappUrl, '_blank');
-            
-            // After redirect, show manual section
-            setTimeout(() => {
-                whatsappSection.style.display = 'none';
-                manualSection.style.display = 'block';
-                if (downloadBtn) downloadBtn.style.display = 'block';
-            }, 1000);
-        }, 2000);
-        
-    } catch (error) {
-        console.error('Error converting canvas:', error);
-        // Fallback: tetap coba kirim
-        const buyerName = doneData?.buyerName || 'Customer';
-        const productsText = doneData?.productsText || 'Produk Digital';
-        const totalAmount = doneData?.totalAmount || 0;
-        
-        const fallbackMessage = `Halo Rayy Store saya *${buyerName}*%0A%0A` +
-            `Saya membeli produk:%0A` +
-            `📦 *${productsText}*%0A` +
-            `💰 *Rp ${formatNumber(totalAmount)}*%0A%0A` +
-            `Mohon untuk diproses 🙏`;
-        
-        whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${fallbackMessage}`;
-        
-        const whatsappSection = document.getElementById('whatsappSection');
-        const manualSection = document.getElementById('manualSection');
-        const downloadBtn = document.getElementById('downloadBtn');
-        
-        if (downloadBtn) downloadBtn.style.display = 'none';
-        whatsappSection.style.display = 'block';
-        
-        setTimeout(() => {
-            window.open(whatsappUrl, '_blank');
-            setTimeout(() => {
-                whatsappSection.style.display = 'none';
-                manualSection.style.display = 'block';
-                if (downloadBtn) downloadBtn.style.display = 'block';
-            }, 1000);
-        }, 2000);
-    }
-}
-
+// ========================================
+// 6. SAVE CANVAS DATA TO ADMIN
+// ========================================
 async function saveToAdmin(buyerName, productName, total, tanggal) {
     const canvasData = {
         buyerName: buyerName,
@@ -303,41 +244,113 @@ async function saveToAdmin(buyerName, productName, total, tanggal) {
     try {
         const canvasId = Date.now().toString();
         await database.ref('doneCanvas/' + canvasId).set(canvasData);
+        console.log('Saved to admin');
     } catch (e) {
         console.error('Error saving to admin:', e);
     }
 }
 
-// Download canvas
+// ========================================
+// 7. SHOW NOTIFICATION
+// ========================================
+function showNotification(msg, type) {
+    const notif = document.createElement('div');
+    notif.className = `notification ${type}`;
+    notif.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i> ${msg}`;
+    document.body.appendChild(notif);
+    setTimeout(() => {
+        notif.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => notif.remove(), 300);
+    }, 2000);
+}
+
+// ========================================
+// 8. TOMBOL DOWNLOAD CANVAS
+// ========================================
 document.getElementById('downloadBtn').onclick = () => {
     const link = document.createElement('a');
     const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
-    link.download = `RAYY_DONE_${timestamp}.png`;
+    link.download = `KARTU_KONFIRMASI_${timestamp}.png`;
     link.href = canvas.toDataURL();
     link.click();
+    
+    showNotification('Kartu berhasil di download!', 'success');
+    
+    // MUNCULKAN TOMBOL UPLOAD SETELAH DOWNLOAD
+    document.getElementById('uploadSection').style.display = 'block';
 };
 
-// Manual WhatsApp button (kirim ulang canvas URL)
-document.getElementById('manualWaBtn').onclick = () => {
-    if (canvasImageUrl) {
-        const buyerName = doneData?.buyerName || 'Customer';
-        const productsText = doneData?.productsText || 'Produk Digital';
-        const totalAmount = doneData?.totalAmount || 0;
+// ========================================
+// 9. TOMBOL UPLOAD CANVAS KE IMGBB
+// ========================================
+document.getElementById('uploadBtn').onclick = async () => {
+    const uploadBtn = document.getElementById('uploadBtn');
+    const uploadLoading = document.getElementById('uploadLoading');
+    
+    uploadBtn.disabled = true;
+    uploadBtn.style.opacity = '0.5';
+    uploadLoading.style.display = 'block';
+    
+    try {
+        const blob = await (await fetch(canvas.toDataURL('image/png'))).blob();
+        const formData = new FormData();
+        formData.append('image', blob, 'canvas-image.png');
         
-        const message = `Halo Rayy Store saya *${buyerName}*%0A%0A` +
-            `Saya membeli produk:%0A` +
-            `📦 *${productsText}*%0A` +
-            `💰 *Rp ${formatNumber(totalAmount)}*%0A%0A` +
-            `Ini kartu konfirmasi pembayaran saya:%0A` +
-            `${canvasImageUrl}%0A%0A` +
-            `Mohon untuk diproses 🙏`;
+        const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+            method: 'POST',
+            body: formData
+        });
         
-        const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`;
-        window.open(waUrl, '_blank');
-    } else {
-        window.open(whatsappUrl, '_blank');
+        const data = await response.json();
+        
+        if (data.success) {
+            uploadedCanvasUrl = data.data.url;
+            console.log('Uploaded canvas URL:', uploadedCanvasUrl);
+            
+            uploadLoading.style.display = 'none';
+            document.getElementById('uploadSection').style.display = 'none';
+            document.getElementById('waSection').style.display = 'block';
+            showNotification('Upload kartu berhasil!', 'success');
+        } else {
+            throw new Error('Upload failed');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        uploadLoading.style.display = 'none';
+        showNotification('Gagal upload, coba lagi!', 'error');
+        uploadBtn.disabled = false;
+        uploadBtn.style.opacity = '1';
     }
 };
 
-// Initialize
+// ========================================
+// 10. TOMBOL KIRIM KE WHATSAPP
+// ========================================
+document.getElementById('waBtn').onclick = () => {
+    if (!uploadedCanvasUrl) {
+        showNotification('Upload kartu terlebih dahulu!', 'error');
+        return;
+    }
+    
+    const buyerName = doneData?.buyerName || 'Customer';
+    const productsText = doneData?.productsText || 'Produk Digital';
+    const totalAmount = doneData?.totalAmount || 0;
+    
+    // KIRIM LINK_CANVAS (bukan link bukti asli)
+    const message = `Halo Rayy Store saya *${buyerName}*%0A%0A` +
+        `Saya membeli produk:%0A` +
+        `📦 *${productsText}*%0A` +
+        `💰 *Rp ${formatNumber(totalAmount)}*%0A%0A` +
+        `Ini kartu konfirmasi pembayaran saya:%0A` +
+        `${uploadedCanvasUrl}%0A%0A` +
+        `Mohon untuk diproses 🙏`;
+    
+    const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`;
+    window.open(waUrl, '_blank');
+    showNotification('Membuka WhatsApp...', 'success');
+};
+
+// ========================================
+// 11. INITIALIZE
+// ========================================
 loadData();
