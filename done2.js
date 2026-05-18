@@ -84,7 +84,7 @@ function truncateText(text, maxLength) {
 }
 
 // ========================================
-// 5. DRAW MAIN CANVAS (DIPERBAIKI)
+// 5. DRAW MAIN CANVAS (FOTO PAS DI TENGAH)
 // ========================================
 function drawCanvas() {
     const w = 1080, h = 1920;
@@ -143,11 +143,11 @@ function drawCanvas() {
     ctx.lineWidth = 1;
     ctx.stroke();
     
-    // ========== FOTO BUKTI (DIPERKECIL - UKURAN 450x450) ==========
-    const imgW = 450;   // DIPERKECIL dari 600 ke 450
-    const imgH = 450;   // DIPERKECIL dari 600 ke 450
-    const imgX = (w - imgW) / 2;  // TENGAH SEMPURNA
-    const imgY = 390;   // DINAICKAN SEDIKIT AGAR TIDAK NEMPEL GARIS
+    // ========== FOTO BUKTI - UKURAN 400x400 (LEBIH KECIL & PAS TENGAH) ==========
+    const imgW = 400;   // Ukuran lebih kecil
+    const imgH = 400;   // Ukuran lebih kecil
+    const imgX = (w - imgW) / 2;   // TENGAH HORIZONTAL (540 - 200 = 340)
+    const imgY = 380;   // TENGAH VERTIKAL (antara header dan data)
     
     // Background foto
     ctx.fillStyle = '#1a1d24';
@@ -156,12 +156,14 @@ function drawCanvas() {
     ctx.lineWidth = 3;
     ctx.strokeRect(imgX, imgY, imgW, imgH);
     
-    // Label "BUKTI PEMBAYARAN"
+    // Label "BUKTI PEMBAYARAN" di atas foto
     ctx.font = '500 22px "Inter"';
     ctx.fillStyle = '#4facfe';
-    ctx.fillText("📷 BUKTI PEMBAYARAN", imgX + 120, imgY - 12);
+    ctx.textAlign = 'center';
+    ctx.fillText("📷 BUKTI PEMBAYARAN", w/2, imgY - 12);
+    ctx.textAlign = 'left';
     
-    // Draw image dari ImgBB (dengan resize agar muat di 450x450)
+    // Draw image dari ImgBB (resize ke 400x400)
     if (imgbbImage && imgbbImage.complete && imgbbImage.naturalWidth > 0) {
         try {
             const imgRatio = imgbbImage.width / imgbbImage.height;
@@ -182,21 +184,25 @@ function drawCanvas() {
                 offY = imgY + (imgH - drawH) / 2;
             }
             ctx.drawImage(imgbbImage, offX, offY, drawW, drawH);
-            console.log('Gambar bukti digambar di canvas ukuran 450x450');
+            console.log('Gambar bukti digambar di canvas ukuran 400x400, posisi X:', imgX, 'Y:', imgY);
         } catch(e) {
             console.error('Error drawing image:', e);
             ctx.font = '30px "Inter"';
             ctx.fillStyle = '#888';
-            ctx.fillText("📷 Gagal muat", imgX + 150, imgY + 220);
+            ctx.textAlign = 'center';
+            ctx.fillText("📷 Gagal muat", w/2, imgY + 200);
+            ctx.textAlign = 'left';
         }
     } else {
         ctx.font = '30px "Inter"';
         ctx.fillStyle = '#888';
-        ctx.fillText("📷 Bukti Pembayaran", imgX + 120, imgY + 220);
+        ctx.textAlign = 'center';
+        ctx.fillText("📷 Bukti Pembayaran", w/2, imgY + 200);
+        ctx.textAlign = 'left';
     }
     
     // ========== DATA PEMBELI (DIBAWAH FOTO) ==========
-    let startY = imgY + imgH + 70;  // Jarak dari foto
+    let startY = imgY + imgH + 65;  // Jarak dari foto 65px
     
     // PEMBELI
     ctx.font = '600 28px "Inter"';
@@ -236,7 +242,9 @@ function drawCanvas() {
     // ========== FOOTER ==========
     ctx.font = '400 20px "Inter"';
     ctx.fillStyle = '#666';
-    ctx.fillText("verified by Rayy Store", w/2 - 150, h - 80);
+    ctx.textAlign = 'center';
+    ctx.fillText("verified by Rayy Store", w/2, h - 80);
+    ctx.textAlign = 'left';
     
     // Save to admin
     saveToAdmin(buyerName, productsText, totalAmount, tanggal);
