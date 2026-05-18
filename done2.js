@@ -143,11 +143,11 @@ function drawCanvas() {
     ctx.lineWidth = 1;
     ctx.stroke();
     
-    // ========== FOTO BUKTI - UKURAN 400x400 (LEBIH KECIL & PAS TENGAH) ==========
-    const imgW = 400;   // Ukuran lebih kecil
-    const imgH = 400;   // Ukuran lebih kecil
-    const imgX = (w - imgW) / 2;   // TENGAH HORIZONTAL (540 - 200 = 340)
-    const imgY = 380;   // TENGAH VERTIKAL (antara header dan data)
+    // ========== FOTO BUKTI - UKURAN 400x400 (PAS TENGAH HORIZONTAL & VERTIKAL) ==========
+    const imgW = 400;
+    const imgH = 400;
+    const imgX = (w - imgW) / 2;        // TENGAH HORIZONTAL
+    const imgY = (h - imgH) / 2;        // TENGAH VERTIKAL ✅
     
     // Background foto
     ctx.fillStyle = '#1a1d24';
@@ -201,7 +201,7 @@ function drawCanvas() {
         ctx.textAlign = 'left';
     }
     
-    // ========== DATA PEMBELI (DIBAWAH FOTO) ==========
+    // ========== DATA PEMBELI (DI BAWAH FOTO) ==========
     let startY = imgY + imgH + 65;  // Jarak dari foto 65px
     
     // PEMBELI
