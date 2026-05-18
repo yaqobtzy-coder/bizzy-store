@@ -46,7 +46,7 @@ function loadData() {
 }
 
 // ========================================
-// 2. DRAW ERROR CANVAS (JIKA DATA TIDAK ADA)
+// 2. DRAW ERROR CANVAS
 // ========================================
 function drawErrorCanvas() {
     const w = 1080, h = 1920;
@@ -75,7 +75,7 @@ function formatNumber(num) {
 }
 
 // ========================================
-// 4. TRUNCATE TEXT (POTONG TEKS PANJANG)
+// 4. TRUNCATE TEXT
 // ========================================
 function truncateText(text, maxLength) {
     if (!text) return '';
@@ -84,7 +84,7 @@ function truncateText(text, maxLength) {
 }
 
 // ========================================
-// 5. DRAW MAIN CANVAS
+// 5. DRAW MAIN CANVAS (DIPERBAIKI)
 // ========================================
 function drawCanvas() {
     const w = 1080, h = 1920;
@@ -103,7 +103,7 @@ function drawCanvas() {
         minute: '2-digit'
     });
     
-    // BACKGROUND GRADIENT
+    // ========== BACKGROUND ==========
     const gradient = ctx.createLinearGradient(0, 0, w, h);
     gradient.addColorStop(0, '#0a0c10');
     gradient.addColorStop(0.5, '#0f1220');
@@ -111,7 +111,7 @@ function drawCanvas() {
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, w, h);
     
-    // BORDER DOUBLE
+    // ========== BORDER DOUBLE ==========
     ctx.strokeStyle = '#4facfe';
     ctx.lineWidth = 8;
     ctx.strokeRect(40, 40, w-80, h-80);
@@ -119,7 +119,7 @@ function drawCanvas() {
     ctx.lineWidth = 3;
     ctx.strokeRect(52, 52, w-104, h-104);
     
-    // HEADER
+    // ========== HEADER ==========
     ctx.shadowColor = '#4facfe';
     ctx.shadowBlur = 10;
     ctx.font = '800 72px "Inter"';
@@ -135,7 +135,7 @@ function drawCanvas() {
     ctx.fillStyle = '#ffffff';
     ctx.fillText("Rayy Store", 80, 300);
     
-    // GARIS PEMISAH
+    // ========== GARIS PEMISAH ==========
     ctx.beginPath();
     ctx.moveTo(80, 340);
     ctx.lineTo(w - 80, 340);
@@ -143,21 +143,25 @@ function drawCanvas() {
     ctx.lineWidth = 1;
     ctx.stroke();
     
-    // FOTO BUKTI DARI IMGBBB DI TENGAH
-    const imgW = 600, imgH = 600;
-    const imgX = (w - imgW) / 2;
-    const imgY = 400;
+    // ========== FOTO BUKTI (DIPERKECIL - UKURAN 450x450) ==========
+    const imgW = 450;   // DIPERKECIL dari 600 ke 450
+    const imgH = 450;   // DIPERKECIL dari 600 ke 450
+    const imgX = (w - imgW) / 2;  // TENGAH SEMPURNA
+    const imgY = 390;   // DINAICKAN SEDIKIT AGAR TIDAK NEMPEL GARIS
     
+    // Background foto
     ctx.fillStyle = '#1a1d24';
     ctx.fillRect(imgX, imgY, imgW, imgH);
     ctx.strokeStyle = '#4facfe';
     ctx.lineWidth = 3;
     ctx.strokeRect(imgX, imgY, imgW, imgH);
     
-    ctx.font = '500 24px "Inter"';
+    // Label "BUKTI PEMBAYARAN"
+    ctx.font = '500 22px "Inter"';
     ctx.fillStyle = '#4facfe';
-    ctx.fillText("📷 BUKTI PEMBAYARAN", imgX + 160, imgY - 15);
+    ctx.fillText("📷 BUKTI PEMBAYARAN", imgX + 120, imgY - 12);
     
+    // Draw image dari ImgBB (dengan resize agar muat di 450x450)
     if (imgbbImage && imgbbImage.complete && imgbbImage.naturalWidth > 0) {
         try {
             const imgRatio = imgbbImage.width / imgbbImage.height;
@@ -165,37 +169,45 @@ function drawCanvas() {
             let drawW, drawH, offX, offY;
             
             if (imgRatio > targetRatio) {
+                // Gambar lebih lebar dari area target
                 drawH = imgH;
                 drawW = imgbbImage.width * (imgH / imgbbImage.height);
                 offX = imgX + (imgW - drawW) / 2;
                 offY = imgY;
             } else {
+                // Gambar lebih tinggi dari area target
                 drawW = imgW;
                 drawH = imgbbImage.height * (imgW / imgbbImage.width);
                 offX = imgX;
                 offY = imgY + (imgH - drawH) / 2;
             }
             ctx.drawImage(imgbbImage, offX, offY, drawW, drawH);
+            console.log('Gambar bukti digambar di canvas ukuran 450x450');
         } catch(e) {
             console.error('Error drawing image:', e);
+            ctx.font = '30px "Inter"';
+            ctx.fillStyle = '#888';
+            ctx.fillText("📷 Gagal muat", imgX + 150, imgY + 220);
         }
     } else {
-        ctx.font = '36px "Inter"';
+        ctx.font = '30px "Inter"';
         ctx.fillStyle = '#888';
-        ctx.fillText("📷 Bukti Pembayaran", imgX + 150, imgY + 300);
+        ctx.fillText("📷 Bukti Pembayaran", imgX + 120, imgY + 220);
     }
     
-    // DATA PEMBELI
-    let startY = imgY + imgH + 80;
+    // ========== DATA PEMBELI (DIBAWAH FOTO) ==========
+    let startY = imgY + imgH + 70;  // Jarak dari foto
     
+    // PEMBELI
     ctx.font = '600 28px "Inter"';
     ctx.fillStyle = '#00f2fe';
     ctx.fillText("👤 PEMBELI", 80, startY);
     ctx.font = '700 36px "Inter"';
     ctx.fillStyle = '#ffffff';
-    ctx.fillText(truncateText(buyerName, 28), 80, startY + 55);
-    startY += 110;
+    ctx.fillText(truncateText(buyerName, 28), 80, startY + 50);
+    startY += 100;
     
+    // PRODUK
     ctx.font = '600 28px "Inter"';
     ctx.fillStyle = '#00f2fe';
     ctx.fillText("📦 PRODUK", 80, startY);
@@ -204,6 +216,7 @@ function drawCanvas() {
     ctx.fillText(truncateText(productsText, 35), 80, startY + 50);
     startY += 100;
     
+    // TOTAL
     ctx.font = '600 28px "Inter"';
     ctx.fillStyle = '#00f2fe';
     ctx.fillText("💰 TOTAL", 80, startY);
@@ -212,6 +225,7 @@ function drawCanvas() {
     ctx.fillText(`Rp ${formatNumber(totalAmount)}`, 80, startY + 55);
     startY += 110;
     
+    // TANGGAL
     ctx.font = '600 28px "Inter"';
     ctx.fillStyle = '#00f2fe';
     ctx.fillText("⏱️ TANGGAL", 80, startY);
@@ -219,17 +233,17 @@ function drawCanvas() {
     ctx.fillStyle = '#ffffff';
     ctx.fillText(tanggal, 80, startY + 50);
     
-    // FOOTER
+    // ========== FOOTER ==========
     ctx.font = '400 20px "Inter"';
     ctx.fillStyle = '#666';
     ctx.fillText("verified by Rayy Store", w/2 - 150, h - 80);
     
-    // SAVE KE ADMIN
+    // Save to admin
     saveToAdmin(buyerName, productsText, totalAmount, tanggal);
 }
 
 // ========================================
-// 6. SAVE CANVAS DATA TO ADMIN
+// 6. SAVE TO ADMIN
 // ========================================
 async function saveToAdmin(buyerName, productName, total, tanggal) {
     const canvasData = {
@@ -265,7 +279,7 @@ function showNotification(msg, type) {
 }
 
 // ========================================
-// 8. TOMBOL DOWNLOAD CANVAS
+// 8. TOMBOL DOWNLOAD
 // ========================================
 document.getElementById('downloadBtn').onclick = () => {
     const link = document.createElement('a');
@@ -275,13 +289,11 @@ document.getElementById('downloadBtn').onclick = () => {
     link.click();
     
     showNotification('Kartu berhasil di download!', 'success');
-    
-    // MUNCULKAN TOMBOL UPLOAD SETELAH DOWNLOAD
     document.getElementById('uploadSection').style.display = 'block';
 };
 
 // ========================================
-// 9. TOMBOL UPLOAD CANVAS KE IMGBB
+// 9. TOMBOL UPLOAD KE IMGBB
 // ========================================
 document.getElementById('uploadBtn').onclick = async () => {
     const uploadBtn = document.getElementById('uploadBtn');
@@ -324,7 +336,7 @@ document.getElementById('uploadBtn').onclick = async () => {
 };
 
 // ========================================
-// 10. TOMBOL KIRIM KE WHATSAPP
+// 10. TOMBOL WHATSAPP
 // ========================================
 document.getElementById('waBtn').onclick = () => {
     if (!uploadedCanvasUrl) {
@@ -336,7 +348,6 @@ document.getElementById('waBtn').onclick = () => {
     const productsText = doneData?.productsText || 'Produk Digital';
     const totalAmount = doneData?.totalAmount || 0;
     
-    // KIRIM LINK_CANVAS (bukan link bukti asli)
     const message = `Halo Rayy Store saya *${buyerName}*%0A%0A` +
         `Saya membeli produk:%0A` +
         `📦 *${productsText}*%0A` +
