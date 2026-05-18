@@ -8,11 +8,15 @@ body {
     background: linear-gradient(135deg, #0a0c10, #0f1117);
     font-family: 'Inter', sans-serif;
     min-height: 100vh;
-    padding: 20px;
+    padding: 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .container {
-    max-width: 450px;
+    max-width: 400px;
+    width: 100%;
     margin: 0 auto;
 }
 
@@ -20,61 +24,68 @@ body {
     background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(10px);
     border-radius: 24px;
-    padding: 20px;
+    padding: 20px 16px;
     border: 1px solid rgba(79, 172, 254, 0.2);
     text-align: center;
 }
 
-.success-icon i {
-    font-size: 48px;
-    color: #28a745;
+/* Icon Success */
+.success-icon {
+    text-align: center;
     margin-bottom: 8px;
+}
+
+.success-icon i {
+    font-size: 44px;
+    color: #28a745;
 }
 
 h1 {
     color: white;
-    font-size: 20px;
+    font-size: 18px;
+    font-weight: 700;
     margin-bottom: 4px;
 }
 
 .subtitle {
     color: #888;
-    font-size: 12px;
+    font-size: 11px;
     margin-bottom: 20px;
 }
 
+/* Canvas Section */
 .canvas-section {
-    margin: 15px 0;
+    margin: 0 0 16px 0;
 }
 
 .canvas-section h3 {
     color: white;
-    font-size: 14px;
+    font-size: 13px;
+    font-weight: 500;
     margin-bottom: 10px;
     text-align: center;
 }
 
 .canvas-wrapper {
-    background: #1a1d24;
+    background: #0f1117;
     border-radius: 16px;
-    padding: 10px;
-    margin-bottom: 12px;
-    overflow-x: auto;
-    text-align: center;
+    padding: 12px;
+    margin-bottom: 10px;
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
 canvas {
-    width: 280px;
+    width: 260px;
     height: auto;
     border-radius: 12px;
     display: block;
     margin: 0 auto;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
 
+/* Download Button */
 .btn-download {
     width: 100%;
     background: linear-gradient(135deg, #00f2fe, #4facfe);
@@ -85,16 +96,21 @@ canvas {
     font-weight: 600;
     font-size: 13px;
     cursor: pointer;
-    transition: opacity 0.2s;
-    margin-top: 8px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
 }
 
 .btn-download:hover {
     opacity: 0.85;
+    transform: scale(0.98);
 }
 
+/* WhatsApp Loading */
 .whatsapp-section {
-    margin: 15px 0;
+    margin: 16px 0;
 }
 
 .loading-wa {
@@ -103,6 +119,7 @@ canvas {
     padding: 12px;
     color: white;
     animation: pulse 1s infinite;
+    text-align: center;
 }
 
 .loading-wa i {
@@ -112,6 +129,7 @@ canvas {
 
 .loading-wa p {
     font-size: 12px;
+    font-weight: 500;
 }
 
 .loading-wa .small {
@@ -126,12 +144,12 @@ canvas {
     100% { opacity: 0.7; transform: scale(0.98); }
 }
 
+/* Manual Section */
 .manual-section {
-    margin: 15px 0;
+    margin: 16px 0;
 }
 
 .btn-wa {
-    display: inline-block;
     width: 100%;
     background: #25D366;
     border: none;
@@ -141,32 +159,42 @@ canvas {
     font-weight: 700;
     font-size: 14px;
     cursor: pointer;
-    transition: opacity 0.2s;
-    text-decoration: none;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
     margin-bottom: 10px;
 }
 
 .btn-wa:hover {
     opacity: 0.85;
+    transform: scale(0.98);
 }
 
 .back-btn {
     width: 100%;
-    background: rgba(255, 255, 255, 0.1);
-    border: none;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(79, 172, 254, 0.3);
     padding: 10px;
     border-radius: 40px;
-    color: white;
+    color: #aaa;
     font-weight: 500;
     font-size: 13px;
     cursor: pointer;
     transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
 }
 
 .back-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
 }
 
+/* Loading Overlay */
 .loading-overlay {
     position: fixed;
     top: 0;
@@ -196,31 +224,61 @@ canvas {
     font-size: 14px;
 }
 
+/* Error Message */
 .error-message {
-    background: rgba(220, 53, 69, 0.2);
+    background: rgba(220, 53, 69, 0.15);
     border: 1px solid #dc3545;
     border-radius: 12px;
-    padding: 12px;
-    margin: 15px 0;
+    padding: 10px;
+    margin: 12px 0;
     color: #dc3545;
-    font-size: 12px;
+    font-size: 11px;
+    text-align: center;
 }
 
-/* Tombol kecil untuk mobile */
-@media (max-width: 550px) {
+/* Responsive */
+@media (max-width: 480px) {
+    body {
+        padding: 12px;
+    }
+    
     .container {
         max-width: 100%;
     }
+    
     .done-card {
-        padding: 15px;
+        padding: 16px 12px;
     }
+    
     .success-icon i {
-        font-size: 40px;
+        font-size: 38px;
     }
+    
     h1 {
-        font-size: 18px;
+        font-size: 16px;
     }
+    
+    .subtitle {
+        font-size: 10px;
+    }
+    
     canvas {
-        width: 250px;
+        width: 220px;
+    }
+    
+    .canvas-wrapper {
+        padding: 8px;
+    }
+    
+    .btn-download, .btn-wa, .back-btn {
+        padding: 8px;
+        font-size: 12px;
+    }
+}
+
+/* Untuk HP yang lebih kecil */
+@media (max-width: 360px) {
+    canvas {
+        width: 200px;
     }
 }
