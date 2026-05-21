@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Rayy Store · Done Reply 9:16</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: radial-gradient(circle at 10% 30%, #0B1120, #030712);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            padding: 2rem 1.5rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .dashboard {
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            align-items: flex-start;
+            justify-content: center;
+        }
+
+        .card {
+            background: rgba(15, 25, 35, 0.65);
+            backdrop-filter: blur(16px);
+            border-radius: 2.5rem;
+            border: 1px solid rgba(255, 215, 150, 0.25);
+            box-shadow: 0 25px 45px -12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+        }
+
+        .form-card {
+            flex: 1;
+            min-width: 320px;
+            padding: 2rem 1.8rem;
+        }
+
+        .canvas-card {
+            flex: 1;
+            min-width: 380px;
+            padding: 1.8rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, #F59E0B20, #FCD34D10);
+            padding: 0.3rem 1rem;
+            border-radius: 60px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #FCD34D;
+            border: 0.5px solid #F59E0B50;
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #FFF6E5, #FFE0A3);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 0.3rem;
+        }
+
+        .store-name-badge {
+            color: #FCD34D;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 1rem;
+            display: inline-block;
+            background: #00000040;
+            padding: 0.2rem 0.8rem;
+            border-radius: 30px;
+        }
+
+        .subhead {
+            color: #9CA3AF;
+            font-size: 0.85rem;
+            margin-bottom: 1.8rem;
+            border-left: 3px solid #F59E0B;
+            padding-left: 0.8rem;
+        }
+
+        .input-field {
+            margin-bottom: 1.2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .input-field label {
+            font-weight: 600;
+            font-size: 0.8rem;
+            color: #E5E7EB;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .input-field input {
+            background: #0F172A80;
+            border: 1px solid #334155;
+            border-radius: 1.5rem;
+            padding: 0.85rem 1.2rem;
+            font-family: 'Inter', monospace;
+            font-size: 0.9rem;
+            color: #F3F4F6;
+            transition: all 0.2s;
+            outline: none;
+        }
+
+        .input-field input:focus {
+            border-color: #F59E0B;
+            box-shadow: 0 0 0 3px #F59E0B30;
+            background: #0F1722;
+        }
+
+        .file-upload {
+            background: #0F172A80;
+            border: 1px dashed #F59E0B80;
+            border-radius: 1.5rem;
+            padding: 0.7rem 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.2s;
+            color: #FCD34D;
+            font-weight: 500;
+        }
+
+        .file-upload:hover {
+            background: #F59E0B20;
+            border-color: #F59E0B;
+        }
+
+        .preview-img {
+            margin-top: 10px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .preview-img img {
+            width: 70px;
+            height: 70px;
+            border-radius: 18px;
+            object-fit: cover;
+            border: 2px solid #F59E0B;
+            background: #1E293B;
+            padding: 2px;
+        }
+
+        .date-chip {
+            background: #111827CC;
+            border-radius: 2rem;
+            padding: 0.7rem 1.2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 0.5rem 0 1rem;
+            border: 1px solid #F59E0B40;
+        }
+
+        .date-chip span:first-child {
+            font-weight: 500;
+            color: #FFDFA5;
+            font-size: 0.8rem;
+        }
+
+        .date-chip span:last-child {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            background: #00000050;
+            padding: 0.2rem 0.9rem;
+            border-radius: 2rem;
+            font-size: 0.75rem;
+        }
+
+        .btn-generate {
+            width: 100%;
+            background: linear-gradient(105deg, #F59E0B, #EA580C);
+            border: none;
+            padding: 1rem;
+            border-radius: 3rem;
+            font-weight: 800;
+            font-size: 1rem;
+            font-family: 'Inter';
+            color: #0F0F1A;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 5px 15px #EA580C40;
+            margin-top: 0.5rem;
+        }
+
+        .btn-generate:hover {
+            transform: scale(0.98);
+            background: linear-gradient(105deg, #FBBF24, #F97316);
+        }
+
+        .canvas-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.2rem;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .canvas-header h3 {
+            font-weight: 700;
+            color: #FDE68A;
+            font-size: 1.2rem;
+        }
+
+        .btn-download {
+            background: #1E293B;
+            border: 1px solid #F59E0B80;
+            padding: 0.5rem 1.2rem;
+            border-radius: 2rem;
+            font-weight: 600;
+            color: #FFEDD5;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-download:hover {
+            background: #F59E0B;
+            color: #0A0F1A;
+        }
+
+        .canvas-wrapper {
+            display: flex;
+            justify-content: center;
+            border-radius: 2rem;
+        }
+
+        canvas {
+            background: #FEF9F0;
+            border-radius: 2rem;
+            box-shadow: 0 25px 40px -12px black;
+            width: 100%;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+
+        footer {
+            font-size: 0.7rem;
+            text-align: center;
+            color: #6B7280;
+            margin-top: 1rem;
+        }
+
+        @media (max-width: 860px) {
+            body { padding: 1rem; }
+            .form-card, .canvas-card { min-width: auto; }
+            h1 { font-size: 1.6rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="dashboard">
+    <!-- FORM SECTION -->
+    <div class="form-card card">
+        <div class="badge">
+            <span>✨ DONE REPLY · RATIO 9:16</span>
+        </div>
+        <h1>Buat Kartu<br>Konfirmasi</h1>
+        <div class="store-name-badge">🏬 Rayy Store · Official</div>
+        <div class="subhead">Isi data, foto di tengah, rasio 9:16</div>
+
+        <div class="input-field">
+            <label>🖼️ Foto Produk (tampil tengah)</label>
+            <div class="file-upload" id="uploadTrigger">
+                📎 Pilih gambar
+            </div>
+            <input type="file" id="productImage" accept="image/jpeg,image/png,image/webp" hidden>
+            <div class="preview-img" id="imagePreview"></div>
+        </div>
+
+        <div class="input-field">
+            <label>👤 Nama Pembeli</label>
+            <input type="text" id="buyerName" placeholder="Contoh: Muhammad Rayyan" autocomplete="off">
+        </div>
+
+        <div class="input-field">
+            <label>🏷️ Nama Produk</label>
+            <input type="text" id="productName" placeholder="Ex: Hoodie Alpha / Sepatu" autocomplete="off">
+        </div>
+
+        <div class="input-field">
+            <label>🔢 Jumlah Produk</label>
+            <input type="text" id="productQty" placeholder="2 pcs / 1 set">
+        </div>
+
+        <div class="input-field">
+            <label>💰 Harga Produk</label>
+            <input type="text" id="productPrice" placeholder="Rp 349.000">
+        </div>
+
+        <div class="date-chip">
+            <span>📅 Tanggal (Real-time)</span>
+            <span id="liveDate">--/--/---- --:--:--</span>
+        </div>
+
+        <button class="btn-generate" id="generateBtn">
+            🎯 GENERATE DONE CANVAS
+        </button>
+        <footer>Canvas rasio 9:16 (1080x1920) · foto tengah</footer>
+    </div>
+
+    <!-- CANVAS PREMIUM 9:16 -->
+    <div class="canvas-card card">
+        <div class="canvas-header">
+            <h3>✅ RAYY STORE · 9:16 CARD</h3>
+            <button class="btn-download" id="downloadBtn">
+                💾 Simpan PNG
+            </button>
+        </div>
+        <div class="canvas-wrapper">
+            <canvas id="doneCanvas" width="1080" height="1920" style="max-width:100%; height:auto; border-radius:28px"></canvas>
+        </div>
+        <footer>⬇️ Klik simpan atau klik kanan pada kartu</footer>
+    </div>
+</div>
+
+<script>
+    (function() {
+        // DOM Elements
+        const canvas = document.getElementById('doneCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        const fileInput = document.getElementById('productImage');
+        const uploadTrigger = document.getElementById('uploadTrigger');
+        const previewDiv = document.getElementById('imagePreview');
+        const buyerNameInput = document.getElementById('buyerName');
+        const productNameInput = document.getElementById('productName');
+        const productQtyInput = document.getElementById('productQty');
+        const productPriceInput = document.getElementById('productPrice');
+        const liveDateSpan = document.getElementById('liveDate');
+        const generateBtn = document.getElementById('generateBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        
+        // Image state
+        let uploadedImageObj = null;
+        let hasImage = false;
+        
+        // Fixed store info
+        const STORE_NAME = "Rayy Store";
+        const STORE_LINK = "www.rayyxprimze-store-v1.web.id";
+        
+        // Real-time date
+        function updateClock() {
+            const now = new Date();
+            const day = String(now.getDate()).padStart(2,'0');
+            const month = String(now.getMonth()+1).padStart(2,'0');
+            const year = now.getFullYear();
+            const hours = String(now.getHours()).padStart(2,'0');
+            const minutes = String(now.getMinutes()).padStart(2,'0');
+            const seconds = String(now.getSeconds()).padStart(2,'0');
+            const fullDate = `${day}/${month}/${year} · ${hours}:${minutes}:${seconds}`;
+            liveDateSpan.innerText = fullDate;
+            return fullDate;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+        
+        // Upload handler
+        uploadTrigger.addEventListener('click', () => fileInput.click());
+        
+        function loadImageFromFile(file) {
+            return new Promise((resolve, reject) => {
+                if (!file) reject(new Error("no file"));
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => resolve(img);
+                    img.onerror = (err) => reject(err);
+                    img.src = e.target.result;
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+        
+        function updatePreview(imgElement) {
+            previewDiv.innerHTML = '';
+            if (imgElement && imgElement.src) {
+                const thumb = document.createElement('img');
+                thumb.src = imgElement.src;
+                thumb.alt = "preview";
+                previewDiv.appendChild(thumb);
+            } else {
+                previewDiv.innerHTML = '<span style="color:#9CA3AF; font-size:12px;">📷 belum ada foto</span>';
+            }
+        }
+        
+        fileInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) {
+                uploadedImageObj = null;
+                hasImage = false;
+                updatePreview(null);
+                return;
+            }
+            try {
+                const img = await loadImageFromFile(file);
+                uploadedImageObj = img;
+                hasImage = true;
+                updatePreview(img);
+            } catch (err) {
+                console.warn(err);
+                uploadedImageObj = null;
+                hasImage = false;
+                updatePreview(null);
+                alert("Gagal memuat gambar, coba format JPG/PNG.");
+            }
+        });
+        
+        // ----- DRAWING 9:16 (1080x1920) FOTO TENGAH, DATA DI BAWAH -----
+        function drawMasterpiece() {
+            const w = 1080, h = 1920;
+            canvas.width = w;
+            canvas.height = h;
+            
+            // Get fresh data
+            const buyerName = buyerNameInput.value.trim() || "Nama Pembeli";
+            const productName = productNameInput.value.trim() || "Nama Produk";
+            const productQty = productQtyInput.value.trim() || "—";
+            const productPrice = productPriceInput.value.trim() || "—";
+            const tanggalNow = liveDateSpan.innerText;
+            
+            // 1. Background premium soft cream
+            const bgGrd = ctx.createLinearGradient(0, 0, w, h);
+            bgGrd.addColorStop(0, '#FFFBF5');
+            bgGrd.addColorStop(1, '#FFEFE0');
+            ctx.fillStyle = bgGrd;
+            ctx.fillRect(0, 0, w, h);
+            
+            // Elegant border double
+            ctx.save();
+            ctx.shadowBlur = 0;
+            ctx.strokeStyle = '#E2C294';
+            ctx.lineWidth = 8;
+            ctx.strokeRect(40, 40, w-80, h-80);
+            ctx.strokeStyle = '#D6A95C';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(52, 52, w-104, h-104);
+            
+            // Header: DONE + Store
+            ctx.font = '800 88px "Inter", system-ui';
+            ctx.fillStyle = '#2F5D3A';
+            ctx.fillText("✔️ DONE", 70, 160);
+            ctx.font = '600 34px "Inter"';
+            ctx.fillStyle = '#B57C2E';
+            ctx.fillText("KONFIRMASI PEMBELIAN", 470, 150);
+            
+            // Store name & link
+            ctx.font = '700 46px "Inter"';
+            ctx.fillStyle = '#C47D2E';
+            ctx.fillText(STORE_NAME, 70, 245);
+            ctx.font = '500 28px monospace';
+            ctx.fillStyle = '#AC8E64';
+            ctx.fillText(STORE_LINK, 70, 295);
+            
+            // --- FOTO PRODUK DI TENGAH (horizontal center) ---
+            const imgW = 680;
+            const imgH = 680;
+            const imgX = (w - imgW) / 2;
+            const imgY = 420;
+            
+            // Rounded clipping untuk foto (radius besar)
+            ctx.beginPath();
+            ctx.moveTo(imgX + 60, imgY);
+            ctx.lineTo(imgX + imgW - 60, imgY);
+            ctx.quadraticCurveTo(imgX + imgW, imgY, imgX + imgW, imgY + 60);
+            ctx.lineTo(imgX + imgW, imgY + imgH - 60);
+            ctx.quadraticCurveTo(imgX + imgW, imgY + imgH, imgX + imgW - 60, imgY + imgH);
+            ctx.lineTo(imgX + 60, imgY + imgH);
+            ctx.quadraticCurveTo(imgX, imgY + imgH, imgX, imgY + imgH - 60);
+            ctx.lineTo(imgX, imgY + 60);
+            ctx.quadraticCurveTo(imgX, imgY, imgX + 60, imgY);
+            ctx.closePath();
+            ctx.clip();
+            
+            // Background foto
+            ctx.fillStyle = '#F5E7D9';
+            ctx.fillRect(imgX, imgY, imgW, imgH);
+            
+            if (hasImage && uploadedImageObj && uploadedImageObj.complete && uploadedImageObj.naturalWidth > 0) {
+                const imgRatio = uploadedImageObj.width / uploadedImageObj.height;
+                const targetRatio = imgW / imgH;
+                let drawW, drawH, offX, offY;
+                if (imgRatio > targetRatio) {
+                    drawH = imgH;
+                    drawW = uploadedImageObj.width * (imgH / uploadedImageObj.height);
+                    offX = imgX + (imgW - drawW) / 2;
+                    offY = imgY;
+                } else {
+                    drawW = imgW;
+                    drawH = uploadedImageObj.height * (imgW / uploadedImageObj.width);
+                    offX = imgX;
+                    offY = imgY + (imgH - drawH) / 2;
+                }
+                ctx.drawImage(uploadedImageObj, offX, offY, drawW, drawH);
+            } else {
+                ctx.font = '80px "Inter"';
+                ctx.fillStyle = '#D1B48C';
+                ctx.fillText("📸", imgX + imgW/2 - 55, imgY + imgH/2 + 30);
+                ctx.font = 'bold 32px "Inter"';
+                ctx.fillStyle = '#A58767';
+                ctx.fillText("Upload foto produk", imgX + imgW/2 - 170, imgY + imgH - 70);
+            }
+            ctx.restore(); // restore clip
+            
+            // Border foto stengah gloss
+            ctx.beginPath();
+            ctx.moveTo(imgX + 60, imgY);
+            ctx.lineTo(imgX + imgW - 60, imgY);
+            ctx.quadraticCurveTo(imgX + imgW, imgY, imgX + imgW, imgY + 60);
+            ctx.lineTo(imgX + imgW, imgY + imgH - 60);
+            ctx.quadraticCurveTo(imgX + imgW, imgY + imgH, imgX + imgW - 60, imgY + imgH);
+            ctx.lineTo(imgX + 60, imgY + imgH);
+            ctx.quadraticCurveTo(imgX, imgY + imgH, imgX, imgY + imgH - 60);
+            ctx.lineTo(imgX, imgY + 60);
+            ctx.quadraticCurveTo(imgX, imgY, imgX + 60, imgY);
+            ctx.closePath();
+            ctx.lineWidth = 6;
+            ctx.strokeStyle = '#E2A324';
+            ctx.stroke();
+            ctx.lineWidth = 2.5;
+            ctx.strokeStyle = '#FFE3A8';
+            ctx.stroke();
+            
+            // --- DATA PRODUK DI BAWAH FOTO ---
+            let startY = imgY + imgH + 70;
+            
+            // 1. Nama Pembeli
+            ctx.font = '600 28px "Inter"';
+            ctx.fillStyle = '#A5753E';
+            ctx.fillText("👤 PEMBELI", 70, startY);
+            ctx.font = '700 40px "Inter"';
+            ctx.fillStyle = '#2B3B2C';
+            let buyerText = buyerName.length > 35 ? buyerName.slice(0,32)+"..." : buyerName;
+            ctx.fillText(buyerText, 70, startY + 55);
+            startY += 120;
+            
+            // 2. Nama Produk
+            ctx.font = '600 28px "Inter"';
+            ctx.fillStyle = '#A5753E';
+            ctx.fillText("📦 NAMA PRODUK", 70, startY);
+            ctx.font = '700 38px "Inter"';
+            ctx.fillStyle = '#2C4A34';
+            let productText = productName.length > 38 ? productName.slice(0,35)+"..." : productName;
+            ctx.fillText(productText, 70, startY + 55);
+            startY += 120;
+            
+            // 3. Jumlah & Harga (2 kolom)
+            ctx.font = '600 28px "Inter"';
+            ctx.fillStyle = '#A5753E';
+            ctx.fillText("🔢 JUMLAH", 70, startY);
+            ctx.font = '600 28px "Inter"';
+            ctx.fillStyle = '#A5753E';
+            ctx.fillText("💰 HARGA", 620, startY);
+            
+            ctx.font = '700 40px "Inter"';
+            ctx.fillStyle = '#1F2E2A';
+            ctx.fillText(productQty, 70, startY + 55);
+            ctx.font = '700 40px "Inter"';
+            ctx.fillStyle = '#D97706';
+            ctx.fillText(productPrice, 620, startY + 55);
+            startY += 130;
+            
+            // 4. Tanggal Transaksi
+            ctx.font = '600 26px "Inter"';
+            ctx.fillStyle = '#A5753E';
+            ctx.fillText("⏱️ TANGGAL TRANSAKSI", 70, startY);
+            ctx.font = '600 34px "JetBrains Mono", monospace';
+            ctx.fillStyle = '#2A5D48';
+            ctx.fillText(tanggalNow, 70, startY + 55);
+            startY += 110;
+            
+            // 5. Link Website Store
+            ctx.font = '500 24px "Inter"';
+            ctx.fillStyle = '#B87C3C';
+            ctx.fillText("🔗 Link Toko Resmi:", 70, startY);
+            ctx.font = '600 32px "Inter", monospace';
+            ctx.fillStyle = '#E09D32';
+            ctx.fillText(STORE_LINK, 70, startY + 50);
+            
+            // --- ELEMEN BAWAH (stiker verified) ---
+            const badgeX = w - 280;
+            const badgeY = h - 110;
+            ctx.font = 'bold 60px "Inter"';
+            ctx.fillStyle = '#DFB87A30';
+            ctx.fillText("✔️ DONE", badgeX, badgeY);
+            ctx.font = 'italic 22px "Inter"';
+            ctx.fillStyle = '#C69850';
+            ctx.fillText("verified by Rayy Store", badgeX - 20, badgeY + 45);
+            
+            // Garis pemisah elegant
+            ctx.beginPath();
+            ctx.moveTo(70, h - 170);
+            ctx.lineTo(w - 70, h - 170);
+            ctx.strokeStyle = '#E2C198';
+            ctx.lineWidth = 2.5;
+            ctx.setLineDash([10, 12]);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Watermark halus
+            ctx.font = '500 18px "Inter"';
+            ctx.fillStyle = '#C9AD87';
+            ctx.fillText("done.canvas · official confirmation", 70, h - 60);
+            
+            // Ornamen pojok mewah
+            ctx.beginPath();
+            ctx.strokeStyle = '#EBB45C';
+            ctx.lineWidth = 4;
+            ctx.moveTo(60, 80);
+            ctx.lineTo(100, 80);
+            ctx.lineTo(100, 40);
+            ctx.stroke();
+            ctx.moveTo(w-60, 80);
+            ctx.lineTo(w-100, 80);
+            ctx.lineTo(w-100, 40);
+            ctx.stroke();
+            ctx.moveTo(60, h-80);
+            ctx.lineTo(100, h-80);
+            ctx.lineTo(100, h-40);
+            ctx.stroke();
+            ctx.moveTo(w-60, h-80);
+            ctx.lineTo(w-100, h-80);
+            ctx.lineTo(w-100, h-40);
+            ctx.stroke();
+        }
+        
+        // Generate canvas
+        function generateCanvas() {
+            updateClock();
+            if (hasImage && uploadedImageObj && !uploadedImageObj.complete) {
+                setTimeout(() => {
+                    drawMasterpiece();
+                }, 60);
+                return;
+            }
+            drawMasterpiece();
+        }
+        
+        // Event listeners
+        generateBtn.addEventListener('click', () => {
+            generateCanvas();
+        });
+        
+        downloadBtn.addEventListener('click', () => {
+            try {
+                const link = document.createElement('a');
+                const nowStamp = new Date().toISOString().slice(0,19).replace(/:/g, '-');
+                link.download = `RAYYSTORE_DONE_9x16_${nowStamp}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            } catch(e) {
+                alert("Gagal simpan: "+e);
+            }
+        });
+        
+        // Initial default canvas 9:16
+        function initDefault() {
+            buyerNameInput.value = "";
+            productNameInput.value = "";
+            productQtyInput.value = "";
+            productPriceInput.value = "";
+            uploadedImageObj = null;
+            hasImage = false;
+            previewDiv.innerHTML = '<span style="color:#9CA3AF; font-size:12px;">📷 belum ada foto</span>';
+            updateClock();
+            drawMasterpiece();
+        }
+        
+        window.addEventListener('load', () => {
+            initDefault();
+        });
+    })();
+</script>
+</body>
+</html>
