@@ -152,24 +152,44 @@ body {
 .btn-warning {
     background: linear-gradient(135deg, #ffc107, #f59e0b);
 }
+.btn-sm {
+    padding: 5px 12px;
+    font-size: 12px;
+}
 .btn:hover {
     opacity: 0.85;
+}
+
+/* ==================== TABEL PESANAN ==================== */
+.table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 -5px;
+    padding: 0 5px;
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
+    min-width: 600px;
 }
 th, td {
-    padding: 12px;
+    padding: 10px 8px;
     text-align: left;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     color: white;
-    font-size: 13px;
+    font-size: 12px;
+    word-break: break-word;
 }
 th {
     color: #4facfe;
     font-weight: 600;
+    white-space: nowrap;
+}
+td {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .product-thumb {
@@ -179,6 +199,71 @@ th {
     border-radius: 8px;
 }
 
+/* ==================== SLIDER LIST ==================== */
+.slider-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 15px;
+    padding: 12px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+}
+.slider-item img, .slider-item video {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 10px;
+}
+.slider-item-info {
+    flex: 1;
+    min-width: 150px;
+}
+.slider-item-title {
+    color: white;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+.slider-item-url {
+    color: #888;
+    font-size: 11px;
+    word-break: break-all;
+}
+.slider-item-type {
+    color: #4facfe;
+    font-size: 11px;
+    margin-top: 3px;
+}
+.slider-item-actions {
+    display: flex;
+    gap: 8px;
+}
+
+/* ==================== TIPE PRODUK LIST ==================== */
+.type-item {
+    display: inline-flex;
+    align-items: center;
+    background: rgba(79, 172, 254, 0.15);
+    padding: 8px 16px;
+    border-radius: 30px;
+    margin: 6px;
+    color: white;
+    font-size: 13px;
+}
+.delete-type {
+    background: none;
+    border: none;
+    color: #ff6b6b;
+    margin-left: 10px;
+    cursor: pointer;
+    font-size: 14px;
+}
+.delete-type:hover {
+    color: #ff4444;
+}
+
+/* ==================== BALANCE ==================== */
 .balance-card {
     background: linear-gradient(135deg, #1a1a2e, #16213e);
     border-color: #4facfe;
@@ -199,6 +284,7 @@ th {
     font-weight: 700;
 }
 
+/* ==================== GATEWAY ==================== */
 .gateway-setting {
     display: flex;
     flex-direction: column;
@@ -267,7 +353,7 @@ th {
     to { transform: rotate(360deg); }
 }
 
-/* ==================== POPUP PREVIEW STYLES ==================== */
+/* ==================== POPUP PREVIEW ==================== */
 .popup-preview {
     background: linear-gradient(135deg, #0f1220, #1a1d2e);
     border-radius: 24px;
@@ -290,6 +376,12 @@ th {
 .preview-icon i {
     font-size: 38px;
     color: white;
+}
+.preview-icon img {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    object-fit: cover;
 }
 .preview-title {
     color: white;
@@ -316,7 +408,7 @@ th {
     display: inline-block;
 }
 
-/* Category item */
+/* ==================== CATEGORY ITEM ==================== */
 .category-item {
     display: inline-flex;
     align-items: center;
@@ -326,6 +418,7 @@ th {
     margin: 5px;
     color: white;
     font-size: 13px;
+    flex-wrap: wrap;
 }
 .delete-cat {
     background: none;
@@ -339,6 +432,71 @@ th {
     color: #ff4444;
 }
 
+/* ==================== MODAL EDIT ==================== */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(5px);
+    z-index: 3000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.modal-content {
+    background: linear-gradient(135deg, #0f1220, #1a1d2e);
+    border-radius: 28px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 25px;
+    border: 1px solid rgba(79, 172, 254, 0.3);
+}
+.modal-content h3 {
+    color: white;
+    margin-bottom: 20px;
+}
+.modal-close {
+    float: right;
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+/* ==================== NOTIFICATION ==================== */
+.notification {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 12px 20px;
+    border-radius: 40px;
+    color: white;
+    font-weight: 500;
+    z-index: 1002;
+    animation: slideIn 0.3s ease;
+}
+.notification.success {
+    background: #28a745;
+}
+.notification.error {
+    background: #dc3545;
+}
+@keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+@keyframes slideOut {
+    from { transform: translateX(0); opacity: 1; }
+    to { transform: translateX(100%); opacity: 0; }
+}
+
+/* ==================== RESPONSIVE ==================== */
 @media (max-width: 768px) {
     .container {
         padding: 15px;
@@ -347,9 +505,19 @@ th {
         grid-template-columns: 1fr;
         gap: 0;
     }
+    .table-wrapper {
+        margin: 0 -10px;
+        padding: 0 10px;
+    }
     th, td {
-        padding: 8px;
+        padding: 8px 6px;
         font-size: 11px;
+    }
+    th {
+        white-space: nowrap;
+    }
+    td {
+        max-width: 120px;
     }
     .tabs {
         gap: 8px;
@@ -357,5 +525,23 @@ th {
     .tab-btn {
         padding: 6px 14px;
         font-size: 12px;
+    }
+    .slider-item {
+        flex-direction: column;
+        text-align: center;
+    }
+    .slider-item-info {
+        text-align: center;
+    }
+}
+
+@media (max-width: 550px) {
+    th, td {
+        padding: 6px 4px;
+        font-size: 10px;
+    }
+    .btn-sm {
+        padding: 3px 8px;
+        font-size: 10px;
     }
 }

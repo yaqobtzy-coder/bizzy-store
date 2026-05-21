@@ -12,7 +12,7 @@
     <nav class="navbar">
         <div class="logo">Rayy<span>Store Admin</span></div>
         <div class="nav-links">
-            <a href="rayy-store.html"><i class="fas fa-home"></i> Beranda</a>
+            <a href="rayy-store.com.html"><i class="fas fa-home"></i> Beranda</a>
             <a href="profile.html"><i class="fas fa-user"></i> Profil</a>
         </div>
     </nav>
@@ -21,6 +21,7 @@
         <div class="tabs">
             <button class="tab-btn active" data-tab="products">📦 Produk</button>
             <button class="tab-btn" data-tab="categories">🏷️ Kategori</button>
+            <button class="tab-btn" data-tab="slider">🖼️ Slider</button>
             <button class="tab-btn" data-tab="popup">🪟 Popup</button>
             <button class="tab-btn" data-tab="orders">📋 Pesanan</button>
             <button class="tab-btn" data-tab="payments">💳 Pembayaran</button>
@@ -28,6 +29,7 @@
             <button class="tab-btn" data-tab="balance">💰 Cek Saldo</button>
             <button class="tab-btn" data-tab="gateway">⚙️ Gateway</button>
             <button class="tab-btn" data-tab="transfer">📊 Riwayat Transfer</button>
+            <button class="tab-btn" data-tab="productTypes">🏷️ Tipe Produk</button>
         </div>
 
         <!-- ==================== PRODUK TAB ==================== -->
@@ -40,7 +42,10 @@
                         <select id="productType">
                             <option value="sewa">Sewa Bot</option>
                             <option value="script">Script Bot</option>
+                            <option value="digital">Produk Digital</option>
+                            <option value="fisik">Produk Fisik</option>
                         </select>
+                        <small class="form-note">Pilih tipe atau pilih "+ Tambah Tipe Baru" di bawah</small>
                     </div>
                     <div class="form-group">
                         <label>Nama Produk</label>
@@ -67,9 +72,23 @@
                         <input type="number" id="productStock" placeholder="Stok">
                     </div>
                 </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Rating (1-5)</label>
+                        <input type="number" id="productRating" step="0.1" min="0" max="5" placeholder="4.5">
+                    </div>
+                    <div class="form-group">
+                        <label>Jumlah Ulasan</label>
+                        <input type="number" id="productReviewCount" min="0" placeholder="0">
+                    </div>
+                </div>
                 <div class="form-group">
                     <label>Thumbnail URL</label>
                     <input type="text" id="productThumbnail" placeholder="URL gambar">
+                </div>
+                <div class="form-group">
+                    <label>Ulasan (pisahkan dengan | )</label>
+                    <textarea id="productReviews" rows="2" placeholder="User1: Bagus banget!|User2: Recommended"></textarea>
                 </div>
                 <button class="btn" onclick="addProduct()">Tambah Produk</button>
             </div>
@@ -101,14 +120,83 @@
             </div>
         </div>
 
+        <!-- ==================== TIPE PRODUK TAB ==================== -->
+        <div id="productTypes" class="tab-content">
+            <div class="card">
+                <h3>🏷️ Manajemen Tipe Produk</h3>
+                <div class="form-group">
+                    <label>Nama Tipe Produk Baru</label>
+                    <input type="text" id="newProductTypeValue" placeholder="Contoh: ebook, kursus, template, jasa">
+                    <small class="form-note">Masukkan nama tipe produk baru (tanpa spasi, gunakan underscore jika perlu)</small>
+                </div>
+                <button class="btn" onclick="addNewProductTypeManually()">➕ Tambah Tipe Produk</button>
+            </div>
+            <div class="card">
+                <h3>📋 Daftar Tipe Produk</h3>
+                <div id="productTypesList"></div>
+            </div>
+        </div>
+
+        <!-- ==================== SLIDER TAB ==================== -->
+        <div id="slider" class="tab-content">
+            <div class="card">
+                <h3>➕ Tambah Slide Baru</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Tipe Slide</label>
+                        <select id="slideType">
+                            <option value="image">Gambar (Foto)</option>
+                            <option value="video">Video</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>URL Gambar/Video</label>
+                        <input type="text" id="slideUrl" placeholder="https://...">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Judul (opsional)</label>
+                    <input type="text" id="slideTitle" placeholder="Judul slide">
+                </div>
+                <button class="btn" onclick="addSlide()">Tambah Slide</button>
+            </div>
+            <div class="card">
+                <h3>📁 Daftar Slide</h3>
+                <div id="sliderList"></div>
+            </div>
+        </div>
+
         <!-- ==================== POPUP TAB ==================== -->
         <div id="popup" class="tab-content">
             <div class="card">
                 <h3>🪟 Pengaturan Popup Modal</h3>
                 <div class="form-group">
-                    <label>Icon Popup (Font Awesome class)</label>
-                    <input type="text" id="popupIconClass" placeholder="Contoh: fab fa-whatsapp, fab fa-telegram, fas fa-bell">
-                    <small class="form-note">Gunakan class Font Awesome. Contoh: fab fa-instagram, fas fa-gift</small>
+                    <label>Aktifkan Popup</label>
+                    <select id="popupEnabled">
+                        <option value="true">✅ Aktif</option>
+                        <option value="false">❌ Nonaktif</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Tipe Media Popup</label>
+                    <select id="popupMediaType">
+                        <option value="icon">🔘 Icon Font Awesome</option>
+                        <option value="image">🖼️ Gambar (URL)</option>
+                    </select>
+                </div>
+                <div id="popupIconGroup">
+                    <div class="form-group">
+                        <label>Icon Popup (Font Awesome class)</label>
+                        <input type="text" id="popupIconClass" placeholder="Contoh: fab fa-whatsapp">
+                        <small class="form-note">Gunakan class Font Awesome</small>
+                    </div>
+                </div>
+                <div id="popupImageGroup" style="display: none;">
+                    <div class="form-group">
+                        <label>URL Gambar Popup</label>
+                        <input type="text" id="popupImageUrl" placeholder="https://...">
+                        <small class="form-note">Masukkan URL gambar (jpg/png)</small>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label>Judul Popup</label>
@@ -116,7 +204,7 @@
                 </div>
                 <div class="form-group">
                     <label>Pesan Popup</label>
-                    <textarea id="popupMessage" rows="3" placeholder="Dapatkan info update produk terbaru dan promo menarik!"></textarea>
+                    <textarea id="popupMessage" rows="3" placeholder="Dapatkan info update produk terbaru..."></textarea>
                 </div>
                 <div class="form-group">
                     <label>Teks Tombol</label>

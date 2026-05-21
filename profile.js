@@ -18,7 +18,6 @@ function loadUserData() {
         localStorage.setItem('joinDate', date);
     }
     
-    // Set email
     document.getElementById('userEmail').textContent = localStorage.getItem('userEmail') || 'customer@rayystore.com';
 }
 
@@ -34,7 +33,6 @@ function saveName() {
     localStorage.setItem('userName', newName);
     document.getElementById('displayName').textContent = newName;
     
-    // Show notification
     const notif = document.createElement('div');
     notif.className = 'notification success';
     notif.innerHTML = '<i class="fas fa-check-circle"></i> Nama berhasil diubah!';
@@ -56,15 +54,14 @@ function saveName() {
 // Logout
 function logout() {
     if (confirm('Apakah Anda yakin ingin logout?')) {
-        // Clear all user data but keep cart?
         const cart = localStorage.getItem('cart');
         localStorage.clear();
         if (cart) localStorage.setItem('cart', cart);
-        window.location.href = 'rayy-store.html';
+        window.location.href = 'rayy-store.com.html';
     }
 }
 
-// Add animation style
+// Animation style
 const style = document.createElement('style');
 style.textContent = `
     @keyframes slideIn {
@@ -80,5 +77,4 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// Initialize
 loadUserData();

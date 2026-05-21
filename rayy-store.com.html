@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Rayy-store.com - Toko Digital Premium</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css">
+    <link rel="stylesheet" href="rayy-store.com.css">
+</head>
+<body>
+    <!-- SPLASH SCREEN -->
+    <div class="splash-screen" id="splashScreen">
+        <div class="splash-container">
+            <div class="logo-wrapper">
+                <div class="logo-r">R</div>
+            </div>
+            <div class="brand-text">
+                Rayy <span>Store</span>
+            </div>
+            <div class="brand-line"></div>
+        </div>
+    </div>
+
+    <!-- POPUP MODAL -->
+    <div id="popupModal" class="popup-modal" style="display: none;">
+        <div class="popup-content">
+            <button class="popup-close" id="closePopupBtn">&times;</button>
+            <div class="popup-media" id="popupMedia">
+                <i class="fab fa-whatsapp"></i>
+            </div>
+            <h2 id="popupTitle">JOIN CHANNEL</h2>
+            <p id="popupMessage">Dapatkan info update produk terbaru dan promo menarik!</p>
+            <a href="#" id="popupButton" class="popup-btn" target="_blank">
+                <i class="fab fa-whatsapp"></i> Gabung Sekarang
+            </a>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content" id="mainContent">
+        <!-- NAVBAR -->
+        <nav class="navbar">
+            <div class="logo-small">Rayy<span>Store</span></div>
+            <div class="nav-links">
+                <a href="rayy-store.com.html"><i class="fas fa-home"></i> Beranda</a>
+                <a href="profile.html"><i class="fas fa-user"></i> Profil</a>
+                <a href="#" id="musicBtn"><i class="fas fa-music"></i> Musik</a>
+                <div class="cart-icon" onclick="toggleCart()">
+                    <i class="fas fa-shopping-bag"></i>
+                    <span class="cart-count" id="cartCount">0</span>
+                </div>
+            </div>
+        </nav>
+
+        <!-- SLIDER SECTION -->
+        <div class="slider-section" id="sliderSection" style="display: none;">
+            <div class="slider-container">
+                <div class="swiper mySwiper">
+                    <div class="swiper-wrapper" id="swiperWrapper"></div>
+                    <div class="swiper-pagination"></div>
+                    <div class="swiper-button-next"></div>
+                    <div class="swiper-button-prev"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- HERO SECTION -->
+        <div class="hero-section">
+            <h1 class="hero-title">Premium Digital Store</h1>
+            <p class="hero-subtitle">Temukan berbagai produk digital berkualitas dengan harga terbaik</p>
+        </div>
+
+        <!-- MAIN CONTAINER -->
+        <div class="container">
+            <!-- KATEGORI PRODUK -->
+            <div class="section-title">
+                <i class="fas fa-tags"></i>
+                <span>Kategori Produk</span>
+            </div>
+            <div class="categories" id="categoriesContainer">
+                <button class="category-btn active" data-category="all">
+                    <i class="fas fa-th-large"></i> Semua
+                </button>
+            </div>
+
+            <!-- PRODUK SEWA BOT -->
+            <div class="section-title">
+                <i class="fas fa-calendar-alt"></i>
+                <span>Produk Sewa Bot</span>
+            </div>
+            <div class="products-grid" id="sewaProductsGrid">
+                <div class="loading-spinner">
+                    <i class="fas fa-spinner"></i>
+                    <p>Memuat produk...</p>
+                </div>
+            </div>
+
+            <!-- PRODUK SCRIPT -->
+            <div class="section-title">
+                <i class="fas fa-code"></i>
+                <span>Produk Script</span>
+            </div>
+            <div class="products-grid" id="scriptProductsGrid">
+                <div class="loading-spinner">
+                    <i class="fas fa-spinner"></i>
+                    <p>Memuat produk...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- MUSIC MODAL -->
+        <div id="musicModal" class="music-modal" style="display: none;">
+            <div class="music-modal-content">
+                <div class="music-modal-header">
+                    <h3><i class="fas fa-music"></i> Rayy Store Music Player</h3>
+                    <button class="close-modal" id="closeMusicModal">&times;</button>
+                </div>
+                <div class="music-modal-body">
+                    <div class="music-now-playing" id="musicNowPlaying" style="display: none;">
+                        <img id="musicThumb" src="https://via.placeholder.com/60x60?text=🎵" alt="Cover">
+                        <div class="music-info">
+                            <div class="music-title" id="musicTitle">Tidak ada lagu</div>
+                            <div class="music-artist" id="musicArtist">-</div>
+                        </div>
+                        <button class="music-stop-btn" id="musicStopBtn"><i class="fas fa-stop"></i></button>
+                    </div>
+                    <div class="music-progress">
+                        <div class="progress-bar" id="musicProgressBar">
+                            <div class="progress-filled" id="musicProgressFilled"></div>
+                        </div>
+                        <div class="music-time">
+                            <span id="musicCurrentTime">0:00</span>
+                            <span id="musicDuration">0:00</span>
+                        </div>
+                    </div>
+                    <div class="music-controls">
+                        <button class="music-control-btn" id="musicPlayPauseBtn"><i class="fas fa-play"></i></button>
+                    </div>
+                    <div class="music-volume">
+                        <button class="volume-btn" id="musicVolDown"><i class="fas fa-volume-down"></i></button>
+                        <input type="range" id="musicVolumeSlider" min="0" max="100" value="70">
+                        <button class="volume-btn" id="musicVolUp"><i class="fas fa-volume-up"></i></button>
+                    </div>
+                    <div class="music-search">
+                        <input type="text" id="musicSearchInput" placeholder="Cari lagu...">
+                        <button id="musicSearchBtn"><i class="fas fa-search"></i> Cari</button>
+                    </div>
+                    <div class="music-results">
+                        <div class="results-title"><i class="fas fa-headphones"></i> HASIL PENCARIAN</div>
+                        <div class="results-list" id="musicResultsList">
+                            <div class="empty-message">Cari lagu favoritmu</div>
+                        </div>
+                    </div>
+                    <div class="music-history" id="musicHistorySection" style="display: none;">
+                        <div class="history-title">
+                            <i class="fas fa-history"></i> RIWAYAT PUTAR
+                            <button class="clear-history" id="clearMusicHistory"><i class="fas fa-trash"></i></button>
+                        </div>
+                        <div class="history-list" id="musicHistoryList"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FOOTER -->
+        <footer class="footer">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>Rayy-store.com</h4>
+                    <p>Toko digital premium terpercaya sejak 2024.</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-tiktok"></i></a>
+                        <a href="#"><i class="fab fa-whatsapp"></i></a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h4>Kontak</h4>
+                    <p><i class="fab fa-whatsapp"></i> +62 857-9454-5996</p>
+                    <p><i class="fas fa-envelope"></i> support@rayy-store.com</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Metode Pembayaran</h4>
+                    <p><i class="fas fa-qrcode"></i> QRIS</p>
+                    <p><i class="fas fa-credit-card"></i> Bank Transfer</p>
+                </div>
+            </div>
+            <div class="copyright">
+                &copy; 2024 Rayy-store.com. All rights reserved.
+            </div>
+        </footer>
+    </div>
+
+    <!-- CART SIDEBAR -->
+    <div class="overlay" id="overlay" onclick="toggleCart()"></div>
+    <div class="cart-sidebar" id="cartSidebar">
+        <div class="cart-header">
+            <h3><i class="fas fa-shopping-bag"></i> Keranjang</h3>
+            <button class="close-cart" onclick="toggleCart()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="cart-items" id="cartItems"></div>
+        <div class="cart-total">
+            <div class="total-row">
+                <span>Total</span>
+                <span class="total-amount" id="cartTotal">Rp 0</span>
+            </div>
+            <button class="checkout-btn" onclick="checkout()">
+                <i class="fas fa-credit-card"></i> Checkout
+            </button>
+        </div>
+    </div>
+
+    <audio id="globalAudio" style="display: none;"></audio>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="telegram-notif.js"></script>
+    <script src="rayy-store.com.js"></script>
+</body>
+</html>

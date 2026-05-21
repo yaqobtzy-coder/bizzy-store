@@ -1,22 +1,97 @@
 let cart = [];
 let total = 0;
-let currentGateway = 'zakki';
+let currentGateway = null;
 let depositId = null;
 let statusInterval = null;
 let orderData = null;
+let processingNotifSent = false;
+let activeGateways = { zakki: true, ramashop: false };
+
+// Load active gateways dari localStorage (disimpan oleh admin)
+function loadActiveGateways() {
+    const saved = localStorage.getItem('activeGateways');
+    if (saved) {
+        activeGateways = JSON.parse(saved);
+    }
+}
+
+// Render gateway options berdasarkan yang aktif
+function renderGatewayOptions() {
+    const container = document.getElementById('gatewayOptions');
+    if (!container) return;
+    
+    let html = '';
+    let hasActive = false;
+    
+    if (activeGateways.zakki) {
+        html += `
+            <div class="gateway-option" data-gateway="zakki">
+                <div class="gateway-radio">
+                    <input type="radio" name="gateway" value="zakki" id="gatewayZakki" ${!hasActive ? 'checked' : ''}>
+                    <label for="gatewayZakki">
+                        <strong>Zakki Store QRIS</strong>
+                        <span class="recommended">⭐ Recommended</span>
+                        <small>Rate terbaik & proses cepat</small>
+                    </label>
+                </div>
+            </div>
+        `;
+        hasActive = true;
+    }
+    
+    if (activeGateways.ramashop) {
+        html += `
+            <div class="gateway-option" data-gateway="ramashop">
+                <div class="gateway-radio">
+                    <input type="radio" name="gateway" value="ramashop" id="gatewayRamashop" ${!hasActive ? 'checked' : ''}>
+                    <label for="gatewayRamashop">
+                        <strong>Ramashop QRIS</strong>
+                        <small>Payment gateway alternatif</small>
+                    </label>
+                </div>
+            </div>
+        `;
+    }
+    
+    if (!activeGateways.zakki && !activeGateways.ramashop) {
+        container.innerHTML = '<div style="color:#ff6b6b; text-align:center; padding:20px;">⚠️ Tidak ada gateway pembayaran yang aktif. Silakan hubungi admin.</div>';
+        return;
+    }
+    
+    container.innerHTML = html;
+    
+    // Set current gateway ke yang pertama aktif
+    if (activeGateways.zakki) {
+        currentGateway = 'zakki';
+        document.getElementById('gatewayZakki')?.setAttribute('checked', 'checked');
+    } else if (activeGateways.ramashop) {
+        currentGateway = 'ramashop';
+        document.getElementById('gatewayRamashop')?.setAttribute('checked', 'checked');
+    }
+    
+    // Add event listeners
+    document.querySelectorAll('input[name="gateway"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            currentGateway = e.target.value;
+            createDeposit();
+        });
+    });
+}
 
 // Load checkout data
 function loadCheckoutData() {
     cart = JSON.parse(localStorage.getItem('checkoutCart')) || [];
     total = parseInt(localStorage.getItem('checkoutTotal')) || 0;
     orderData = JSON.parse(localStorage.getItem('orderData')) || {};
+    loadActiveGateways();
     
     if (cart.length === 0) {
-        window.location.href = 'rayy-store.html';
+        window.location.href = 'rayy-store.com.html';
         return;
     }
     
     displayOrderSummary();
+    renderGatewayOptions();
 }
 
 function displayOrderSummary() {
@@ -26,7 +101,7 @@ function displayOrderSummary() {
         itemsHtml += `
             <div class="order-item">
                 <span>${escapeHtml(item.name)} x${item.quantity}</span>
-                <span>Rp ${formatNumber(item.price * item.quantity)}</span>
+                <span>Rp ${formatNumberPay(item.price * item.quantity)}</span>
             </div>
         `;
     });
@@ -35,7 +110,7 @@ function displayOrderSummary() {
         ${itemsHtml}
         <div class="order-total">
             <span>Total Pembayaran</span>
-            <span>Rp ${formatNumber(total)}</span>
+            <span>Rp ${formatNumberPay(total)}</span>
         </div>
     `;
 }
@@ -47,7 +122,7 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-function formatNumber(num) {
+function formatNumberPay(num) {
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 }
 
@@ -62,23 +137,47 @@ function showNotification(msg, type) {
     }, 2000);
 }
 
-// Gateway selection
-document.querySelectorAll('input[name="gateway"]').forEach(radio => {
-    radio.addEventListener('change', (e) => {
-        currentGateway = e.target.value;
-        createDeposit();
-    });
-});
+// Kirim notifikasi proses
+async function sendProcessingNotification() {
+    if (processingNotifSent) return;
+    processingNotifSent = true;
+    
+    const processingData = {
+        id: Date.now().toString(),
+        type: orderData.type || 'unknown',
+        cart: cart,
+        total: total,
+        customerData: orderData,
+        status: 'processing',
+        createdAt: new Date().toISOString()
+    };
+    
+    if (typeof notifyOrderProcessing !== 'undefined') {
+        await notifyOrderProcessing(processingData);
+    }
+}
 
-// Create deposit based on selected gateway
 async function createDeposit() {
+    if (!currentGateway) {
+        showError('Tidak ada gateway pembayaran yang dipilih');
+        return;
+    }
+    
     const qrSection = document.getElementById('qrSection');
     qrSection.innerHTML = `<div class="loading-spinner"><i class="fas fa-spinner"></i><p>Menyiapkan QRIS...</p></div>`;
     document.getElementById('paymentInfo').style.display = 'none';
     
     if (currentGateway === 'zakki') {
+        if (!activeGateways.zakki) {
+            showError('Gateway Zakki sedang tidak aktif');
+            return;
+        }
         await createZakkiDeposit();
-    } else {
+    } else if (currentGateway === 'ramashop') {
+        if (!activeGateways.ramashop) {
+            showError('Gateway Ramashop sedang tidak aktif');
+            return;
+        }
         await createRamashopDeposit();
     }
 }
@@ -121,7 +220,7 @@ function displayZakkiQR(data) {
             <img src="${data.qris_image}" alt="QRIS Code" onerror="this.src='https://placehold.co/220x220/1a1d24/4facfe?text=QRIS'">
         </div>
         <div class="payment-info-box">
-            <p><strong>Total Bayar:</strong> Rp ${formatNumber(data.rincian?.total_bayar || total)}</p>
+            <p><strong>Total Bayar:</strong> Rp ${formatNumberPay(data.rincian?.total_bayar || total)}</p>
             <p><strong>Kode Unik:</strong> ${data.rincian?.kode_unik || '-'}</p>
         </div>
     `;
@@ -187,7 +286,7 @@ function displayRamashopQR(data) {
             <img src="${data.qrImage}" alt="QRIS Code" onerror="this.src='https://placehold.co/220x220/1a1d24/4facfe?text=QRIS'">
         </div>
         <div class="payment-info-box">
-            <p><strong>Total Bayar:</strong> Rp ${formatNumber(data.totalAmount || total)}</p>
+            <p><strong>Total Bayar:</strong> Rp ${formatNumberPay(data.totalAmount || total)}</p>
             <p><strong>Kode Unik:</strong> ${data.uniqueCode || '-'}</p>
         </div>
     `;
@@ -258,6 +357,18 @@ async function paymentSuccess() {
     
     await database.ref('orders/' + orderId).set(finalOrderData);
     
+    try {
+        if (typeof notifySewaSuccess !== 'undefined' && typeof notifyScriptSuccess !== 'undefined') {
+            if (orderData.type === 'sewa') {
+                await notifySewaSuccess(finalOrderData);
+            } else if (orderData.type === 'script') {
+                await notifyScriptSuccess(finalOrderData);
+            }
+        }
+    } catch(e) {
+        console.error('Error kirim notifikasi:', e);
+    }
+    
     // Reduce stock
     for (const item of cart) {
         const productRef = database.ref(`products/${item.type}/${item.id}`);
@@ -290,4 +401,7 @@ function showError(message) {
 
 // Initialize
 loadCheckoutData();
-createDeposit();
+if (activeGateways.zakki || activeGateways.ramashop) {
+    createDeposit();
+}
+sendProcessingNotification();

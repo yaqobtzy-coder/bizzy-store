@@ -3,68 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Done - Rayy Store</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <title>Rayy Store · Done Reply 9:16</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="done2.css">
 </head>
 <body>
-    <div class="container">
-        <div class="done-card">
-            <div class="success-icon">
-                <i class="fas fa-check-circle"></i>
-            </div>
-            <h1>Konfirmasi Pembayaran</h1>
-            <p class="subtitle">Kartu konfirmasi telah dibuat</p>
-
-            <!-- CANVAS -->
-            <div class="canvas-wrapper">
-                <canvas id="mainCanvas" width="1080" height="1920"></canvas>
-            </div>
-
-            <!-- TOMBOL 1: DOWNLOAD -->
-            <button class="btn btn-download" id="downloadBtn">
-                <i class="fas fa-download"></i> 1. Download Kartu (PNG)
-            </button>
-
-            <!-- TOMBOL 2: UPLOAD (muncul setelah download) -->
-            <div id="uploadSection" style="display: none;">
-                <button class="btn btn-upload" id="uploadBtn">
-                    <i class="fas fa-cloud-upload-alt"></i> 2. Upload Kartu ke ImgBB
-                </button>
-                <div id="uploadLoading" class="upload-loading" style="display: none;">
-                    <i class="fas fa-spinner fa-spin"></i>
-                    <p>Mengupload kartu...</p>
-                </div>
-            </div>
-
-            <!-- TOMBOL 3: WHATSAPP (muncul setelah upload sukses) -->
-            <div id="waSection" style="display: none;">
-                <div class="success-box">
-                    <i class="fas fa-check-circle"></i>
-                    <p>Upload Berhasil!</p>
-                </div>
-                <button class="btn btn-wa" id="waBtn">
-                    <i class="fab fa-whatsapp"></i> 3. Kirim ke WhatsApp
-                </button>
-            </div>
-
-            <button class="back-btn" onclick="window.location.href='rayy-store.html'">
-                <i class="fas fa-home"></i> Kembali ke Beranda
+<div class="dashboard">
+    <!-- CANVAS PREMIUM 9:16 -->
+    <div class="canvas-card card">
+        <div class="canvas-header">
+            <h3>✅ RAYY STORE · 9:16 CARD</h3>
+            <button class="btn-download" id="downloadBtn">
+                💾 Simpan PNG
             </button>
         </div>
-    </div>
-
-    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
-        <div class="loading-content">
+        <div class="canvas-wrapper">
+            <canvas id="doneCanvas" width="1080" height="1920"></canvas>
+        </div>
+        
+        <!-- Tombol Upload ke ImgBB -->
+        <button class="btn-upload" id="uploadCanvasBtn">
+            <i class="fas fa-cloud-upload-alt"></i> Upload Kartu ke ImgBB
+        </button>
+        
+        <div id="uploadLoading" class="upload-loading" style="display: none;">
             <i class="fas fa-spinner fa-spin"></i>
-            <p>Membuat kartu konfirmasi...</p>
+            <p>Mengupload kartu...</p>
         </div>
+        
+        <div id="waSection" style="display: none;">
+            <div class="success-box">
+                <i class="fas fa-check-circle"></i>
+                <p>Upload Berhasil!</p>
+            </div>
+            <button class="btn-wa" id="waBtn">
+                <i class="fab fa-whatsapp"></i> Kirim ke WhatsApp
+            </button>
+        </div>
+        
+        <footer>⬇️ Klik simpan atau upload untuk konfirmasi</footer>
     </div>
+</div>
 
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    <script src="firebase-config.js"></script>
-    <script src="done2.js"></script>
+<div id="loadingOverlay" class="loading-overlay" style="display: none;">
+    <div class="loading-content">
+        <i class="fas fa-spinner fa-spin"></i>
+        <p>Membuat kartu konfirmasi...</p>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="done2.js"></script>
 </body>
 </html>

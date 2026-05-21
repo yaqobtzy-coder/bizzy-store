@@ -25,7 +25,6 @@ body {
     font-weight: 800;
     color: white;
 }
-
 .logo span {
     color: #4facfe;
 }
@@ -34,13 +33,11 @@ body {
     display: flex;
     gap: 20px;
 }
-
 .nav-links a {
     color: #ccc;
     text-decoration: none;
     transition: color 0.2s;
 }
-
 .nav-links a:hover {
     color: #4facfe;
 }
@@ -142,7 +139,6 @@ h2 {
     padding: 10px 0;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
-
 .info-row:last-child {
     border-bottom: none;
 }

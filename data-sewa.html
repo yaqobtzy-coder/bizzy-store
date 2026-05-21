@@ -6,142 +6,7 @@
     <title>Data Sewa - Rayy Store</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            background: linear-gradient(135deg, #0a0c10, #0f1117);
-            font-family: 'Inter', sans-serif;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 500px;
-            width: 100%;
-        }
-
-        .card {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border-radius: 30px;
-            padding: 30px;
-            border: 1px solid rgba(79, 172, 254, 0.2);
-        }
-
-        .logo {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .logo h1 {
-            font-size: 28px;
-            font-weight: 800;
-            background: linear-gradient(135deg, #00f2fe, #4facfe);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        h2 {
-            color: white;
-            font-size: 20px;
-            margin-bottom: 8px;
-        }
-
-        .subtitle {
-            color: #888;
-            font-size: 14px;
-            margin-bottom: 25px;
-        }
-
-        .order-summary {
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 20px;
-            padding: 15px;
-            margin-bottom: 25px;
-        }
-
-        .order-item {
-            display: flex;
-            justify-content: space-between;
-            color: white;
-            margin-bottom: 10px;
-        }
-
-        .order-total {
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            padding-top: 10px;
-            margin-top: 10px;
-            font-weight: 700;
-            color: #00f2fe;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            color: #ccc;
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 14px;
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(79, 172, 254, 0.3);
-            border-radius: 15px;
-            color: white;
-            font-size: 14px;
-            transition: all 0.2s;
-        }
-
-        .form-group input:focus {
-            outline: none;
-            border-color: #4facfe;
-        }
-
-        .btn-submit {
-            width: 100%;
-            background: linear-gradient(135deg, #00f2fe, #4facfe);
-            border: none;
-            padding: 14px;
-            border-radius: 15px;
-            color: white;
-            font-weight: 700;
-            font-size: 16px;
-            cursor: pointer;
-            transition: opacity 0.2s;
-        }
-
-        .btn-submit:hover {
-            opacity: 0.85;
-        }
-
-        .back-link {
-            text-align: center;
-            margin-top: 20px;
-        }
-
-        .back-link a {
-            color: #888;
-            text-decoration: none;
-            font-size: 14px;
-        }
-
-        .back-link a:hover {
-            color: #4facfe;
-        }
-    </style>
+    <link rel="stylesheet" href="data-sewa.css">
 </head>
 <body>
     <div class="container">
@@ -160,8 +25,13 @@
             </div>
 
             <div class="form-group">
-                <label><i class="fab fa-whatsapp"></i> Link Grup whatsapp</label>
-                <input type="text" id="linkGroup" placeholder="https://chat....">
+                <label><i class="fab fa-whatsapp"></i> Nomor WhatsApp</label>
+                <input type="text" id="buyerPhone" placeholder="628xxxxxxxxxx">
+            </div>
+
+            <div class="form-group">
+                <label><i class="fab fa-whatsapp"></i> Link Grup WhatsApp</label>
+                <input type="text" id="linkGroup" placeholder="https://chat.whatsapp.com/...">
             </div>
 
             <button class="btn-submit" onclick="submitData()">
@@ -169,7 +39,7 @@
             </button>
 
             <div class="back-link">
-                <a href="rayy-store.html"><i class="fas fa-arrow-left"></i> Kembali ke Toko</a>
+                <a href="rayy-store.com.html"><i class="fas fa-arrow-left"></i> Kembali ke Toko</a>
             </div>
         </div>
     </div>
@@ -177,79 +47,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="firebase-config.js"></script>
-    <script>
-        let cart = [];
-        let total = 0;
-
-        // Load cart data
-        function loadCartData() {
-            cart = JSON.parse(localStorage.getItem('checkoutCart')) || [];
-            total = parseInt(localStorage.getItem('checkoutTotal')) || 0;
-            
-            if (cart.length === 0) {
-                window.location.href = 'rayy-store.html';
-                return;
-            }
-            
-            displayOrderSummary();
-        }
-
-        function displayOrderSummary() {
-            const container = document.getElementById('orderSummary');
-            let itemsHtml = '';
-            cart.forEach(item => {
-                itemsHtml += `
-                    <div class="order-item">
-                        <span>${item.name} x${item.quantity}</span>
-                        <span>Rp ${formatNumber(item.price * item.quantity)}</span>
-                    </div>
-                `;
-            });
-            
-            container.innerHTML = `
-                ${itemsHtml}
-                <div class="order-total">
-                    <span>Total</span>
-                    <span>Rp ${formatNumber(total)}</span>
-                </div>
-            `;
-        }
-
-        function formatNumber(num) {
-            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-        }
-
-        function submitData() {
-            const buyerName = document.getElementById('buyerName').value.trim();
-            const linkGroup = document.getElementById('linkGroup').value.trim();
-            
-            if (!buyerName) {
-                alert('Masukkan nama pembeli!');
-                return;
-            }
-            
-            if (!linkGroup) {
-                alert('Masukkan link grup Whatsapp!');
-                return;
-            }
-            
-            // Save data sewa
-            const orderData = {
-                type: 'sewa',
-                buyerName: buyerName,
-                linkGroup: linkGroup,
-                cart: cart,
-                total: total,
-                createdAt: new Date().toISOString()
-            };
-            
-            localStorage.setItem('orderData', JSON.stringify(orderData));
-            localStorage.setItem('buyerName', buyerName);
-            
-            window.location.href = 'pay.html';
-        }
-
-        loadCartData();
-    </script>
+    <script src="data-sewa.js"></script>
 </body>
 </html>

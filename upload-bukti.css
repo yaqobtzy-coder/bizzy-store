@@ -186,10 +186,16 @@ body {
     font-size: 50px;
     color: #4facfe;
     margin-bottom: 15px;
+    animation: spin 1s linear infinite;
 }
 
 .loading-content p {
     font-size: 16px;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
 }
 
 .notification {
@@ -205,11 +211,11 @@ body {
 }
 
 .notification.success {
-    background: linear-gradient(135deg, #00f2fe, #4facfe);
+    background: #28a745;
 }
 
 .notification.error {
-    background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+    background: #dc3545;
 }
 
 @keyframes slideIn {

@@ -90,7 +90,7 @@ function removeImage() {
     document.getElementById('submitBtn').disabled = true;
 }
 
-// Submit button - upload to ImgBB
+// Submit button - upload to ImgBB and save to localStorage
 document.getElementById('submitBtn').onclick = async () => {
     if (!selectedFile) return;
     
@@ -114,13 +114,11 @@ document.getElementById('submitBtn').onclick = async () => {
         
         if (data.success) {
             const imageUrl = data.data.url;
-            const imageDeleteUrl = data.data.delete_url;
             
             // Save to Firebase
             if (orderId) {
                 await database.ref('orders/' + orderId).update({
                     paymentProof: imageUrl,
-                    paymentProofDeleteUrl: imageDeleteUrl,
                     paymentProofUploadedAt: new Date().toISOString(),
                     status: 'completed'
                 });
@@ -136,7 +134,7 @@ document.getElementById('submitBtn').onclick = async () => {
                 status: 'pending_verification'
             });
             
-            // Prepare data for done2.html
+            // Prepare data for done.html
             let productsText = '';
             let totalAmount = 0;
             if (orderData && orderData.cart) {
@@ -145,9 +143,9 @@ document.getElementById('submitBtn').onclick = async () => {
                 totalAmount = orderData.total || 0;
             }
             
-            // Save ALL data to localStorage for done2.html
+            // Save ALL data to localStorage for done.html
             const doneData = {
-                imgbbUrl: imageUrl,      // URL ImgBB untuk ditampilkan di canvas
+                imgbbUrl: imageUrl,
                 buyerName: buyerName,
                 productsText: productsText,
                 totalAmount: totalAmount,
@@ -156,17 +154,18 @@ document.getElementById('submitBtn').onclick = async () => {
             };
             
             localStorage.setItem('doneData', JSON.stringify(doneData));
+            console.log('Data saved to localStorage:', doneData);
             
             loadingOverlay.innerHTML = `
                 <div class="loading-content">
                     <i class="fas fa-check-circle" style="color: #28a745;"></i>
-                    <p>Upload berhasil! Mengalihkan ke halaman konfirmasi...</p>
+                    <p>Upload berhasil! Mengalihkan...</p>
                 </div>
             `;
             
-            // Redirect to done2.html after 1.5 seconds
+            // Redirect to done.html
             setTimeout(() => {
-                window.location.href = 'done2.html';
+                window.location.href = 'done.html';
             }, 1500);
             
         } else {
