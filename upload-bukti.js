@@ -134,7 +134,7 @@ document.getElementById('submitBtn').onclick = async () => {
                 status: 'pending_verification'
             });
             
-            // Prepare data for done.html
+            // Prepare data for done2.html
             let productsText = '';
             let totalAmount = 0;
             if (orderData && orderData.cart) {
@@ -143,7 +143,7 @@ document.getElementById('submitBtn').onclick = async () => {
                 totalAmount = orderData.total || 0;
             }
             
-            // Save ALL data to localStorage for done.html
+            // Save ALL data to localStorage for done2.html
             const doneData = {
                 imgbbUrl: imageUrl,
                 buyerName: buyerName,
@@ -163,9 +163,9 @@ document.getElementById('submitBtn').onclick = async () => {
                 </div>
             `;
             
-            // Redirect to done.html
+            // Redirect to done2.html
             setTimeout(() => {
-                window.location.href = 'done.html';
+                window.location.href = 'done2.html';
             }, 1500);
             
         } else {
