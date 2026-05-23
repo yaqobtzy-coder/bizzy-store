@@ -23,6 +23,8 @@
             <button class="tab-btn" data-tab="categories">🏷️ Kategori</button>
             <button class="tab-btn" data-tab="slider">🖼️ Slider</button>
             <button class="tab-btn" data-tab="popup">🪟 Popup</button>
+            <button class="tab-btn" data-tab="voucher">🎟️ Voucher</button>
+            <button class="tab-btn" data-tab="marquee">📢 Marquee</button>
             <button class="tab-btn" data-tab="orders">📋 Pesanan</button>
             <button class="tab-btn" data-tab="payments">💳 Pembayaran</button>
             <button class="tab-btn" data-tab="canvas">🎨 Done Canvas</button>
@@ -227,6 +229,84 @@
                     <div class="preview-title">JOIN CHANNEL</div>
                     <div class="preview-message">Dapatkan info update produk terbaru dan promo menarik!</div>
                     <div class="preview-button">Gabung Sekarang</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== VOUCHER TAB ==================== -->
+        <div id="voucher" class="tab-content">
+            <div class="card">
+                <h3>🎟️ Tambah Voucher Baru</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Kode Voucher</label>
+                        <input type="text" id="voucherCode" placeholder="Contoh: DISKON50">
+                        <small class="form-note">Gunakan huruf besar dan angka, tanpa spasi</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Tipe Voucher</label>
+                        <select id="voucherType">
+                            <option value="percentage">Persentase (%)</option>
+                            <option value="nominal">Nominal (Rp)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nilai Potongan</label>
+                        <input type="number" id="voucherValue" placeholder="Contoh: 50 (untuk 50%) atau 20000">
+                        <small class="form-note">Isi angka saja</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Batas Penggunaan</label>
+                        <input type="number" id="voucherUsageLimit" placeholder="Contoh: 100">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Tanggal Kadaluarsa</label>
+                        <input type="datetime-local" id="voucherExpiredAt">
+                    </div>
+                    <div class="form-group">
+                        <label>Tampil di Popup</label>
+                        <select id="voucherShowInPopup">
+                            <option value="false">❌ Tidak</option>
+                            <option value="true">✅ Ya</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn" onclick="addVoucher()">➕ Tambah Voucher</button>
+            </div>
+            
+            <div class="card">
+                <h3>📋 Daftar Voucher</h3>
+                <div id="voucherList"></div>
+            </div>
+        </div>
+
+        <!-- ==================== MARQUEE TAB ==================== -->
+        <div id="marquee" class="tab-content">
+            <div class="card">
+                <h3>📢 Pengaturan Teks Berjalan (Marquee)</h3>
+                <div class="form-group">
+                    <label>Aktifkan Marquee</label>
+                    <select id="marqueeEnabled">
+                        <option value="true">✅ Aktif</option>
+                        <option value="false">❌ Nonaktif</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Teks Berjalan</label>
+                    <textarea id="marqueeText" rows="3" placeholder="Contoh: 🔥 PROMO SPESIAL! Diskon hingga 50% untuk pembelian pertama! 🎉"></textarea>
+                    <small class="form-note">Gunakan emoji untuk menarik perhatian</small>
+                </div>
+                <button class="btn" onclick="saveMarqueeSettings()">💾 Simpan Pengaturan Marquee</button>
+            </div>
+            
+            <div class="card">
+                <h3>📋 Preview Marquee</h3>
+                <div class="marquee-preview">
+                    <div class="preview-marquee" id="previewMarquee">🔥 PROMO SPESIAL! Diskon hingga 50% untuk pembelian pertama! 🎉</div>
                 </div>
             </div>
         </div>

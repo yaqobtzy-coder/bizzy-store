@@ -83,7 +83,6 @@ function deleteProductType(id) {
     }
 }
 
-// Event listener untuk pilihan tambah tipe baru di dropdown produk
 document.getElementById('productType')?.addEventListener('change', (e) => {
     if (e.target.value === '__NEW__') {
         const newType = prompt('Masukkan nama tipe produk baru (contoh: ebook, kursus, template):');
@@ -116,6 +115,8 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
         if (btn.dataset.tab === 'gateway') updateGatewayUI();
         if (btn.dataset.tab === 'popup') loadPopupSettingsToForm();
         if (btn.dataset.tab === 'slider') loadSliderList();
+        if (btn.dataset.tab === 'voucher') loadVoucherList();
+        if (btn.dataset.tab === 'marquee') loadMarqueeSettings();
         if (btn.dataset.tab === 'productTypes') renderProductTypesList();
     });
 });
@@ -379,7 +380,7 @@ function loadProducts() {
                         <td><button onclick='editProduct("${p.type}", "${p.id}", ${JSON.stringify(p).replace(/'/g, "&#39;")})' class="btn-warning btn-sm">✏️ Edit</button> <button onclick="deleteProduct('${p.type}', '${p.id}')" class="btn-danger btn-sm">🗑️ Hapus</button></td>
                     </tr>`;
                 });
-                html += '</tbody></table></div>';
+                html += '</tbody><tr></div>';
                 sewaContainer.innerHTML = html;
             }
         }
@@ -477,6 +478,153 @@ function deleteSlide(slideId) {
 }
 
 // ========================================
+// VOUCHER MANAGEMENT
+// ========================================
+function addVoucher() {
+    const code = document.getElementById('voucherCode').value.trim().toUpperCase();
+    const type = document.getElementById('voucherType').value;
+    const value = parseInt(document.getElementById('voucherValue').value);
+    const usageLimit = parseInt(document.getElementById('voucherUsageLimit').value);
+    const expiredAt = document.getElementById('voucherExpiredAt').value;
+    const showInPopup = document.getElementById('voucherShowInPopup').value === 'true';
+    
+    if (!code) {
+        alert('Masukkan kode voucher!');
+        return;
+    }
+    if (!value || value <= 0) {
+        alert('Masukkan nilai potongan yang valid!');
+        return;
+    }
+    if (!usageLimit || usageLimit <= 0) {
+        alert('Masukkan batas penggunaan yang valid!');
+        return;
+    }
+    if (!expiredAt) {
+        alert('Masukkan tanggal kadaluarsa!');
+        return;
+    }
+    
+    const voucher = {
+        code: code,
+        type: type,
+        value: value,
+        usageLimit: usageLimit,
+        used: 0,
+        expiredAt: expiredAt,
+        showInPopup: showInPopup,
+        createdAt: new Date().toISOString()
+    };
+    
+    database.ref('vouchers').push(voucher);
+    
+    document.getElementById('voucherCode').value = '';
+    document.getElementById('voucherValue').value = '';
+    document.getElementById('voucherUsageLimit').value = '';
+    document.getElementById('voucherExpiredAt').value = '';
+    
+    showNotification('Voucher berhasil ditambahkan!', 'success');
+}
+
+function loadVoucherList() {
+    database.ref('vouchers').on('value', (snapshot) => {
+        const container = document.getElementById('voucherList');
+        if (!container) return;
+        
+        if (!snapshot.exists()) {
+            container.innerHTML = '<p style="color: #888;">Belum ada voucher</p>';
+            return;
+        }
+        
+        const now = new Date();
+        let html = '';
+        
+        snapshot.forEach(child => {
+            const v = child.val();
+            const expired = new Date(v.expiredAt);
+            const isExpired = expired < now;
+            const isFull = v.used >= v.usageLimit;
+            let statusClass = 'active';
+            let statusText = 'Aktif';
+            
+            if (isExpired) {
+                statusClass = 'expired';
+                statusText = 'Kadaluarsa';
+            } else if (isFull) {
+                statusClass = 'full';
+                statusText = 'Penuh';
+            }
+            
+            const discountText = v.type === 'percentage' ? `${v.value}%` : `Rp ${formatNumber(v.value)}`;
+            
+            html += `
+                <div class="voucher-item">
+                    <div class="voucher-info">
+                        <div class="voucher-code">${escapeHtml(v.code)}</div>
+                        <div class="voucher-detail">
+                            <span><i class="fas fa-tag"></i> ${discountText}</span>
+                            <span><i class="fas fa-users"></i> ${v.used}/${v.usageLimit}</span>
+                            <span><i class="fas fa-calendar"></i> Kadaluarsa: ${new Date(v.expiredAt).toLocaleDateString('id-ID')}</span>
+                            <span class="voucher-status ${statusClass}">${statusText}</span>
+                            ${v.showInPopup ? '<span><i class="fas fa-star"></i> Tampil di Popup</span>' : ''}
+                        </div>
+                    </div>
+                    <div class="voucher-actions">
+                        <button onclick="deleteVoucher('${child.key}')" class="btn-danger btn-sm">🗑️ Hapus</button>
+                    </div>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    });
+}
+
+function deleteVoucher(voucherId) {
+    if (confirm('Hapus voucher ini?')) {
+        database.ref('vouchers/' + voucherId).remove();
+        showNotification('Voucher dihapus', 'success');
+    }
+}
+
+// ========================================
+// MARQUEE MANAGEMENT
+// ========================================
+function loadMarqueeSettings() {
+    database.ref('settings/marquee').once('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            document.getElementById('marqueeEnabled').value = data.enabled ? 'true' : 'false';
+            document.getElementById('marqueeText').value = data.text || '';
+            updateMarqueePreview();
+        }
+    });
+}
+
+function updateMarqueePreview() {
+    const text = document.getElementById('marqueeText').value;
+    const preview = document.getElementById('previewMarquee');
+    if (preview) {
+        preview.innerHTML = text || '🔥 PROMO SPESIAL! Diskon hingga 50% untuk pembelian pertama! 🎉';
+    }
+}
+
+function saveMarqueeSettings() {
+    const enabled = document.getElementById('marqueeEnabled').value === 'true';
+    const text = document.getElementById('marqueeText').value;
+    
+    const settings = {
+        enabled: enabled,
+        text: text,
+        updatedAt: new Date().toISOString()
+    };
+    
+    database.ref('settings/marquee').set(settings);
+    showNotification('Pengaturan marquee disimpan!', 'success');
+}
+
+document.getElementById('marqueeText')?.addEventListener('input', updateMarqueePreview);
+
+// ========================================
 // ORDERS
 // ========================================
 function loadOrders() {
@@ -487,7 +635,7 @@ function loadOrders() {
             container.innerHTML = '<p style="color: #888;">Belum ada pesanan</p>';
             return;
         }
-        let html = '<div class="table-wrapper"><table><thead><tr><th>Order ID</th><th>Pembeli</th><th>Produk</th><th>Total</th><th>Status</th><th>Tanggal</th></tr></thead><tbody>';
+        let html = '<div class="table-wrapper"><tr><thead><tr><th>Order ID</th><th>Pembeli</th><th>Produk</th><th>Total</th><th>Status</th><th>Tanggal</th></tr></thead><tbody>';
         snapshot.forEach(child => {
             const order = child.val();
             let productsHtml = '';
@@ -524,7 +672,7 @@ function loadPayments() {
             container.innerHTML = '<p style="color: #888;">Belum ada bukti pembayaran</p>';
             return;
         }
-        let html = '<div class="table-wrapper"><table><thead><tr><th>Bukti</th><th>Pembeli</th><th>Order ID</th><th>Upload</th></tr></thead><tbody>';
+        let html = '<div class="table-wrapper"></table><thead><tr><th>Bukti</th><th>Pembeli</th><th>Order ID</th><th>Upload</th></tr></thead><tbody>';
         snapshot.forEach(child => {
             const payment = child.val();
             html += `<tr>
@@ -622,7 +770,7 @@ async function loadTransferHistory() {
         const response = await fetch(`https://qris.zakki.store/mytransfer?token=${PAYMENT_GATEWAYS.zakki.token}&type=all`);
         const data = await response.json();
         if (data.code === 200 && data.data) {
-            let html = '<div class="table-wrapper"><table><thead><tr><th>ID Transfer</th><th>Amount</th><th>Tipe</th><th>Tanggal</th></tr></thead><tbody>';
+            let html = '<div class="table-wrapper"></td><thead><tr><th>ID Transfer</th><th>Amount</th><th>Tipe</th><th>Tanggal</th><tr></thead><tbody>';
             if (data.data.riwayat && data.data.riwayat.length > 0) {
                 data.data.riwayat.forEach(transfer => {
                     html += `<tr>
@@ -633,7 +781,7 @@ async function loadTransferHistory() {
                     </tr>`;
                 });
             } else {
-                html += '<tr><td colspan="4" style="text-align:center">Belum ada riwayat transfer</td></tr>';
+                html += '<tr><td colspan="4" style="text-align:center">Belum ada riwayat transfer</td>';
             }
             html += '</tbody></table></div>';
             container.innerHTML = html;
@@ -646,7 +794,7 @@ async function loadTransferHistory() {
 }
 
 // ========================================
-// GATEWAY SETTINGS - DENGAN SINKRONISASI KE PAY.JS
+// GATEWAY SETTINGS
 // ========================================
 function updateGatewayUI() {
     const zakkiStatus = document.getElementById('zakkiStatus');
@@ -659,7 +807,6 @@ function updateGatewayUI() {
         ramashopStatus.textContent = activeGateways.ramashop ? 'Active' : 'Inactive';
         ramashopStatus.className = `status-badge ${activeGateways.ramashop ? 'status-active' : 'status-inactive'}`;
     }
-    // Simpan ke localStorage agar bisa diakses oleh pay.js
     localStorage.setItem('activeGateways', JSON.stringify(activeGateways));
 }
 

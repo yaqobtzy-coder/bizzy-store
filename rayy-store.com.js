@@ -7,29 +7,83 @@ let scriptProducts = [];
 let cart = JSON.parse(localStorage.getItem('cart')) || [];
 let currentUser = JSON.parse(localStorage.getItem('currentUser')) || { name: '' };
 let swiperInstance = null;
-let isCheckingName = false;
+let activeVoucher = null;
+let voucherDiscount = 0;
+let voucherType = 'percentage';
+let voucherValue = 0;
 
 // ========================================
-// CEK NAMA USER DI AWAL (SEBELUM APAPUN)
+// CEK NAMA USER DI AWAL
 // ========================================
 function checkUserIdentity() {
     const userName = localStorage.getItem('userName');
-    const hasVisited = sessionStorage.getItem('hasVisited');
-    
-    // Jika sudah pernah cek di session ini, lewati
-    if (hasVisited === 'true') {
-        return true;
-    }
-    
-    // Jika belum ada nama atau nama masih default
     if (!userName || userName === '' || userName === 'Customer' || userName === 'null') {
-        sessionStorage.setItem('redirectToProfile', 'true');
         window.location.href = 'profile.html';
         return false;
     }
-    
-    sessionStorage.setItem('hasVisited', 'true');
     return true;
+}
+
+// ========================================
+// LOAD MARQUEE TEXT FROM FIREBASE
+// ========================================
+function loadMarqueeText() {
+    database.ref('settings/marquee').on('value', (snapshot) => {
+        const data = snapshot.val();
+        const marqueeSection = document.getElementById('marqueeSection');
+        const marqueeText = document.getElementById('marqueeText');
+        
+        if (data && data.enabled && data.text) {
+            marqueeSection.style.display = 'block';
+            marqueeText.innerHTML = `<i class="fas fa-fire"></i> ${data.text}`;
+        } else {
+            marqueeSection.style.display = 'none';
+        }
+    });
+}
+
+// ========================================
+// LOAD VOUCHER FOR POPUP
+// ========================================
+function loadVoucherForPopup() {
+    database.ref('vouchers').orderByChild('showInPopup').equalTo(true).once('value', (snapshot) => {
+        const voucherList = [];
+        snapshot.forEach(child => {
+            voucherList.push({ id: child.key, ...child.val() });
+        });
+        
+        if (voucherList.length > 0) {
+            const randomVoucher = voucherList[Math.floor(Math.random() * voucherList.length)];
+            displayVoucherInPopup(randomVoucher);
+        }
+    });
+}
+
+function displayVoucherInPopup(voucher) {
+    const voucherDiv = document.getElementById('popupVoucher');
+    const voucherCodeDisplay = document.getElementById('voucherCodeDisplay');
+    
+    if (voucherDiv && voucherCodeDisplay) {
+        let discountText = '';
+        if (voucher.type === 'percentage') {
+            discountText = `${voucher.value}% OFF`;
+        } else {
+            discountText = `Rp ${formatNumber(voucher.value)} OFF`;
+        }
+        
+        voucherCodeDisplay.innerHTML = `${voucher.code}<br><small style="font-size:11px;color:#b45309;">${discountText}</small>`;
+        voucherDiv.style.display = 'block';
+        
+        sessionStorage.setItem('popupVoucher', JSON.stringify(voucher));
+    }
+}
+
+function copyVoucherCode() {
+    const voucherCode = document.getElementById('voucherCodeDisplay')?.innerText.split('\n')[0];
+    if (voucherCode) {
+        navigator.clipboard.writeText(voucherCode);
+        showNotification('Kode voucher disalin!', 'success');
+    }
 }
 
 // ========================================
@@ -47,7 +101,7 @@ setTimeout(() => {
 }, 2000);
 
 // ========================================
-// LOAD SLIDER FROM FIREBASE
+// LOAD SLIDER
 // ========================================
 function loadSlider() {
     database.ref('slider').on('value', (snapshot) => {
@@ -112,9 +166,9 @@ function loadPopupSettings() {
         const mediaValue = data.mediaValue || 'fab fa-whatsapp';
         
         if (mediaType === 'icon') {
-            popupMedia.innerHTML = `<i class="${mediaValue}" style="font-size:64px;color:white;"></i>`;
+            popupMedia.innerHTML = `<i class="${mediaValue}"></i>`;
         } else {
-            popupMedia.innerHTML = `<img src="${mediaValue}" style="width:100%;height:100%;object-fit:cover;">`;
+            popupMedia.innerHTML = `<img src="${mediaValue}">`;
         }
         
         document.getElementById('popupTitle').innerText = data.title || 'JOIN CHANNEL';
@@ -123,6 +177,8 @@ function loadPopupSettings() {
         const button = document.getElementById('popupButton');
         button.innerHTML = `<i class="${mediaType === 'icon' ? mediaValue : 'fab fa-whatsapp'}"></i> ${data.buttonText || 'Gabung Sekarang'}`;
         button.href = data.buttonLink || 'https://wa.me/6285794545996';
+        
+        loadVoucherForPopup();
     });
 }
 
@@ -177,6 +233,7 @@ function loadProducts() {
         renderScriptProducts();
     });
     updateCartCount();
+    loadSavedVoucher();
 }
 
 function renderRatingStars(rating, reviewCount) {
@@ -251,6 +308,7 @@ function escapeHtml(text) {
 }
 
 function formatNumber(num) {
+    if (!num) return '0';
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 }
 
@@ -272,7 +330,7 @@ function showNotification(msg, type) {
 }
 
 // ========================================
-// CART FUNCTIONS - TANPA NOTIFIKASI WHATSAPP
+// CART FUNCTIONS WITH VOUCHER & GRATIS
 // ========================================
 function addToCart(productId, productType) {
     let product = productType === 'sewa' ? sewaProducts.find(p => p.id === productId) : scriptProducts.find(p => p.id === productId);
@@ -284,7 +342,6 @@ function addToCart(productId, productType) {
         if (existing.quantity < product.stock) {
             existing.quantity++;
             showNotification('Produk ditambahkan', 'success');
-            // HANYA KIRIM KE TELEGRAM, TIDAK KE WHATSAPP
             if (typeof notifyAddToCartTelegram !== 'undefined') {
                 const userName = localStorage.getItem('userName') || 'Guest';
                 notifyAddToCartTelegram(product.name, product.price, existing.quantity, userName);
@@ -296,7 +353,6 @@ function addToCart(productId, productType) {
     } else {
         cart.push({ id: product.id, name: product.name, price: product.price, thumbnail: product.thumbnail, quantity: 1, type: productType, duration: product.duration || null });
         showNotification('Produk ditambahkan ke keranjang', 'success');
-        // HANYA KIRIM KE TELEGRAM, TIDAK KE WHATSAPP
         if (typeof notifyAddToCartTelegram !== 'undefined') {
             const userName = localStorage.getItem('userName') || 'Guest';
             notifyAddToCartTelegram(product.name, product.price, 1, userName);
@@ -317,16 +373,20 @@ function updateCartCount() {
 function renderCartItems() {
     const container = document.getElementById('cartItems');
     if (!container) return;
+    
     if (cart.length === 0) {
         container.innerHTML = `<div class="empty-cart"><i class="fas fa-shopping-bag"></i><p>Keranjang belanja kosong</p><small>Yuk, belanja produk menarik di Rayy Store!</small></div>`;
-        const cartTotal = document.getElementById('cartTotal');
-        if (cartTotal) cartTotal.innerHTML = 'Rp 0';
+        document.getElementById('subtotalAmount').innerHTML = 'Rp 0';
+        document.getElementById('cartTotal').innerHTML = 'Rp 0';
+        document.getElementById('discountRow').style.display = 'none';
+        document.getElementById('voucherInfo').style.display = 'none';
         return;
     }
-    let total = 0;
+    
+    let subtotal = 0;
     container.innerHTML = cart.map(item => {
         const itemTotal = item.price * item.quantity;
-        total += itemTotal;
+        subtotal += itemTotal;
         return `
             <div class="cart-item">
                 <img class="cart-item-img" src="${item.thumbnail || 'https://placehold.co/65x65/1a1d24/4facfe?text=No'}" onerror="this.src='https://placehold.co/65x65/1a1d24/4facfe?text=No'">
@@ -344,8 +404,38 @@ function renderCartItems() {
             </div>
         `;
     }).join('');
-    const cartTotal = document.getElementById('cartTotal');
-    if (cartTotal) cartTotal.innerHTML = `Rp ${formatNumber(total)}`;
+    
+    let finalTotal = subtotal;
+    let discountAmount = 0;
+    let isGratis = false;
+    
+    if (activeVoucher && voucherDiscount > 0) {
+        discountAmount = Math.min(voucherDiscount, subtotal);
+        finalTotal = subtotal - discountAmount;
+        
+        if (finalTotal <= 0) {
+            isGratis = true;
+            finalTotal = 0;
+        }
+        
+        document.getElementById('voucherInfo').style.display = 'block';
+        document.getElementById('voucherAppliedCode').innerHTML = `${activeVoucher.code}`;
+        document.getElementById('voucherAppliedDiscount').innerHTML = `- Rp ${formatNumber(discountAmount)}`;
+        document.getElementById('discountRow').style.display = 'flex';
+        document.getElementById('discountAmount').innerHTML = `- Rp ${formatNumber(discountAmount)}`;
+    } else {
+        document.getElementById('voucherInfo').style.display = 'none';
+        document.getElementById('discountRow').style.display = 'none';
+    }
+    
+    document.getElementById('subtotalAmount').innerHTML = `Rp ${formatNumber(subtotal)}`;
+    
+    if (finalTotal <= 0) {
+        document.getElementById('cartTotal').innerHTML = '<span style="color: #28a745; font-weight: 700;">🎉 GRATIS!</span>';
+    } else {
+        document.getElementById('cartTotal').innerHTML = `Rp ${formatNumber(finalTotal)}`;
+    }
+    
     localStorage.setItem('cart', JSON.stringify(cart));
     updateCartCount();
 }
@@ -379,11 +469,137 @@ function checkout() {
         showNotification('Keranjang kosong!', 'error');
         return;
     }
+    
     const firstItem = cart[0];
-    const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    let total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    let isGratis = false;
+    
+    if (activeVoucher && voucherDiscount > 0) {
+        total = total - Math.min(voucherDiscount, total);
+        if (total <= 0) {
+            isGratis = true;
+            total = 0;
+        }
+        if (activeVoucher.id) {
+            database.ref(`vouchers/${activeVoucher.id}/used`).transaction((current) => {
+                return (current || 0) + 1;
+            });
+        }
+    }
+    
     localStorage.setItem('checkoutCart', JSON.stringify(cart));
     localStorage.setItem('checkoutTotal', total);
+    
+    if (activeVoucher) {
+        localStorage.setItem('checkoutVoucher', JSON.stringify({
+            code: activeVoucher.code,
+            discount: voucherDiscount,
+            isGratis: isGratis
+        }));
+    }
+    
+    if (isGratis) {
+        showNotification('🎉 Selamat! Pesanan Anda GRATIS! Lanjut ke pengisian data.', 'success');
+    }
+    
     window.location.href = firstItem.type === 'sewa' ? 'data-sewa.html' : 'data-script.html';
+}
+
+// ========================================
+// VOUCHER FUNCTIONS
+// ========================================
+function applyVoucherFromCart() {
+    const code = document.getElementById('voucherCodeCart').value.trim().toUpperCase();
+    if (!code) {
+        showVoucherMessageCart('Masukkan kode voucher!', 'error');
+        return;
+    }
+    
+    database.ref('vouchers').orderByChild('code').equalTo(code).once('value', (snapshot) => {
+        if (snapshot.exists()) {
+            let voucher = null;
+            snapshot.forEach(child => {
+                voucher = { id: child.key, ...child.val() };
+            });
+            
+            if (voucher) {
+                const now = new Date();
+                const expired = new Date(voucher.expiredAt);
+                
+                if (voucher.used >= voucher.usageLimit) {
+                    showVoucherMessageCart('Voucher sudah mencapai batas penggunaan!', 'error');
+                    return;
+                }
+                
+                if (expired < now) {
+                    showVoucherMessageCart('Voucher sudah kadaluarsa!', 'error');
+                    return;
+                }
+                
+                activeVoucher = voucher;
+                voucherType = voucher.type;
+                voucherValue = voucher.value;
+                
+                const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                if (voucher.type === 'percentage') {
+                    voucherDiscount = (subtotal * voucher.value) / 100;
+                } else {
+                    voucherDiscount = Math.min(voucher.value, subtotal);
+                }
+                
+                const finalTotal = subtotal - voucherDiscount;
+                if (finalTotal <= 0) {
+                    showVoucherMessageCart(`✅ Voucher ${voucher.code} berhasil dipakai! Total menjadi GRATIS!`, 'success');
+                } else {
+                    showVoucherMessageCart(`✅ Voucher ${voucher.code} berhasil dipakai! Potongan Rp ${formatNumber(voucherDiscount)}`, 'success');
+                }
+                
+                localStorage.setItem('activeVoucher', JSON.stringify({
+                    id: voucher.id,
+                    code: voucher.code,
+                    type: voucher.type,
+                    value: voucher.value,
+                    discount: voucherDiscount
+                }));
+                
+                document.getElementById('voucherCodeCart').value = '';
+                renderCartItems();
+            }
+        } else {
+            showVoucherMessageCart('Kode voucher tidak valid!', 'error');
+        }
+    });
+}
+
+function removeVoucherFromCart() {
+    activeVoucher = null;
+    voucherDiscount = 0;
+    localStorage.removeItem('activeVoucher');
+    showVoucherMessageCart('Voucher dihapus', 'success');
+    renderCartItems();
+}
+
+function showVoucherMessageCart(msg, type) {
+    const msgDiv = document.getElementById('voucherMessageCart');
+    msgDiv.textContent = msg;
+    msgDiv.className = `voucher-message-cart ${type}`;
+    setTimeout(() => {
+        msgDiv.textContent = '';
+        msgDiv.className = 'voucher-message-cart';
+    }, 3000);
+}
+
+function loadSavedVoucher() {
+    const saved = localStorage.getItem('activeVoucher');
+    if (saved) {
+        try {
+            const voucher = JSON.parse(saved);
+            activeVoucher = { code: voucher.code, id: voucher.id, type: voucher.type, value: voucher.value };
+            voucherDiscount = voucher.discount;
+            voucherType = voucher.type;
+            voucherValue = voucher.value;
+        } catch(e) {}
+    }
 }
 
 function loadUserProfile() {
@@ -597,19 +813,14 @@ function initMusicEventListeners() {
 }
 
 // ========================================
-// INITIALIZE - CEK NAMA DULU
+// INITIALIZE
 // ========================================
-// CEK APAKAH USER SUDAH PUNYA NAMA
-const userHasName = localStorage.getItem('userName');
-const isValidName = userHasName && userHasName !== '' && userHasName !== 'Customer' && userHasName !== 'null';
-
-if (!isValidName) {
-    // Redirect ke profile.html untuk isi nama
-    window.location.href = 'profile.html';
+if (!checkUserIdentity()) {
+    // Redirect to profile
 } else {
-    // Load semua konten
     loadUserProfile();
     loadSlider();
+    loadMarqueeText();
     loadProducts();
     initMusicEventListeners();
     initPopup();
@@ -624,3 +835,6 @@ window.playMusic = playMusic;
 window.stopMusic = stopMusic;
 window.togglePlayPause = togglePlayPause;
 window.playFromHistory = playFromHistory;
+window.applyVoucherFromCart = applyVoucherFromCart;
+window.removeVoucherFromCart = removeVoucherFromCart;
+window.copyVoucherCode = copyVoucherCode;

@@ -302,6 +302,94 @@ th {
     gap: 8px;
 }
 
+/* ========== VOUCHER LIST ========== */
+.voucher-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 12px;
+    border: 1px solid #e2e8f0;
+}
+
+.voucher-info {
+    flex: 1;
+}
+
+.voucher-code {
+    font-weight: 700;
+    color: #d97706;
+    font-size: 14px;
+    margin-bottom: 4px;
+}
+
+.voucher-detail {
+    color: #64748b;
+    font-size: 12px;
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.voucher-detail span {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.voucher-status {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 600;
+}
+
+.voucher-status.active {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.voucher-status.expired {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.voucher-status.full {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.voucher-actions {
+    display: flex;
+    gap: 8px;
+}
+
+/* ========== MARQUEE PREVIEW ========== */
+.marquee-preview {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    padding: 12px;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.preview-marquee {
+    color: white;
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+    animation: previewMarquee 10s linear infinite;
+    display: inline-block;
+    padding-left: 100%;
+}
+
+@keyframes previewMarquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-100%); }
+}
+
 /* ========== TYPE & CATEGORY ITEMS ========== */
 .type-item,
 .category-item {
@@ -331,7 +419,7 @@ th {
     color: #dc2626;
 }
 
-/* ========== CEK SALDO - NATURAL STYLE ========== */
+/* ========== CEK SALDO ========== */
 .balance-card {
     background: #ffffff;
     border: 1px solid #e2e8f0;
@@ -567,25 +655,13 @@ th {
 }
 
 @keyframes slideIn {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
 }
 
 @keyframes slideOut {
-    from {
-        transform: translateX(0);
-        opacity: 1;
-    }
-    to {
-        transform: translateX(100%);
-        opacity: 0;
-    }
+    from { transform: translateX(0); opacity: 1; }
+    to { transform: translateX(100%); opacity: 0; }
 }
 
 /* ========== RESPONSIVE ========== */
@@ -617,12 +693,14 @@ th {
         padding: 16px;
     }
 
-    .slider-item {
+    .slider-item,
+    .voucher-item {
         flex-direction: column;
         text-align: center;
     }
 
-    .slider-item-info {
+    .slider-item-info,
+    .voucher-info {
         text-align: center;
     }
 
@@ -633,6 +711,10 @@ th {
 
     .gateway-balance div {
         font-size: 24px;
+    }
+    
+    .voucher-detail {
+        justify-content: center;
     }
 }
 

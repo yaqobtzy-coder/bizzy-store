@@ -32,6 +32,10 @@
             </div>
             <h2 id="popupTitle">JOIN CHANNEL</h2>
             <p id="popupMessage">Dapatkan info update produk terbaru dan promo menarik!</p>
+            <div id="popupVoucher" class="popup-voucher" style="display: none;">
+                <div class="voucher-code" id="voucherCodeDisplay"></div>
+                <button class="copy-voucher-btn" onclick="copyVoucherCode()">📋 Salin Kode</button>
+            </div>
             <a href="#" id="popupButton" class="popup-btn" target="_blank">
                 <i class="fab fa-whatsapp"></i> Gabung Sekarang
             </a>
@@ -62,6 +66,15 @@
                     <div class="swiper-pagination"></div>
                     <div class="swiper-button-next"></div>
                     <div class="swiper-button-prev"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MARQUEE / TEKS BERJALAN -->
+        <div class="marquee-section" id="marqueeSection" style="display: none;">
+            <div class="marquee-wrapper">
+                <div class="marquee-content" id="marqueeContent">
+                    <span id="marqueeText">🔥 PROMO SPESIAL! Dapatkan diskon hingga 50%</span>
                 </div>
             </div>
         </div>
@@ -201,7 +214,32 @@
             <button class="close-cart" onclick="toggleCart()"><i class="fas fa-times"></i></button>
         </div>
         <div class="cart-items" id="cartItems"></div>
+        
+        <!-- INPUT VOUCHER DI DALAM KERANJANG -->
+        <div class="voucher-input-cart">
+            <input type="text" id="voucherCodeCart" placeholder="Masukkan kode voucher">
+            <button onclick="applyVoucherFromCart()">Pakai Voucher</button>
+        </div>
+        <div id="voucherMessageCart" class="voucher-message-cart"></div>
+        
+        <!-- INFO VOUCHER YANG SUDAH DIPAKAI -->
+        <div class="voucher-info" id="voucherInfo" style="display: none;">
+            <div class="voucher-applied">
+                <span id="voucherAppliedCode"></span>
+                <span id="voucherAppliedDiscount"></span>
+                <button onclick="removeVoucherFromCart()">✕</button>
+            </div>
+        </div>
+        
         <div class="cart-total">
+            <div class="total-row">
+                <span>Subtotal</span>
+                <span class="subtotal-amount" id="subtotalAmount">Rp 0</span>
+            </div>
+            <div class="total-row" id="discountRow" style="display: none;">
+                <span>Diskon</span>
+                <span class="discount-amount" id="discountAmount">Rp 0</span>
+            </div>
             <div class="total-row">
                 <span>Total</span>
                 <span class="total-amount" id="cartTotal">Rp 0</span>

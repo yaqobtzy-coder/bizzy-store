@@ -16,6 +16,11 @@ function loadActiveGateways() {
     }
 }
 
+// Cek apakah total gratis (Rp 0)
+function isTotalGratis() {
+    return total <= 0;
+}
+
 // Cek apakah sudah ada depositId di sessionStorage (mencegah regenerasi QR saat refresh)
 function loadExistingDeposit() {
     const savedDepositId = sessionStorage.getItem('currentDepositId');
@@ -52,6 +57,11 @@ function loadExistingDeposit() {
 function renderGatewayOptions() {
     const container = document.getElementById('gatewayOptions');
     if (!container) return;
+    
+    if (isTotalGratis()) {
+        container.innerHTML = '<div style="color:#28a745; text-align:center; padding:20px;">🎉 Selamat! Anda mendapatkan gratis. Tidak perlu pembayaran.</div>';
+        return;
+    }
     
     let html = '';
     let hasActive = false;
@@ -105,9 +115,11 @@ function renderGatewayOptions() {
     
     document.querySelectorAll('input[name="gateway"]').forEach(radio => {
         radio.addEventListener('change', (e) => {
-            if (!isDepositCreated) {
+            if (!isDepositCreated && !isTotalGratis()) {
                 currentGateway = e.target.value;
                 createDeposit();
+            } else if (isTotalGratis()) {
+                showNotification('Pembayaran gratis, lanjut ke konfirmasi!', 'success');
             } else {
                 showNotification('Pembayaran sudah dibuat, silakan selesaikan pembayaran!', 'error');
                 radio.checked = currentGateway === e.target.value;
@@ -131,6 +143,14 @@ function loadCheckoutData() {
     displayOrderSummary();
     renderGatewayOptions();
     
+    if (isTotalGratis()) {
+        showNotification('🎉 Total Rp 0! Langsung konfirmasi pesanan.', 'success');
+        setTimeout(() => {
+            paymentSuccessGratis();
+        }, 1500);
+        return;
+    }
+    
     if (!loadExistingDeposit()) {
         if (activeGateways.zakki || activeGateways.ramashop) {
             createDeposit();
@@ -150,11 +170,14 @@ function displayOrderSummary() {
         `;
     });
     
+    const totalText = total <= 0 ? '🎉 GRATIS!' : `Rp ${formatNumberPay(total)}`;
+    const totalColor = total <= 0 ? '#28a745' : '#00f2fe';
+    
     container.innerHTML = `
         ${itemsHtml}
         <div class="order-total">
             <span>Total Pembayaran</span>
-            <span>Rp ${formatNumberPay(total)}</span>
+            <span style="color: ${totalColor}; font-size: 18px; font-weight: 800;">${totalText}</span>
         </div>
     `;
 }
@@ -208,6 +231,11 @@ async function createDeposit() {
     
     if (isDepositCreated) {
         showNotification('Pembayaran sudah dibuat, silakan selesaikan!', 'error');
+        return;
+    }
+    
+    if (isTotalGratis()) {
+        paymentSuccessGratis();
         return;
     }
     
@@ -406,6 +434,7 @@ function startCountdown(expiredAt) {
     }, 1000);
 }
 
+// Payment success untuk pembayaran normal
 async function paymentSuccess() {
     clearInterval(statusInterval);
     
@@ -455,6 +484,55 @@ async function paymentSuccess() {
     localStorage.setItem('lastOrderData', JSON.stringify(finalOrderData));
     
     window.location.href = 'upload-bukti.html';
+}
+
+// Payment success untuk GRATIS (tanpa QR)
+async function paymentSuccessGratis() {
+    const orderId = Date.now().toString();
+    const finalOrderData = {
+        id: orderId,
+        type: orderData.type || 'unknown',
+        cart: cart,
+        total: 0,
+        gateway: 'gratis',
+        depositId: null,
+        status: 'paid',
+        isGratis: true,
+        createdAt: new Date().toISOString(),
+        customerData: orderData
+    };
+    
+    await database.ref('orders/' + orderId).set(finalOrderData);
+    
+    try {
+        if (typeof notifySewaSuccess !== 'undefined' && typeof notifyScriptSuccess !== 'undefined') {
+            if (orderData.type === 'sewa') {
+                await notifySewaSuccess(finalOrderData);
+            } else if (orderData.type === 'script') {
+                await notifyScriptSuccess(finalOrderData);
+            }
+        }
+    } catch(e) {
+        console.error('Error kirim notifikasi:', e);
+    }
+    
+    for (const item of cart) {
+        const productRef = database.ref(`products/${item.type}/${item.id}`);
+        const snapshot = await productRef.once('value');
+        const product = snapshot.val();
+        if (product) {
+            const newStock = (product.stock || 0) - item.quantity;
+            await productRef.update({ stock: newStock });
+        }
+    }
+    
+    localStorage.setItem('lastOrderId', orderId);
+    localStorage.setItem('lastOrderData', JSON.stringify(finalOrderData));
+    
+    showNotification('🎉 Pesanan gratis! Lanjut ke konfirmasi.', 'success');
+    setTimeout(() => {
+        window.location.href = 'upload-bukti.html';
+    }, 1500);
 }
 
 function showError(message) {
