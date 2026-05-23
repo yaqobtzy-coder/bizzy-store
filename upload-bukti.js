@@ -134,6 +134,12 @@ document.getElementById('submitBtn').onclick = async () => {
                 status: 'pending_verification'
             });
             
+            // Kirim notifikasi upload bukti ke Telegram
+            if (typeof notifyUploadBukti !== 'undefined') {
+                const total = orderData?.total || 0;
+                await notifyUploadBukti(orderId, buyerName, total, imageUrl);
+            }
+            
             // Prepare data for done2.html
             let productsText = '';
             let totalAmount = 0;
@@ -163,7 +169,7 @@ document.getElementById('submitBtn').onclick = async () => {
                 </div>
             `;
             
-            // Redirect to done2.html
+            // Redirect to done2.html (BUKAN done.html)
             setTimeout(() => {
                 window.location.href = 'done2.html';
             }, 1500);

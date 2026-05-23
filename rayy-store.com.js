@@ -253,11 +253,18 @@ function showNotification(msg, type) {
 function addToCart(productId, productType) {
     let product = productType === 'sewa' ? sewaProducts.find(p => p.id === productId) : scriptProducts.find(p => p.id === productId);
     if (!product || product.stock <= 0) return;
+    
+    const userName = localStorage.getItem('userName') || currentUser.name || 'Guest';
     const existing = cart.find(item => item.id === productId);
+    
     if (existing) {
         if (existing.quantity < product.stock) {
             existing.quantity++;
             showNotification('Produk ditambahkan', 'success');
+            // KIRIM NOTIFIKASI TELEGRAM - TAMBAH KE KERANJANG
+            if (typeof notifyAddToCart !== 'undefined') {
+                notifyAddToCart(product.name, product.price, existing.quantity, userName);
+            }
         } else {
             showNotification('Stok tidak mencukupi!', 'error');
             return;
@@ -265,7 +272,12 @@ function addToCart(productId, productType) {
     } else {
         cart.push({ id: product.id, name: product.name, price: product.price, thumbnail: product.thumbnail, quantity: 1, type: productType, duration: product.duration || null });
         showNotification('Produk ditambahkan ke keranjang', 'success');
+        // KIRIM NOTIFIKASI TELEGRAM - TAMBAH KE KERANJANG
+        if (typeof notifyAddToCart !== 'undefined') {
+            notifyAddToCart(product.name, product.price, 1, userName);
+        }
     }
+    
     localStorage.setItem('cart', JSON.stringify(cart));
     updateCartCount();
     renderCartItems();

@@ -368,6 +368,14 @@
                 uploadedCanvasUrl = data.data.url;
                 console.log('Uploaded canvas URL:', uploadedCanvasUrl);
                 
+                // Kirim notifikasi done canvas ke Telegram
+                if (typeof notifyDoneCanvas !== 'undefined') {
+                    const buyerName = doneData?.buyerName || 'Customer';
+                    const productsText = doneData?.productsText || 'Produk Digital';
+                    const totalAmount = doneData?.totalAmount || 0;
+                    await notifyDoneCanvas(buyerName, productsText, totalAmount, uploadedCanvasUrl);
+                }
+                
                 uploadLoading.style.display = 'none';
                 waSection.style.display = 'block';
                 showNotification('Upload kartu berhasil!', 'success');
@@ -383,7 +391,7 @@
         }
     };
     
-    // WhatsApp button - format pesan seperti yang diminta
+    // WhatsApp button - format pesan
     document.getElementById('waBtn').onclick = () => {
         if (!uploadedCanvasUrl) {
             showNotification('Upload kartu terlebih dahulu!', 'error');
@@ -404,11 +412,9 @@
             `${uploadedCanvasUrl}%0A%0A` +
             `💌 Mohon diproses ya admin 😘`;
         
-        // Kirim ke WhatsApp Admin Utama
         const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`;
         window.open(waUrl, '_blank');
         
-        // Juga kirim ke Admin 2
         setTimeout(() => {
             const waUrl2 = `https://wa.me/${WHATSAPP_ADMIN2}?text=${message}`;
             window.open(waUrl2, '_blank');

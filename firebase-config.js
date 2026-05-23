@@ -28,8 +28,13 @@ const PAYMENT_GATEWAYS = {
 // ImgBB API Key
 const IMGBB_API_KEY = "a60507c67d4d1a5d3f6b0cecbb168314";
 
-// WhatsApp Number
+// WhatsApp Numbers
 const WHATSAPP_NUMBER = "6285794545996";
+const WHATSAPP_ADMIN2 = "6285189712417";
+
+// Telegram Bot
+const TELEGRAM_BOT_TOKEN = "8996706964:AAEXwbGDvtJC3l2X6WTeFfk3K5KZb7JxtLQ";
+const TELEGRAM_CHAT_ID = "7966336512";
 
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);

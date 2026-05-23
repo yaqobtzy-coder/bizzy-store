@@ -46,7 +46,7 @@ function formatNumber(num) {
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 }
 
-function submitData() {
+async function submitData() {
     const buyerName = document.getElementById('buyerName').value.trim();
     const buyerPhone = document.getElementById('buyerPhone').value.trim();
     const linkGroup = document.getElementById('linkGroup').value.trim();
@@ -79,6 +79,20 @@ function submitData() {
     
     localStorage.setItem('orderData', JSON.stringify(orderData));
     localStorage.setItem('buyerName', buyerName);
+    
+    // Kirim notifikasi ke Telegram bahwa data sewa telah diisi
+    if (typeof notifyOrderProcessing !== 'undefined') {
+        const processingData = {
+            id: Date.now().toString(),
+            type: 'sewa',
+            cart: cart,
+            total: total,
+            customerData: orderData,
+            status: 'data_filled',
+            createdAt: new Date().toISOString()
+        };
+        await notifyOrderProcessing(processingData);
+    }
     
     window.location.href = 'pay.html';
 }

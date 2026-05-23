@@ -6,13 +6,46 @@ let statusInterval = null;
 let orderData = null;
 let processingNotifSent = false;
 let activeGateways = { zakki: true, ramashop: false };
+let isDepositCreated = false;
 
-// Load active gateways dari localStorage (disimpan oleh admin)
+// Load active gateways dari localStorage
 function loadActiveGateways() {
     const saved = localStorage.getItem('activeGateways');
     if (saved) {
         activeGateways = JSON.parse(saved);
     }
+}
+
+// Cek apakah sudah ada depositId di sessionStorage (mencegah regenerasi QR saat refresh)
+function loadExistingDeposit() {
+    const savedDepositId = sessionStorage.getItem('currentDepositId');
+    const savedGateway = sessionStorage.getItem('currentGateway');
+    const savedQRHtml = sessionStorage.getItem('currentQRHtml');
+    const savedExpiredAt = sessionStorage.getItem('currentExpiredAt');
+    
+    if (savedDepositId && savedGateway && savedQRHtml) {
+        depositId = savedDepositId;
+        currentGateway = savedGateway;
+        isDepositCreated = true;
+        
+        const qrSection = document.getElementById('qrSection');
+        if (qrSection && savedQRHtml) {
+            qrSection.innerHTML = savedQRHtml;
+            document.getElementById('paymentInfo').style.display = 'block';
+            if (savedExpiredAt) {
+                startCountdown(savedExpiredAt);
+            }
+        }
+        
+        if (currentGateway === 'zakki') {
+            startZakkiStatusCheck(depositId);
+        } else if (currentGateway === 'ramashop') {
+            startRamashopStatusCheck(depositId);
+        }
+        
+        return true;
+    }
+    return false;
 }
 
 // Render gateway options berdasarkan yang aktif
@@ -60,20 +93,25 @@ function renderGatewayOptions() {
     
     container.innerHTML = html;
     
-    // Set current gateway ke yang pertama aktif
-    if (activeGateways.zakki) {
-        currentGateway = 'zakki';
-        document.getElementById('gatewayZakki')?.setAttribute('checked', 'checked');
-    } else if (activeGateways.ramashop) {
-        currentGateway = 'ramashop';
-        document.getElementById('gatewayRamashop')?.setAttribute('checked', 'checked');
+    if (!currentGateway) {
+        if (activeGateways.zakki) {
+            currentGateway = 'zakki';
+            document.getElementById('gatewayZakki')?.setAttribute('checked', 'checked');
+        } else if (activeGateways.ramashop) {
+            currentGateway = 'ramashop';
+            document.getElementById('gatewayRamashop')?.setAttribute('checked', 'checked');
+        }
     }
     
-    // Add event listeners
     document.querySelectorAll('input[name="gateway"]').forEach(radio => {
         radio.addEventListener('change', (e) => {
-            currentGateway = e.target.value;
-            createDeposit();
+            if (!isDepositCreated) {
+                currentGateway = e.target.value;
+                createDeposit();
+            } else {
+                showNotification('Pembayaran sudah dibuat, silakan selesaikan pembayaran!', 'error');
+                radio.checked = currentGateway === e.target.value;
+            }
         });
     });
 }
@@ -92,6 +130,12 @@ function loadCheckoutData() {
     
     displayOrderSummary();
     renderGatewayOptions();
+    
+    if (!loadExistingDeposit()) {
+        if (activeGateways.zakki || activeGateways.ramashop) {
+            createDeposit();
+        }
+    }
 }
 
 function displayOrderSummary() {
@@ -137,7 +181,6 @@ function showNotification(msg, type) {
     }, 2000);
 }
 
-// Kirim notifikasi proses
 async function sendProcessingNotification() {
     if (processingNotifSent) return;
     processingNotifSent = true;
@@ -163,6 +206,11 @@ async function createDeposit() {
         return;
     }
     
+    if (isDepositCreated) {
+        showNotification('Pembayaran sudah dibuat, silakan selesaikan!', 'error');
+        return;
+    }
+    
     const qrSection = document.getElementById('qrSection');
     qrSection.innerHTML = `<div class="loading-spinner"><i class="fas fa-spinner"></i><p>Menyiapkan QRIS...</p></div>`;
     document.getElementById('paymentInfo').style.display = 'none';
@@ -182,7 +230,6 @@ async function createDeposit() {
     }
 }
 
-// Zakki Gateway
 async function createZakkiDeposit() {
     try {
         const response = await fetch('https://qris.zakki.store/topup', {
@@ -198,6 +245,11 @@ async function createZakkiDeposit() {
         
         if (data.code === 201 && data.data) {
             depositId = data.data.id_transaksi;
+            isDepositCreated = true;
+            
+            sessionStorage.setItem('currentDepositId', depositId);
+            sessionStorage.setItem('currentGateway', currentGateway);
+            
             displayZakkiQR(data.data);
             startZakkiStatusCheck(depositId);
             startCountdown(data.data.expired_at);
@@ -211,8 +263,7 @@ async function createZakkiDeposit() {
 }
 
 function displayZakkiQR(data) {
-    const qrSection = document.getElementById('qrSection');
-    qrSection.innerHTML = `
+    const qrHtml = `
         <div class="status-badge status-pending">
             <i class="fas fa-clock"></i> Menunggu Pembayaran
         </div>
@@ -224,7 +275,13 @@ function displayZakkiQR(data) {
             <p><strong>Kode Unik:</strong> ${data.rincian?.kode_unik || '-'}</p>
         </div>
     `;
+    
+    const qrSection = document.getElementById('qrSection');
+    qrSection.innerHTML = qrHtml;
     document.getElementById('paymentInfo').style.display = 'block';
+    
+    sessionStorage.setItem('currentQRHtml', qrHtml);
+    sessionStorage.setItem('currentExpiredAt', data.expired_at);
 }
 
 function startZakkiStatusCheck(id) {
@@ -245,7 +302,6 @@ function startZakkiStatusCheck(id) {
     }, 3000);
 }
 
-// Ramashop Gateway
 async function createRamashopDeposit() {
     try {
         const response = await fetch('https://ramashop.my.id/api/public/deposit/create', {
@@ -264,6 +320,11 @@ async function createRamashopDeposit() {
         
         if (data.success && data.data) {
             depositId = data.data.depositId;
+            isDepositCreated = true;
+            
+            sessionStorage.setItem('currentDepositId', depositId);
+            sessionStorage.setItem('currentGateway', currentGateway);
+            
             displayRamashopQR(data.data);
             startRamashopStatusCheck(depositId);
             startCountdown(data.data.expiredAt);
@@ -277,8 +338,7 @@ async function createRamashopDeposit() {
 }
 
 function displayRamashopQR(data) {
-    const qrSection = document.getElementById('qrSection');
-    qrSection.innerHTML = `
+    const qrHtml = `
         <div class="status-badge status-pending">
             <i class="fas fa-clock"></i> Menunggu Pembayaran
         </div>
@@ -290,7 +350,13 @@ function displayRamashopQR(data) {
             <p><strong>Kode Unik:</strong> ${data.uniqueCode || '-'}</p>
         </div>
     `;
+    
+    const qrSection = document.getElementById('qrSection');
+    qrSection.innerHTML = qrHtml;
     document.getElementById('paymentInfo').style.display = 'block';
+    
+    sessionStorage.setItem('currentQRHtml', qrHtml);
+    sessionStorage.setItem('currentExpiredAt', data.expiredAt);
 }
 
 function startRamashopStatusCheck(id) {
@@ -318,7 +384,6 @@ function startRamashopStatusCheck(id) {
     }, 3000);
 }
 
-// Countdown timer
 function startCountdown(expiredAt) {
     const expiredTime = new Date(expiredAt).getTime();
     const countdownEl = document.getElementById('countdown');
@@ -330,6 +395,9 @@ function startCountdown(expiredAt) {
         if (distance <= 0) {
             clearInterval(interval);
             countdownEl.innerHTML = '⏰ QRIS Kadaluarsa, silakan buat baru';
+            sessionStorage.removeItem('currentDepositId');
+            sessionStorage.removeItem('currentQRHtml');
+            isDepositCreated = false;
         } else {
             const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((distance % (1000 * 60)) / 1000);
@@ -338,9 +406,13 @@ function startCountdown(expiredAt) {
     }, 1000);
 }
 
-// Payment success
 async function paymentSuccess() {
     clearInterval(statusInterval);
+    
+    sessionStorage.removeItem('currentDepositId');
+    sessionStorage.removeItem('currentGateway');
+    sessionStorage.removeItem('currentQRHtml');
+    sessionStorage.removeItem('currentExpiredAt');
     
     const orderId = Date.now().toString();
     const finalOrderData = {
@@ -369,7 +441,6 @@ async function paymentSuccess() {
         console.error('Error kirim notifikasi:', e);
     }
     
-    // Reduce stock
     for (const item of cart) {
         const productRef = database.ref(`products/${item.type}/${item.id}`);
         const snapshot = await productRef.once('value');
@@ -399,9 +470,5 @@ function showError(message) {
     `;
 }
 
-// Initialize
 loadCheckoutData();
-if (activeGateways.zakki || activeGateways.ramashop) {
-    createDeposit();
-}
 sendProcessingNotification();

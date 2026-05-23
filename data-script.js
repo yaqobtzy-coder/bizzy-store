@@ -45,7 +45,7 @@ function formatNumber(num) {
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 }
 
-function submitData() {
+async function submitData() {
     // Validasi data wajib
     const requiredFields = {
         ownerName: 'Nama Owner',
@@ -93,6 +93,20 @@ function submitData() {
     
     localStorage.setItem('orderData', JSON.stringify(scriptData));
     localStorage.setItem('buyerName', scriptData.wajib.ownerName);
+    
+    // Kirim notifikasi ke Telegram bahwa data script telah diisi
+    if (typeof notifyOrderProcessing !== 'undefined') {
+        const processingData = {
+            id: Date.now().toString(),
+            type: 'script',
+            cart: cart,
+            total: total,
+            customerData: scriptData,
+            status: 'data_filled',
+            createdAt: new Date().toISOString()
+        };
+        await notifyOrderProcessing(processingData);
+    }
     
     window.location.href = 'pay.html';
 }
