@@ -7,16 +7,17 @@
     const uploadLoading = document.getElementById('uploadLoading');
     const waSection = document.getElementById('waSection');
     
-    // Data dari localStorage (hasil upload bukti)
+    // Data dari localStorage
     let doneData = null;
     let imgbbImage = null;
     let uploadedCanvasUrl = '';
+    let autoWASent = false;
     
-    // Store info sesuai request
+    // Store info
     const STORE_NAME = "Rayy Store";
     const STORE_LINK = "Bizzy-store.web.id/rayy-store.com";
     
-    // Load data dari localStorage
+    // Load data
     function loadData() {
         const loadingOverlay = document.getElementById('loadingOverlay');
         loadingOverlay.style.display = 'flex';
@@ -29,7 +30,6 @@
             console.log('doneData:', doneData);
         }
         
-        // Fallback ke data lama
         if (!doneData || !doneData.imgbbUrl) {
             const imageUrl = localStorage.getItem('doneImageUrl');
             const buyerName = localStorage.getItem('doneBuyerName') || localStorage.getItem('buyerName') || 'Customer';
@@ -71,22 +71,19 @@
         }
     }
     
-    // Format number
     function formatNumber(num) {
         if (!num) return '0';
         return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
     }
     
-    // DRAW CANVAS - 100% MIRIP dengan done-manual.com.html
     function drawCanvas() {
         const w = 1080, h = 1920;
         canvas.width = w;
         canvas.height = h;
         
-        // Get fresh data dari doneData
         const buyerName = doneData?.buyerName || "Nama Pembeli";
         const productName = doneData?.productsText || "Produk Digital";
-        const productQty = "1"; // Default quantity
+        const productQty = "1";
         const productPrice = `Rp ${formatNumber(doneData?.totalAmount || 0)}`;
         const tanggalNow = new Date().toLocaleString('id-ID', {
             day: '2-digit',
@@ -96,14 +93,12 @@
             minute: '2-digit'
         }).replace(/\./g, ':');
         
-        // 1. Background premium soft cream
         const bgGrd = ctx.createLinearGradient(0, 0, w, h);
         bgGrd.addColorStop(0, '#FFFBF5');
         bgGrd.addColorStop(1, '#FFEFE0');
         ctx.fillStyle = bgGrd;
         ctx.fillRect(0, 0, w, h);
         
-        // Elegant border double
         ctx.save();
         ctx.shadowBlur = 0;
         ctx.strokeStyle = '#E2C294';
@@ -113,7 +108,6 @@
         ctx.lineWidth = 3;
         ctx.strokeRect(52, 52, w-104, h-104);
         
-        // Header: DONE + Store
         ctx.font = '800 88px "Inter", system-ui';
         ctx.fillStyle = '#2F5D3A';
         ctx.fillText("✔️ DONE", 70, 160);
@@ -121,7 +115,6 @@
         ctx.fillStyle = '#B57C2E';
         ctx.fillText("KONFIRMASI PEMBELIAN", 470, 150);
         
-        // Store name & link
         ctx.font = '700 46px "Inter"';
         ctx.fillStyle = '#C47D2E';
         ctx.fillText(STORE_NAME, 70, 245);
@@ -129,13 +122,11 @@
         ctx.fillStyle = '#AC8E64';
         ctx.fillText(STORE_LINK, 70, 295);
         
-        // --- FOTO PRODUK DI TENGAH (horizontal center) ---
         const imgW = 680;
         const imgH = 680;
         const imgX = (w - imgW) / 2;
         const imgY = 420;
         
-        // Rounded clipping untuk foto
         ctx.beginPath();
         ctx.moveTo(imgX + 60, imgY);
         ctx.lineTo(imgX + imgW - 60, imgY);
@@ -149,7 +140,6 @@
         ctx.closePath();
         ctx.clip();
         
-        // Background foto
         ctx.fillStyle = '#F5E7D9';
         ctx.fillRect(imgX, imgY, imgW, imgH);
         
@@ -177,9 +167,8 @@
             ctx.fillStyle = '#A58767';
             ctx.fillText("Upload foto produk", imgX + imgW/2 - 170, imgY + imgH - 70);
         }
-        ctx.restore(); // restore clip
+        ctx.restore();
         
-        // Border foto
         ctx.beginPath();
         ctx.moveTo(imgX + 60, imgY);
         ctx.lineTo(imgX + imgW - 60, imgY);
@@ -198,10 +187,8 @@
         ctx.strokeStyle = '#FFE3A8';
         ctx.stroke();
         
-        // --- DATA PRODUK DI BAWAH FOTO ---
         let startY = imgY + imgH + 70;
         
-        // 1. Nama Pembeli
         ctx.font = '600 28px "Inter"';
         ctx.fillStyle = '#A5753E';
         ctx.fillText("👤 PEMBELI", 70, startY);
@@ -211,7 +198,6 @@
         ctx.fillText(buyerText, 70, startY + 55);
         startY += 120;
         
-        // 2. Nama Produk
         ctx.font = '600 28px "Inter"';
         ctx.fillStyle = '#A5753E';
         ctx.fillText("📦 NAMA PRODUK", 70, startY);
@@ -221,7 +207,6 @@
         ctx.fillText(productText, 70, startY + 55);
         startY += 120;
         
-        // 3. Jumlah & Harga (2 kolom)
         ctx.font = '600 28px "Inter"';
         ctx.fillStyle = '#A5753E';
         ctx.fillText("🔢 JUMLAH", 70, startY);
@@ -237,7 +222,6 @@
         ctx.fillText(productPrice, 620, startY + 55);
         startY += 130;
         
-        // 4. Tanggal Transaksi
         ctx.font = '600 26px "Inter"';
         ctx.fillStyle = '#A5753E';
         ctx.fillText("⏱️ TANGGAL TRANSAKSI", 70, startY);
@@ -246,7 +230,6 @@
         ctx.fillText(tanggalNow, 70, startY + 55);
         startY += 110;
         
-        // 5. Link Website Store
         ctx.font = '500 24px "Inter"';
         ctx.fillStyle = '#B87C3C';
         ctx.fillText("🔗 Link Toko Resmi:", 70, startY);
@@ -254,7 +237,6 @@
         ctx.fillStyle = '#E09D32';
         ctx.fillText(STORE_LINK, 70, startY + 50);
         
-        // --- ELEMEN BAWAH (stiker verified) ---
         const badgeX = w - 280;
         const badgeY = h - 110;
         ctx.font = 'bold 60px "Inter"';
@@ -264,7 +246,6 @@
         ctx.fillStyle = '#C69850';
         ctx.fillText("verified by Rayy Store", badgeX - 20, badgeY + 45);
         
-        // Garis pemisah elegant
         ctx.beginPath();
         ctx.moveTo(70, h - 170);
         ctx.lineTo(w - 70, h - 170);
@@ -274,12 +255,10 @@
         ctx.stroke();
         ctx.setLineDash([]);
         
-        // Watermark halus
         ctx.font = '500 18px "Inter"';
         ctx.fillStyle = '#C9AD87';
         ctx.fillText("done.canvas · official confirmation", 70, h - 60);
         
-        // Ornamen pojok mewah
         ctx.beginPath();
         ctx.strokeStyle = '#EBB45C';
         ctx.lineWidth = 4;
@@ -300,11 +279,9 @@
         ctx.lineTo(w-100, h-40);
         ctx.stroke();
         
-        // Save to admin
         saveToAdmin(buyerName, productName, doneData?.totalAmount || 0, tanggalNow);
     }
     
-    // Save to admin
     async function saveToAdmin(buyerName, productName, total, tanggal) {
         const canvasData = {
             buyerName: buyerName,
@@ -324,7 +301,6 @@
         }
     }
     
-    // Show notification
     function showNotification(msg, type) {
         const notif = document.createElement('div');
         notif.className = `notification ${type}`;
@@ -334,6 +310,31 @@
             notif.style.animation = 'slideOut 0.3s ease';
             setTimeout(() => notif.remove(), 300);
         }, 2000);
+    }
+    
+    function sendToWhatsApp(canvasUrl) {
+        const buyerName = doneData?.buyerName || 'Customer';
+        const productsText = doneData?.productsText || 'Produk Digital';
+        const totalAmount = doneData?.totalAmount || 0;
+        
+        const message = `*📝 FORMAT ORDER PRODUK RAYY STORE*%0A%0A` +
+            `*👤 Nama* : ${buyerName}%0A` +
+            `*🛒 Produk* : ${productsText}%0A` +
+            `*💰 Harga* : Rp ${formatNumber(totalAmount)}%0A` +
+            `*💳 Metode Bayar* : QRIS%0A` +
+            `*📸 Bukti pembayaran*%0A` +
+            `${canvasUrl}%0A%0A` +
+            `💌 Mohon diproses ya admin 😘`;
+        
+        const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`;
+        window.open(waUrl, '_blank');
+        
+        setTimeout(() => {
+            const waUrl2 = `https://wa.me/${WHATSAPP_ADMIN2}?text=${message}`;
+            window.open(waUrl2, '_blank');
+        }, 500);
+        
+        showNotification('Membuka WhatsApp...', 'success');
     }
     
     // Download canvas
@@ -346,7 +347,7 @@
         showNotification('Kartu berhasil di download!', 'success');
     };
     
-    // Upload canvas ke ImgBB
+    // Upload canvas ke ImgBB dan auto kirim ke WhatsApp
     uploadBtn.onclick = async () => {
         uploadBtn.disabled = true;
         uploadBtn.style.opacity = '0.5';
@@ -377,8 +378,13 @@
                 }
                 
                 uploadLoading.style.display = 'none';
-                waSection.style.display = 'block';
                 showNotification('Upload kartu berhasil!', 'success');
+                
+                // AUTO KIRIM KE WHATSAPP SETELAH UPLOAD BERHASIL
+                setTimeout(() => {
+                    sendToWhatsApp(uploadedCanvasUrl);
+                }, 500);
+                
             } else {
                 throw new Error('Upload failed');
             }
@@ -389,38 +395,6 @@
             uploadBtn.disabled = false;
             uploadBtn.style.opacity = '1';
         }
-    };
-    
-    // WhatsApp button - format pesan
-    document.getElementById('waBtn').onclick = () => {
-        if (!uploadedCanvasUrl) {
-            showNotification('Upload kartu terlebih dahulu!', 'error');
-            return;
-        }
-        
-        const buyerName = doneData?.buyerName || 'Customer';
-        const productsText = doneData?.productsText || 'Produk Digital';
-        const totalAmount = doneData?.totalAmount || 0;
-        const paymentMethod = 'QRIS';
-        
-        const message = `*📝 FORMAT ORDER PRODUK RAYY STORE*%0A%0A` +
-            `*👤 Nama* : ${buyerName}%0A` +
-            `*🛒 Produk* : ${productsText}%0A` +
-            `*💰 Harga* : Rp ${formatNumber(totalAmount)}%0A` +
-            `*💳 Metode Bayar* : ${paymentMethod}%0A` +
-            `*📸 Bukti pembayaran*%0A` +
-            `${uploadedCanvasUrl}%0A%0A` +
-            `💌 Mohon diproses ya admin 😘`;
-        
-        const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`;
-        window.open(waUrl, '_blank');
-        
-        setTimeout(() => {
-            const waUrl2 = `https://wa.me/${WHATSAPP_ADMIN2}?text=${message}`;
-            window.open(waUrl2, '_blank');
-        }, 500);
-        
-        showNotification('Membuka WhatsApp...', 'success');
     };
     
     // Initialize

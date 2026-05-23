@@ -21,7 +21,7 @@ function isTotalGratis() {
     return total <= 0;
 }
 
-// Cek apakah sudah ada depositId di sessionStorage (mencegah regenerasi QR saat refresh)
+// Cek apakah sudah ada depositId di sessionStorage
 function loadExistingDeposit() {
     const savedDepositId = sessionStorage.getItem('currentDepositId');
     const savedGateway = sessionStorage.getItem('currentGateway');
@@ -53,7 +53,7 @@ function loadExistingDeposit() {
     return false;
 }
 
-// Render gateway options berdasarkan yang aktif
+// Render gateway options
 function renderGatewayOptions() {
     const container = document.getElementById('gatewayOptions');
     if (!container) return;
@@ -434,7 +434,7 @@ function startCountdown(expiredAt) {
     }, 1000);
 }
 
-// Payment success untuk pembayaran normal
+// Payment success untuk pembayaran normal (TANPA WA OTOMATIS)
 async function paymentSuccess() {
     clearInterval(statusInterval);
     
@@ -483,10 +483,11 @@ async function paymentSuccess() {
     localStorage.setItem('lastOrderId', orderId);
     localStorage.setItem('lastOrderData', JSON.stringify(finalOrderData));
     
+    // LANGSUNG KE UPLOAD BUKTI, BUKAN WA
     window.location.href = 'upload-bukti.html';
 }
 
-// Payment success untuk GRATIS (tanpa QR)
+// Payment success untuk GRATIS (TANPA WA OTOMATIS)
 async function paymentSuccessGratis() {
     const orderId = Date.now().toString();
     const finalOrderData = {

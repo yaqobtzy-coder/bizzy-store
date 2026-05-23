@@ -220,6 +220,7 @@ function addProduct() {
     const reviewCount = parseInt(document.getElementById('productReviewCount').value) || 0;
     const thumbnail = document.getElementById('productThumbnail').value.trim();
     const reviewsText = document.getElementById('productReviews').value.trim();
+    const allowVoucher = document.getElementById('productAllowVoucher').checked;
     
     let reviews = [];
     if (reviewsText) {
@@ -232,7 +233,7 @@ function addProduct() {
     }
 
     const product = {
-        name, category, price, stock, rating, reviewCount, reviews,
+        name, category, price, stock, rating, reviewCount, reviews, allowVoucher,
         thumbnail: thumbnail || 'https://placehold.co/300x200/1a1d24/4facfe?text=Product',
         createdAt: new Date().toISOString()
     };
@@ -251,8 +252,15 @@ function addProduct() {
     document.getElementById('productThumbnail').value = '';
     document.getElementById('productDuration').value = '';
     document.getElementById('productReviews').value = '';
+    document.getElementById('productAllowVoucher').checked = true;
     
     showNotification('Produk berhasil ditambahkan!', 'success');
+}
+
+function toggleAllowVoucher(type, productId, currentValue) {
+    const newValue = !currentValue;
+    database.ref(`products/${type}/${productId}`).update({ allowVoucher: newValue });
+    showNotification(`Voucher ${newValue ? 'diaktifkan' : 'dinonaktifkan'} untuk produk ini`, 'success');
 }
 
 function editProduct(type, productId, product) {
@@ -302,6 +310,12 @@ function editProduct(type, productId, product) {
                 <label>Thumbnail URL</label>
                 <input type="text" id="editThumbnail" value="${product.thumbnail || ''}">
             </div>
+            <div class="checkbox-group" style="margin: 15px 0;">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="editAllowVoucher" ${product.allowVoucher !== false ? 'checked' : ''}>
+                    <span>✅ Boleh Pakai Voucher</span>
+                </label>
+            </div>
             ${type === 'sewa' ? `<div class="form-group"><label>Durasi</label><input type="text" id="editDuration" value="${product.duration || ''}"></div>` : ''}
             <div class="form-row">
                 <button class="btn" onclick="saveEditProduct()">💾 Simpan</button>
@@ -320,7 +334,8 @@ function saveEditProduct() {
         stock: parseInt(document.getElementById('editStock').value),
         rating: parseFloat(document.getElementById('editRating').value) || 0,
         reviewCount: parseInt(document.getElementById('editReviewCount').value) || 0,
-        thumbnail: document.getElementById('editThumbnail').value
+        thumbnail: document.getElementById('editThumbnail').value,
+        allowVoucher: document.getElementById('editAllowVoucher').checked
     };
     
     if (currentEditType === 'sewa') {
@@ -367,8 +382,11 @@ function loadProducts() {
             if (sewaProducts.length === 0) {
                 sewaContainer.innerHTML = '<p style="color: #888;">Belum ada produk sewa</p>';
             } else {
-                let html = '<div class="table-wrapper"><table><thead><tr><th>Thumb</th><th>Nama</th><th>Kategori</th><th>Durasi</th><th>Harga</th><th>Stok</th><th>Rating</th><th>Aksi</th></tr></thead><tbody>';
+                let html = '<div class="table-wrapper"></table><thead><tr><th>Thumb</th><th>Nama</th><th>Kategori</th><th>Durasi</th><th>Harga</th><th>Stok</th><th>Rating</th><th>Voucher</th><th>Aksi</th></tr></thead><tbody>';
                 sewaProducts.forEach(p => {
+                    const voucherBadge = p.allowVoucher !== false 
+                        ? '<span class="voucher-badge-active">✅ Bisa</span>' 
+                        : '<span class="voucher-badge-inactive">❌ Tidak</span>';
                     html += `<tr>
                         <td><img class="product-thumb" src="${p.thumbnail}" onerror="this.src='https://placehold.co/40x40'"></td>
                         <td>${escapeHtml(p.name)}</td>
@@ -377,10 +395,17 @@ function loadProducts() {
                         <td>Rp ${formatNumber(p.price)}</td>
                         <td><input type="number" id="stock_${p.id}" value="${p.stock}" style="width:70px;"><button onclick="updateStock('${p.type}', '${p.id}')" class="btn-warning btn-sm">Update</button></td>
                         <td>⭐ ${p.rating || 0} (${p.reviewCount || 0})</td>
-                        <td><button onclick='editProduct("${p.type}", "${p.id}", ${JSON.stringify(p).replace(/'/g, "&#39;")})' class="btn-warning btn-sm">✏️ Edit</button> <button onclick="deleteProduct('${p.type}', '${p.id}')" class="btn-danger btn-sm">🗑️ Hapus</button></td>
+                        <td>
+                            ${voucherBadge}
+                            <button onclick="toggleAllowVoucher('${p.type}', '${p.id}', ${p.allowVoucher !== false})" class="btn-toggle-voucher btn-sm">Toggle</button>
+                        </td>
+                        <td>
+                            <button onclick='editProduct("${p.type}", "${p.id}", ${JSON.stringify(p).replace(/'/g, "&#39;")})' class="btn-warning btn-sm">✏️ Edit</button>
+                            <button onclick="deleteProduct('${p.type}', '${p.id}')" class="btn-danger btn-sm">🗑️ Hapus</button>
+                        </td>
                     </tr>`;
                 });
-                html += '</tbody><tr></div>';
+                html += '</tbody></table></div>';
                 sewaContainer.innerHTML = html;
             }
         }
@@ -389,8 +414,11 @@ function loadProducts() {
             if (scriptProducts.length === 0) {
                 scriptContainer.innerHTML = '<p style="color: #888;">Belum ada produk script</p>';
             } else {
-                let html = '<div class="table-wrapper"><table><thead><tr><th>Thumb</th><th>Nama</th><th>Kategori</th><th>Harga</th><th>Stok</th><th>Rating</th><th>Aksi</th></tr></thead><tbody>';
+                let html = '<div class="table-wrapper"><table><thead><tr><th>Thumb</th><th>Nama</th><th>Kategori</th><th>Harga</th><th>Stok</th><th>Rating</th><th>Voucher</th><th>Aksi</th></tr></thead><tbody>';
                 scriptProducts.forEach(p => {
+                    const voucherBadge = p.allowVoucher !== false 
+                        ? '<span class="voucher-badge-active">✅ Bisa</span>' 
+                        : '<span class="voucher-badge-inactive">❌ Tidak</span>';
                     html += `<tr>
                         <td><img class="product-thumb" src="${p.thumbnail}" onerror="this.src='https://placehold.co/40x40'"></td>
                         <td>${escapeHtml(p.name)}</td>
@@ -398,7 +426,14 @@ function loadProducts() {
                         <td>Rp ${formatNumber(p.price)}</td>
                         <td><input type="number" id="stock_${p.id}" value="${p.stock}" style="width:70px;"><button onclick="updateStock('${p.type}', '${p.id}')" class="btn-warning btn-sm">Update</button></td>
                         <td>⭐ ${p.rating || 0} (${p.reviewCount || 0})</td>
-                        <td><button onclick='editProduct("${p.type}", "${p.id}", ${JSON.stringify(p).replace(/'/g, "&#39;")})' class="btn-warning btn-sm">✏️ Edit</button> <button onclick="deleteProduct('${p.type}', '${p.id}')" class="btn-danger btn-sm">🗑️ Hapus</button></td>
+                        <td>
+                            ${voucherBadge}
+                            <button onclick="toggleAllowVoucher('${p.type}', '${p.id}', ${p.allowVoucher !== false})" class="btn-toggle-voucher btn-sm">Toggle</button>
+                        </td>
+                        <td>
+                            <button onclick='editProduct("${p.type}", "${p.id}", ${JSON.stringify(p).replace(/'/g, "&#39;")})' class="btn-warning btn-sm">✏️ Edit</button>
+                            <button onclick="deleteProduct('${p.type}', '${p.id}')" class="btn-danger btn-sm">🗑️ Hapus</button>
+                        </td>
                     </tr>`;
                 });
                 html += '</tbody></table></div>';
@@ -635,7 +670,7 @@ function loadOrders() {
             container.innerHTML = '<p style="color: #888;">Belum ada pesanan</p>';
             return;
         }
-        let html = '<div class="table-wrapper"><tr><thead><tr><th>Order ID</th><th>Pembeli</th><th>Produk</th><th>Total</th><th>Status</th><th>Tanggal</th></tr></thead><tbody>';
+        let html = '<div class="table-wrapper"><tr><thead><tr><th>Order ID</th><th>Pembeli</th><th>Produk</th><th>Total</th><th>Status</th><th>Tanggal</th><tr></thead><tbody>';
         snapshot.forEach(child => {
             const order = child.val();
             let productsHtml = '';
@@ -672,7 +707,7 @@ function loadPayments() {
             container.innerHTML = '<p style="color: #888;">Belum ada bukti pembayaran</p>';
             return;
         }
-        let html = '<div class="table-wrapper"></table><thead><tr><th>Bukti</th><th>Pembeli</th><th>Order ID</th><th>Upload</th></tr></thead><tbody>';
+        let html = '<div class="table-wrapper"></tr><thead><tr><th>Bukti</th><th>Pembeli</th><th>Order ID</th><th>Upload</th></tr></thead><tbody>';
         snapshot.forEach(child => {
             const payment = child.val();
             html += `<tr>
@@ -770,7 +805,7 @@ async function loadTransferHistory() {
         const response = await fetch(`https://qris.zakki.store/mytransfer?token=${PAYMENT_GATEWAYS.zakki.token}&type=all`);
         const data = await response.json();
         if (data.code === 200 && data.data) {
-            let html = '<div class="table-wrapper"></td><thead><tr><th>ID Transfer</th><th>Amount</th><th>Tipe</th><th>Tanggal</th><tr></thead><tbody>';
+            let html = '<div class="table-wrapper"><tr><thead><tr><th>ID Transfer</th><th>Amount</th><th>Tipe</th><th>Tanggal</th></tr></thead><tbody>';
             if (data.data.riwayat && data.data.riwayat.length > 0) {
                 data.data.riwayat.forEach(transfer => {
                     html += `<tr>

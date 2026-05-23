@@ -11,6 +11,7 @@ let activeVoucher = null;
 let voucherDiscount = 0;
 let voucherType = 'percentage';
 let voucherValue = 0;
+let voucherUsed = false;
 
 // ========================================
 // CEK NAMA USER DI AWAL
@@ -25,7 +26,7 @@ function checkUserIdentity() {
 }
 
 // ========================================
-// LOAD MARQUEE TEXT FROM FIREBASE
+// LOAD MARQUEE TEXT
 // ========================================
 function loadMarqueeText() {
     database.ref('settings/marquee').on('value', (snapshot) => {
@@ -265,6 +266,7 @@ function renderSewaProducts() {
                 <div class="product-price">Rp ${formatNumber(product.price || 0)}</div>
                 ${renderRatingStars(product.rating, product.reviewCount)}
                 <div class="product-stock">${getStockBadge(product.stock || 0)}</div>
+                ${product.allowVoucher !== false ? '<div class="voucher-badge"><i class="fas fa-ticket-alt"></i> Bisa Pakai Voucher</div>' : '<div class="voucher-badge disabled"><i class="fas fa-ban"></i> Tidak Bisa Voucher</div>'}
                 <button class="add-to-cart" ${(product.stock || 0) <= 0 ? 'disabled' : ''} onclick="addToCart('${product.id}', 'sewa')">
                     <i class="fas ${(product.stock || 0) <= 0 ? 'fa-ban' : 'fa-cart-plus'}"></i>
                     ${(product.stock || 0) <= 0 ? 'Stok Habis' : 'Sewa Sekarang'}
@@ -291,6 +293,7 @@ function renderScriptProducts() {
                 <div class="product-price">Rp ${formatNumber(product.price || 0)}</div>
                 ${renderRatingStars(product.rating, product.reviewCount)}
                 <div class="product-stock">${getStockBadge(product.stock || 0)}</div>
+                ${product.allowVoucher !== false ? '<div class="voucher-badge"><i class="fas fa-ticket-alt"></i> Bisa Pakai Voucher</div>' : '<div class="voucher-badge disabled"><i class="fas fa-ban"></i> Tidak Bisa Voucher</div>'}
                 <button class="add-to-cart" ${(product.stock || 0) <= 0 ? 'disabled' : ''} onclick="addToCart('${product.id}', 'script')">
                     <i class="fas ${(product.stock || 0) <= 0 ? 'fa-ban' : 'fa-cart-plus'}"></i>
                     ${(product.stock || 0) <= 0 ? 'Stok Habis' : 'Beli Sekarang'}
@@ -330,7 +333,7 @@ function showNotification(msg, type) {
 }
 
 // ========================================
-// CART FUNCTIONS WITH VOUCHER & GRATIS
+// CART FUNCTIONS
 // ========================================
 function addToCart(productId, productType) {
     let product = productType === 'sewa' ? sewaProducts.find(p => p.id === productId) : scriptProducts.find(p => p.id === productId);
@@ -351,7 +354,16 @@ function addToCart(productId, productType) {
             return;
         }
     } else {
-        cart.push({ id: product.id, name: product.name, price: product.price, thumbnail: product.thumbnail, quantity: 1, type: productType, duration: product.duration || null });
+        cart.push({ 
+            id: product.id, 
+            name: product.name, 
+            price: product.price, 
+            thumbnail: product.thumbnail, 
+            quantity: 1, 
+            type: productType, 
+            duration: product.duration || null,
+            allowVoucher: product.allowVoucher !== false
+        });
         showNotification('Produk ditambahkan ke keranjang', 'success');
         if (typeof notifyAddToCartTelegram !== 'undefined') {
             const userName = localStorage.getItem('userName') || 'Guest';
@@ -409,7 +421,7 @@ function renderCartItems() {
     let discountAmount = 0;
     let isGratis = false;
     
-    if (activeVoucher && voucherDiscount > 0) {
+    if (activeVoucher && voucherDiscount > 0 && !voucherUsed) {
         discountAmount = Math.min(voucherDiscount, subtotal);
         finalTotal = subtotal - discountAmount;
         
@@ -470,16 +482,26 @@ function checkout() {
         return;
     }
     
+    // Cek apakah ada produk yang tidak boleh pakai voucher
+    if (activeVoucher && !voucherUsed) {
+        const hasNonVoucherProduct = cart.some(item => item.allowVoucher === false);
+        if (hasNonVoucherProduct) {
+            showNotification('Tidak bisa pakai voucher! Ada produk yang tidak mendukung voucher.', 'error');
+            return;
+        }
+    }
+    
     const firstItem = cart[0];
     let total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     let isGratis = false;
     
-    if (activeVoucher && voucherDiscount > 0) {
+    if (activeVoucher && voucherDiscount > 0 && !voucherUsed) {
         total = total - Math.min(voucherDiscount, total);
         if (total <= 0) {
             isGratis = true;
             total = 0;
         }
+        voucherUsed = true;
         if (activeVoucher.id) {
             database.ref(`vouchers/${activeVoucher.id}/used`).transaction((current) => {
                 return (current || 0) + 1;
@@ -509,6 +531,11 @@ function checkout() {
 // VOUCHER FUNCTIONS
 // ========================================
 function applyVoucherFromCart() {
+    if (voucherUsed) {
+        showVoucherMessageCart('Voucher sudah digunakan!', 'error');
+        return;
+    }
+    
     const code = document.getElementById('voucherCodeCart').value.trim().toUpperCase();
     if (!code) {
         showVoucherMessageCart('Masukkan kode voucher!', 'error');
@@ -533,6 +560,13 @@ function applyVoucherFromCart() {
                 
                 if (expired < now) {
                     showVoucherMessageCart('Voucher sudah kadaluarsa!', 'error');
+                    return;
+                }
+                
+                // Cek apakah ada produk yang tidak boleh pakai voucher
+                const hasNonVoucherProduct = cart.some(item => item.allowVoucher === false);
+                if (hasNonVoucherProduct) {
+                    showVoucherMessageCart('Tidak bisa pakai voucher! Ada produk yang tidak mendukung voucher.', 'error');
                     return;
                 }
                 
@@ -572,6 +606,10 @@ function applyVoucherFromCart() {
 }
 
 function removeVoucherFromCart() {
+    if (voucherUsed) {
+        showVoucherMessageCart('Voucher sudah digunakan, tidak bisa dihapus!', 'error');
+        return;
+    }
     activeVoucher = null;
     voucherDiscount = 0;
     localStorage.removeItem('activeVoucher');
