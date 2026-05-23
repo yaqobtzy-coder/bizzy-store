@@ -3,11 +3,12 @@ function loadUserData() {
     const savedName = localStorage.getItem('userName');
     const joinDate = localStorage.getItem('joinDate');
     
-    if (savedName) {
+    if (savedName && savedName !== 'Customer' && savedName !== 'null') {
         document.getElementById('displayName').textContent = savedName;
         document.getElementById('userNameInput').value = savedName;
     } else {
-        document.getElementById('displayName').textContent = 'Customer';
+        document.getElementById('displayName').textContent = '';
+        document.getElementById('userNameInput').value = '';
     }
     
     if (joinDate) {
@@ -33,9 +34,10 @@ function saveName() {
     localStorage.setItem('userName', newName);
     document.getElementById('displayName').textContent = newName;
     
+    // Tampilkan notifikasi
     const notif = document.createElement('div');
     notif.className = 'notification success';
-    notif.innerHTML = '<i class="fas fa-check-circle"></i> Nama berhasil diubah!';
+    notif.innerHTML = '<i class="fas fa-check-circle"></i> Nama berhasil disimpan! Mengalihkan...';
     notif.style.cssText = `
         position: fixed;
         bottom: 20px;
@@ -48,15 +50,21 @@ function saveName() {
         animation: slideIn 0.3s ease;
     `;
     document.body.appendChild(notif);
-    setTimeout(() => notif.remove(), 2000);
+    
+    // Redirect ke toko setelah 1.5 detik
+    setTimeout(() => {
+        window.location.href = 'rayy-store.com.html';
+    }, 1500);
 }
 
 // Logout
 function logout() {
     if (confirm('Apakah Anda yakin ingin logout?')) {
         const cart = localStorage.getItem('cart');
+        const userName = localStorage.getItem('userName');
         localStorage.clear();
         if (cart) localStorage.setItem('cart', cart);
+        if (userName) localStorage.setItem('userName', userName);
         window.location.href = 'rayy-store.com.html';
     }
 }

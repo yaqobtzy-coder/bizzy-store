@@ -1,5 +1,5 @@
 // ========================================
-// TELEGRAM & WHATSAPP NOTIFICATION - FULL
+// TELEGRAM & WHATSAPP NOTIFICATION
 // ========================================
 
 function formatNumberTele(num) {
@@ -45,8 +45,8 @@ function sendWhatsAppNotification(phoneNumber, message) {
     console.log('📱 Membuka WhatsApp untuk nomor:', phoneNumber);
 }
 
-// ==================== NOTIFIKASI 1: TAMBAH KE KERANJANG ====================
-async function notifyAddToCart(productName, price, quantity, userName) {
+// ==================== NOTIFIKASI 1: TAMBAH KE KERANJANG (TELEGRAM ONLY) ====================
+async function notifyAddToCartTelegram(productName, price, quantity, userName) {
     const messageTelegram = `🛒 *TAMBAH KE KERANJANG*\n\n` +
         `👤 User: ${userName || 'Guest'}\n` +
         `📦 Produk: ${productName}\n` +
@@ -54,15 +54,8 @@ async function notifyAddToCart(productName, price, quantity, userName) {
         `💰 Harga: Rp ${formatNumberTele(price)}\n` +
         `⏰ Waktu: ${new Date().toLocaleString('id-ID')}`;
     
-    const messageWA = `🛒 *TAMBAH KE KERANJANG*%0A%0A` +
-        `👤 User: ${userName || 'Guest'}%0A` +
-        `📦 Produk: ${productName}%0A` +
-        `🔢 Jumlah: ${quantity}%0A` +
-        `💰 Harga: Rp ${formatNumberTele(price)}%0A%0A` +
-        `⏰ ${new Date().toLocaleString('id-ID')}`;
-    
     await sendTelegramNotification(messageTelegram);
-    sendWhatsAppNotification(WHATSAPP_ADMIN2, messageWA);
+    // TIDAK ADA WHATSAPP - HANYA TELEGRAM
 }
 
 // ==================== NOTIFIKASI 2: PROSES CHECKOUT ====================

@@ -7,6 +7,30 @@ let scriptProducts = [];
 let cart = JSON.parse(localStorage.getItem('cart')) || [];
 let currentUser = JSON.parse(localStorage.getItem('currentUser')) || { name: '' };
 let swiperInstance = null;
+let isCheckingName = false;
+
+// ========================================
+// CEK NAMA USER DI AWAL (SEBELUM APAPUN)
+// ========================================
+function checkUserIdentity() {
+    const userName = localStorage.getItem('userName');
+    const hasVisited = sessionStorage.getItem('hasVisited');
+    
+    // Jika sudah pernah cek di session ini, lewati
+    if (hasVisited === 'true') {
+        return true;
+    }
+    
+    // Jika belum ada nama atau nama masih default
+    if (!userName || userName === '' || userName === 'Customer' || userName === 'null') {
+        sessionStorage.setItem('redirectToProfile', 'true');
+        window.location.href = 'profile.html';
+        return false;
+    }
+    
+    sessionStorage.setItem('hasVisited', 'true');
+    return true;
+}
 
 // ========================================
 // SPLASH SCREEN
@@ -248,22 +272,22 @@ function showNotification(msg, type) {
 }
 
 // ========================================
-// CART FUNCTIONS
+// CART FUNCTIONS - TANPA NOTIFIKASI WHATSAPP
 // ========================================
 function addToCart(productId, productType) {
     let product = productType === 'sewa' ? sewaProducts.find(p => p.id === productId) : scriptProducts.find(p => p.id === productId);
     if (!product || product.stock <= 0) return;
     
-    const userName = localStorage.getItem('userName') || currentUser.name || 'Guest';
     const existing = cart.find(item => item.id === productId);
     
     if (existing) {
         if (existing.quantity < product.stock) {
             existing.quantity++;
             showNotification('Produk ditambahkan', 'success');
-            // KIRIM NOTIFIKASI TELEGRAM - TAMBAH KE KERANJANG
-            if (typeof notifyAddToCart !== 'undefined') {
-                notifyAddToCart(product.name, product.price, existing.quantity, userName);
+            // HANYA KIRIM KE TELEGRAM, TIDAK KE WHATSAPP
+            if (typeof notifyAddToCartTelegram !== 'undefined') {
+                const userName = localStorage.getItem('userName') || 'Guest';
+                notifyAddToCartTelegram(product.name, product.price, existing.quantity, userName);
             }
         } else {
             showNotification('Stok tidak mencukupi!', 'error');
@@ -272,9 +296,10 @@ function addToCart(productId, productType) {
     } else {
         cart.push({ id: product.id, name: product.name, price: product.price, thumbnail: product.thumbnail, quantity: 1, type: productType, duration: product.duration || null });
         showNotification('Produk ditambahkan ke keranjang', 'success');
-        // KIRIM NOTIFIKASI TELEGRAM - TAMBAH KE KERANJANG
-        if (typeof notifyAddToCart !== 'undefined') {
-            notifyAddToCart(product.name, product.price, 1, userName);
+        // HANYA KIRIM KE TELEGRAM, TIDAK KE WHATSAPP
+        if (typeof notifyAddToCartTelegram !== 'undefined') {
+            const userName = localStorage.getItem('userName') || 'Guest';
+            notifyAddToCartTelegram(product.name, product.price, 1, userName);
         }
     }
     
@@ -363,7 +388,9 @@ function checkout() {
 
 function loadUserProfile() {
     const savedName = localStorage.getItem('userName');
-    if (savedName) currentUser.name = savedName;
+    if (savedName && savedName !== 'Customer' && savedName !== 'null') {
+        currentUser.name = savedName;
+    }
 }
 
 // ========================================
@@ -570,13 +597,23 @@ function initMusicEventListeners() {
 }
 
 // ========================================
-// INITIALIZE
+// INITIALIZE - CEK NAMA DULU
 // ========================================
-loadUserProfile();
-loadSlider();
-loadProducts();
-initMusicEventListeners();
-initPopup();
+// CEK APAKAH USER SUDAH PUNYA NAMA
+const userHasName = localStorage.getItem('userName');
+const isValidName = userHasName && userHasName !== '' && userHasName !== 'Customer' && userHasName !== 'null';
+
+if (!isValidName) {
+    // Redirect ke profile.html untuk isi nama
+    window.location.href = 'profile.html';
+} else {
+    // Load semua konten
+    loadUserProfile();
+    loadSlider();
+    loadProducts();
+    initMusicEventListeners();
+    initPopup();
+}
 
 window.addToCart = addToCart;
 window.updateQuantity = updateQuantity;
