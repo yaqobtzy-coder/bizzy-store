@@ -14,6 +14,18 @@ let voucherValue = 0;
 let voucherUsed = false;
 
 // ========================================
+// MUSIC PLAYER GLOBAL
+// ========================================
+let musicPlayer = { 
+    audio: null, 
+    currentTrack: null, 
+    isPlaying: false, 
+    volume: 70, 
+    playHistory: [], 
+    updateInterval: null 
+};
+
+// ========================================
 // CEK NAMA USER DI AWAL
 // ========================================
 function checkUserIdentity() {
@@ -333,6 +345,132 @@ function showNotification(msg, type) {
 }
 
 // ========================================
+// MINI FLOATING PLAYER FUNCTIONS
+// ========================================
+let isDragging = false;
+let dragStartX, dragStartY, playerStartX, playerStartY;
+
+function initFloatingPlayer() {
+    const floatingPlayer = document.getElementById('floatingPlayer');
+    const dragHandle = document.getElementById('floatingDrag');
+    
+    if (!dragHandle) return;
+    
+    dragHandle.addEventListener('mousedown', startDrag);
+    dragHandle.addEventListener('touchstart', startDrag, { passive: false });
+    
+    document.addEventListener('mousemove', onDrag);
+    document.addEventListener('mouseup', stopDrag);
+    document.addEventListener('touchmove', onDrag, { passive: false });
+    document.addEventListener('touchend', stopDrag);
+    
+    // Floating player buttons
+    document.getElementById('floatingPlayPause').onclick = () => {
+        if (musicPlayer.isPlaying) {
+            musicPlayer.audio.pause();
+            musicPlayer.isPlaying = false;
+            document.getElementById('floatingPlayPause').innerHTML = '<i class="fas fa-play"></i>';
+            document.getElementById('musicPlayPauseBtn').innerHTML = '<i class="fas fa-play"></i>';
+        } else {
+            if (musicPlayer.audio && musicPlayer.currentTrack) {
+                musicPlayer.audio.play();
+                musicPlayer.isPlaying = true;
+                document.getElementById('floatingPlayPause').innerHTML = '<i class="fas fa-pause"></i>';
+                document.getElementById('musicPlayPauseBtn').innerHTML = '<i class="fas fa-pause"></i>';
+            } else {
+                showNotification('Pilih lagu terlebih dahulu', 'error');
+            }
+        }
+    };
+    
+    document.getElementById('floatingStop').onclick = () => {
+        stopMusic();
+        document.getElementById('floatingPlayPause').innerHTML = '<i class="fas fa-play"></i>';
+    };
+    
+    document.getElementById('floatingClose').onclick = () => {
+        stopMusic();
+        document.getElementById('floatingPlayer').style.display = 'none';
+    };
+}
+
+function startDrag(e) {
+    isDragging = true;
+    const floatingPlayer = document.getElementById('floatingPlayer');
+    const rect = floatingPlayer.getBoundingClientRect();
+    
+    if (e.type === 'mousedown') {
+        dragStartX = e.clientX - rect.left;
+        dragStartY = e.clientY - rect.top;
+    } else {
+        dragStartX = e.touches[0].clientX - rect.left;
+        dragStartY = e.touches[0].clientY - rect.top;
+    }
+    
+    playerStartX = rect.left;
+    playerStartY = rect.top;
+    
+    floatingPlayer.style.transition = 'none';
+    e.preventDefault();
+}
+
+function onDrag(e) {
+    if (!isDragging) return;
+    
+    let clientX, clientY;
+    if (e.type === 'mousemove') {
+        clientX = e.clientX;
+        clientY = e.clientY;
+    } else {
+        clientX = e.touches[0].clientX;
+        clientY = e.touches[0].clientY;
+    }
+    
+    let newX = clientX - dragStartX;
+    let newY = clientY - dragStartY;
+    
+    // Batas agar tidak keluar layar
+    const floatingPlayer = document.getElementById('floatingPlayer');
+    const maxX = window.innerWidth - floatingPlayer.offsetWidth - 10;
+    const maxY = window.innerHeight - floatingPlayer.offsetHeight - 10;
+    
+    newX = Math.min(Math.max(newX, 10), maxX);
+    newY = Math.min(Math.max(newY, 10), maxY);
+    
+    floatingPlayer.style.left = newX + 'px';
+    floatingPlayer.style.top = newY + 'px';
+    floatingPlayer.style.right = 'auto';
+    floatingPlayer.style.bottom = 'auto';
+    
+    e.preventDefault();
+}
+
+function stopDrag() {
+    isDragging = false;
+    const floatingPlayer = document.getElementById('floatingPlayer');
+    floatingPlayer.style.transition = '';
+}
+
+function updateFloatingPlayer(track) {
+    const floatingPlayer = document.getElementById('floatingPlayer');
+    if (!track) {
+        floatingPlayer.style.display = 'none';
+        return;
+    }
+    
+    floatingPlayer.style.display = 'block';
+    document.getElementById('floatingThumb').src = track.thumbnail || 'https://via.placeholder.com/40x40?text=🎵';
+    document.getElementById('floatingTitle').innerText = track.title || 'Unknown Title';
+    document.getElementById('floatingArtist').innerText = track.artist || 'Unknown Artist';
+    
+    if (musicPlayer.isPlaying) {
+        document.getElementById('floatingPlayPause').innerHTML = '<i class="fas fa-pause"></i>';
+    } else {
+        document.getElementById('floatingPlayPause').innerHTML = '<i class="fas fa-play"></i>';
+    }
+}
+
+// ========================================
 // CART FUNCTIONS
 // ========================================
 function addToCart(productId, productType) {
@@ -482,7 +620,6 @@ function checkout() {
         return;
     }
     
-    // Cek apakah ada produk yang tidak boleh pakai voucher
     if (activeVoucher && !voucherUsed) {
         const hasNonVoucherProduct = cart.some(item => item.allowVoucher === false);
         if (hasNonVoucherProduct) {
@@ -563,7 +700,6 @@ function applyVoucherFromCart() {
                     return;
                 }
                 
-                // Cek apakah ada produk yang tidak boleh pakai voucher
                 const hasNonVoucherProduct = cart.some(item => item.allowVoucher === false);
                 if (hasNonVoucherProduct) {
                     showVoucherMessageCart('Tidak bisa pakai voucher! Ada produk yang tidak mendukung voucher.', 'error');
@@ -648,10 +784,8 @@ function loadUserProfile() {
 }
 
 // ========================================
-// MUSIC PLAYER
+// MUSIC PLAYER CORE
 // ========================================
-let musicPlayer = { audio: null, currentTrack: null, isPlaying: false, volume: 70, playHistory: [], updateInterval: null };
-
 function loadMusicHistory() {
     const saved = localStorage.getItem('rayy_music_history');
     if (saved) {
@@ -665,12 +799,20 @@ function loadMusicHistory() {
     }
 }
 
-function saveMusicHistory() { localStorage.setItem('rayy_music_history', JSON.stringify(musicPlayer.playHistory)); }
+function saveMusicHistory() { 
+    localStorage.setItem('rayy_music_history', JSON.stringify(musicPlayer.playHistory)); 
+}
 
 function addToMusicHistory(track) {
     if (!track || !track.title) return;
     musicPlayer.playHistory = musicPlayer.playHistory.filter(t => t.url !== track.url);
-    musicPlayer.playHistory.unshift({ title: track.title, url: track.url, thumbnail: track.thumbnail, artist: track.artist, timestamp: new Date().toISOString() });
+    musicPlayer.playHistory.unshift({ 
+        title: track.title, 
+        url: track.url, 
+        thumbnail: track.thumbnail, 
+        artist: track.artist, 
+        timestamp: new Date().toISOString() 
+    });
     if (musicPlayer.playHistory.length > 20) musicPlayer.playHistory = musicPlayer.playHistory.slice(0, 20);
     saveMusicHistory();
     renderMusicHistory();
@@ -744,22 +886,36 @@ async function searchMusic(query) {
 }
 
 function playMusic(title, url, thumbnail, artist) {
-    if (!url || url === 'undefined') { showNotification('❌ URL lagu tidak valid', 'error'); return; }
+    if (!url || url === 'undefined') { 
+        showNotification('❌ URL lagu tidak valid', 'error'); 
+        return; 
+    }
+    
     const audio = document.getElementById('globalAudio');
     if (!audio) return;
+    
+    if (musicPlayer.updateInterval) clearInterval(musicPlayer.updateInterval);
+    
     musicPlayer.currentTrack = { title, url, thumbnail, artist };
     musicPlayer.audio = audio;
     audio.src = url;
     audio.load();
     audio.play().catch(e => console.log('Play error:', e));
     musicPlayer.isPlaying = true;
+    
+    // Update UI Modal
     document.getElementById('musicNowPlaying').style.display = 'flex';
     document.getElementById('musicThumb').src = thumbnail || 'https://via.placeholder.com/60x60?text=🎵';
     document.getElementById('musicTitle').innerText = title || 'Unknown Title';
     document.getElementById('musicArtist').innerText = artist || 'Unknown Artist';
     document.getElementById('musicPlayPauseBtn').innerHTML = '<i class="fas fa-pause"></i>';
+    
+    // Update Floating Player
+    updateFloatingPlayer({ title, thumbnail, artist });
+    
     addToMusicHistory({ title, url, thumbnail, artist });
     showNotification(`🎵 Memutar: ${title}`, 'success');
+    
     startProgressUpdate();
 }
 
@@ -769,25 +925,35 @@ function stopMusic() {
         musicPlayer.audio.currentTime = 0;
         musicPlayer.isPlaying = false;
         musicPlayer.currentTrack = null;
+        
         document.getElementById('musicNowPlaying').style.display = 'none';
         document.getElementById('musicPlayPauseBtn').innerHTML = '<i class="fas fa-play"></i>';
         document.getElementById('musicProgressFilled').style.width = '0%';
         document.getElementById('musicCurrentTime').innerText = '0:00';
+        
+        updateFloatingPlayer(null);
+        
         if (musicPlayer.updateInterval) clearInterval(musicPlayer.updateInterval);
         showNotification('⏹️ Musik dihentikan', 'success');
     }
 }
 
 function togglePlayPause() {
-    if (!musicPlayer.audio || !musicPlayer.currentTrack) { showNotification('Pilih lagu terlebih dahulu', 'error'); return; }
+    if (!musicPlayer.audio || !musicPlayer.currentTrack) { 
+        showNotification('Pilih lagu terlebih dahulu', 'error'); 
+        return; 
+    }
+    
     if (musicPlayer.isPlaying) {
         musicPlayer.audio.pause();
         musicPlayer.isPlaying = false;
         document.getElementById('musicPlayPauseBtn').innerHTML = '<i class="fas fa-play"></i>';
+        document.getElementById('floatingPlayPause').innerHTML = '<i class="fas fa-play"></i>';
     } else {
         musicPlayer.audio.play().catch(e => console.log('Resume error:', e));
         musicPlayer.isPlaying = true;
         document.getElementById('musicPlayPauseBtn').innerHTML = '<i class="fas fa-pause"></i>';
+        document.getElementById('floatingPlayPause').innerHTML = '<i class="fas fa-pause"></i>';
         startProgressUpdate();
     }
 }
@@ -798,7 +964,8 @@ function startProgressUpdate() {
         if (musicPlayer.audio && musicPlayer.audio.duration && musicPlayer.isPlaying) {
             const current = musicPlayer.audio.currentTime;
             const duration = musicPlayer.audio.duration;
-            document.getElementById('musicProgressFilled').style.width = (current / duration) * 100 + '%';
+            const percent = (current / duration) * 100;
+            document.getElementById('musicProgressFilled').style.width = percent + '%';
             document.getElementById('musicCurrentTime').innerText = formatMusicTime(current);
             document.getElementById('musicDuration').innerText = formatMusicTime(duration);
         }
@@ -830,21 +997,32 @@ function openMusicModal() {
     document.getElementById('musicModal').style.display = 'flex';
     loadMusicHistory();
 }
-function closeMusicModal() { document.getElementById('musicModal').style.display = 'none'; }
+
+function closeMusicModal() {
+    document.getElementById('musicModal').style.display = 'none';
+}
 
 function initMusicEventListeners() {
-    document.getElementById('musicBtn').onclick = (e) => { e.preventDefault(); openMusicModal(); };
+    document.getElementById('musicBtn').onclick = (e) => { 
+        e.preventDefault(); 
+        openMusicModal(); 
+    };
     document.getElementById('closeMusicModal').onclick = closeMusicModal;
     document.getElementById('musicPlayPauseBtn').onclick = togglePlayPause;
     document.getElementById('musicStopBtn').onclick = stopMusic;
     document.getElementById('musicSearchBtn').onclick = () => searchMusic(document.getElementById('musicSearchInput').value);
-    document.getElementById('musicSearchInput').onkeypress = (e) => { if (e.key === 'Enter') searchMusic(e.target.value); };
+    document.getElementById('musicSearchInput').onkeypress = (e) => { 
+        if (e.key === 'Enter') searchMusic(e.target.value); 
+    };
     document.getElementById('musicVolumeSlider').oninput = (e) => setMusicVolume(parseInt(e.target.value));
     document.getElementById('musicVolDown').onclick = () => setMusicVolume(Math.max(0, musicPlayer.volume - 10));
     document.getElementById('musicVolUp').onclick = () => setMusicVolume(Math.min(100, musicPlayer.volume + 10));
     document.getElementById('musicProgressBar').onclick = seekMusic;
     document.getElementById('clearMusicHistory').onclick = clearMusicHistory;
-    document.getElementById('musicModal').onclick = (e) => { if (e.target === document.getElementById('musicModal')) closeMusicModal(); };
+    document.getElementById('musicModal').onclick = (e) => { 
+        if (e.target === document.getElementById('musicModal')) closeMusicModal(); 
+    };
+    
     const savedVol = localStorage.getItem('rayy_music_volume');
     if (savedVol) setMusicVolume(parseInt(savedVol));
     else setMusicVolume(70);
@@ -862,6 +1040,7 @@ if (!checkUserIdentity()) {
     loadProducts();
     initMusicEventListeners();
     initPopup();
+    initFloatingPlayer();
 }
 
 window.addToCart = addToCart;

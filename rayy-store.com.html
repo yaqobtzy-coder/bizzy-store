@@ -177,6 +177,25 @@
             </div>
         </div>
 
+        <!-- MINI FLOATING PLAYER -->
+        <div id="floatingPlayer" class="floating-player" style="display: none;">
+            <div class="floating-player-content" id="floatingPlayerContent">
+                <img id="floatingThumb" src="https://via.placeholder.com/40x40?text=🎵" alt="cover">
+                <div class="floating-info">
+                    <div class="floating-title" id="floatingTitle">Tidak ada lagu</div>
+                    <div class="floating-artist" id="floatingArtist">-</div>
+                </div>
+                <div class="floating-controls">
+                    <button id="floatingPlayPause"><i class="fas fa-play"></i></button>
+                    <button id="floatingStop"><i class="fas fa-stop"></i></button>
+                    <button id="floatingClose"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="floating-drag" id="floatingDrag">
+                    <i class="fas fa-grip-vertical"></i>
+                </div>
+            </div>
+        </div>
+
         <!-- FOOTER -->
         <footer class="footer">
             <div class="footer-content">
@@ -222,7 +241,6 @@
         </div>
         <div id="voucherMessageCart" class="voucher-message-cart"></div>
         
-        <!-- INFO VOUCHER YANG SUDAH DIPAKAI -->
         <div class="voucher-info" id="voucherInfo" style="display: none;">
             <div class="voucher-applied">
                 <span id="voucherAppliedCode"></span>
