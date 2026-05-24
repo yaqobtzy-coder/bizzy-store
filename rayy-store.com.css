@@ -158,6 +158,20 @@ body {
     color: #3b82f6;
 }
 
+/* Style khusus link Voucher di navbar */
+.nav-links a[href="vouchers.html"] {
+    background: linear-gradient(135deg, #f59e0b, #e67e22);
+    color: white;
+    padding: 6px 14px;
+    border-radius: 30px;
+    transition: all 0.2s;
+}
+
+.nav-links a[href="vouchers.html"]:hover {
+    background: linear-gradient(135deg, #e67e22, #d97706);
+    transform: translateY(-2px);
+}
+
 .cart-icon {
     position: relative;
     cursor: pointer;
@@ -1005,6 +1019,14 @@ body {
 
 .copy-voucher-btn:hover { background: #b45309; }
 
+/* ========== POPUP BUTTONS GROUP ========== */
+.popup-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 8px;
+}
+
 .popup-btn {
     display: inline-flex;
     align-items: center;
@@ -1020,9 +1042,21 @@ body {
     text-decoration: none;
     cursor: pointer;
     width: 100%;
+    transition: all 0.2s ease;
 }
 
-.popup-btn:hover { background: #2563eb; }
+.popup-btn:hover {
+    background: #2563eb;
+    transform: scale(0.98);
+}
+
+.popup-btn-secondary {
+    background: linear-gradient(135deg, #f59e0b, #e67e22);
+}
+
+.popup-btn-secondary:hover {
+    background: linear-gradient(135deg, #e67e22, #d97706);
+}
 
 /* ========== MUSIC MODAL ========== */
 .music-modal {
@@ -1421,4 +1455,32 @@ body {
     .popup-content h2 { font-size: 18px; }
     .voucher-input-cart { flex-direction: column; }
     .voucher-input-cart button { width: 100%; }
+    
+    /* Navbar link voucher responsive */
+    .nav-links a[href="vouchers.html"] {
+        padding: 4px 10px;
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .nav-links {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+    }
+    
+    .nav-links a[href="vouchers.html"] {
+        padding: 4px 10px;
+        font-size: 11px;
+    }
+    
+    .popup-buttons {
+        gap: 10px;
+    }
+    
+    .popup-btn {
+        padding: 10px 16px;
+        font-size: 13px;
+    }
 }

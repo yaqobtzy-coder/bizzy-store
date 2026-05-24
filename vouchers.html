@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Voucher Center - Rayy Store</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="vouchers.css">
+</head>
+<body>
+    <!-- HEADER - SAMA PERSIS DENGAN NEWS.COM -->
+    <div class="news-header">
+        <div class="header-container">
+            <div class="logo">
+                <i class="fas fa-ticket-alt"></i>
+                <div>
+                    <h1>Voucher Center</h1>
+                    <span>Kumpulan Kode Voucher Aktif</span>
+                </div>
+            </div>
+            <div class="date-badge" id="dateBadge"></div>
+            <button class="back-home" onclick="goToStore()">
+                <i class="fas fa-store"></i> Kembali ke Toko
+            </button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- HERO SECTION - SAMA PERSIS DENGAN NEWS.COM -->
+        <div class="hero-section">
+            <div class="maintenance-badge" id="infoBadge">
+                <i class="fas fa-gift fa-beat"></i> UPDATE TERBARU
+            </div>
+            <h2>🎫 Kumpulan Voucher Spesial!</h2>
+            <p id="heroMessage">
+                Dapatkan potongan harga dengan menggunakan kode voucher di halaman keranjang.
+                Jangan sampai kehabisan, setiap voucher terbatas!
+            </p>
+        </div>
+
+        <!-- MARQUEE SECTION - SAMA PERSIS DENGAN NEWS.COM -->
+        <div class="marquee-section" id="infoMarquee" style="display: none;">
+            <div class="marquee-wrapper">
+                <div class="marquee-content" id="marqueeContent">
+                    <span id="marqueeText">🔥 PROMO SPESIAL! Dapatkan diskon hingga 50%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION TITLE - VOUCHER AKTIF -->
+        <div class="section-title">
+            <i class="fas fa-ticket-alt"></i>
+            <span>🎁 VOUCHER AKTIF</span>
+        </div>
+
+        <div class="voucher-grid" id="voucherGrid">
+            <div class="loading-spinner">
+                <i class="fas fa-spinner"></i>
+                <p>Memuat voucher...</p>
+            </div>
+        </div>
+
+        <!-- SECTION TITLE - VOUCHER KADALUARSA -->
+        <div class="section-title">
+            <i class="fas fa-history"></i>
+            <span>⏰ VOUCHER KADALUARSA / HABIS</span>
+        </div>
+
+        <div class="voucher-grid" id="expiredVoucherGrid">
+            <div class="empty-message">Belum ada voucher kadaluarsa</div>
+        </div>
+
+        <!-- SECTION TITLE - CARA PENGGUNAAN -->
+        <div class="section-title">
+            <i class="fas fa-question-circle"></i>
+            <span>📖 CARA MENGGUNAKAN VOUCHER</span>
+        </div>
+
+        <div class="tips-card">
+            <i class="fas fa-lightbulb"></i>
+            <h4>Panduan Penggunaan Voucher</h4>
+            <ol>
+                <li>Salin kode voucher yang ingin digunakan</li>
+                <li>Buka halaman <strong>Keranjang</strong> di Rayy Store</li>
+                <li>Masukkan kode voucher di kolom "Masukkan kode voucher"</li>
+                <li>Klik "Pakai Voucher" dan lihat potongan harga otomatis!</li>
+                <li>Voucher hanya bisa digunakan jika produk mendukung voucher</li>
+            </ol>
+        </div>
+
+        <!-- FOOTER - SAMA PERSIS DENGAN NEWS.COM -->
+        <div class="footer">
+            <div class="social-icons">
+                <a onclick="showToast('Telegram: @BizzyImpactBot')"><i class="fab fa-telegram"></i></a>
+                <a onclick="showToast('Instagram: @bizzy.tools')"><i class="fab fa-instagram"></i></a>
+                <a onclick="showToast('TikTok: @bizzy.tools')"><i class="fab fa-tiktok"></i></a>
+                <a onclick="showToast('WhatsApp: +62 857-9454-5996')"><i class="fab fa-whatsapp"></i></a>
+            </div>
+            <p style="font-size: 0.75rem; opacity: 0.6;">
+                <i class="fas fa-copyright"></i> 2026 Rayy Store | Voucher Center
+            </p>
+            <p style="font-size: 0.7rem; opacity: 0.4; margin-top: 8px;">
+                Voucher diperbarui secara berkala
+            </p>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast" class="toast" style="display: none;"></div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="vouchers.js"></script>
+</body>
+</html>

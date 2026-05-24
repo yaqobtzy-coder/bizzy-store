@@ -118,6 +118,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
         if (btn.dataset.tab === 'voucher') loadVoucherList();
         if (btn.dataset.tab === 'marquee') loadMarqueeSettings();
         if (btn.dataset.tab === 'productTypes') renderProductTypesList();
+        if (btn.dataset.tab === 'voucherInfo') loadVoucherInfoSettingsToForm();
     });
 });
 
@@ -276,7 +277,7 @@ function editProduct(type, productId, product) {
             <h3>✏️ Edit Produk</h3>
             <div class="form-group">
                 <label>Tipe Produk</label>
-                <input type="text" id="editType" value="${escapeHtml(type)}" readonly style="background:#2d2d44;">
+                <input type="text" id="editType" value="${escapeHtml(type)}" readonly style="background:#f1f5f9;">
             </div>
             <div class="form-group">
                 <label>Nama Produk</label>
@@ -382,7 +383,7 @@ function loadProducts() {
             if (sewaProducts.length === 0) {
                 sewaContainer.innerHTML = '<p style="color: #888;">Belum ada produk sewa</p>';
             } else {
-                let html = '<div class="table-wrapper"></table><thead><tr><th>Thumb</th><th>Nama</th><th>Kategori</th><th>Durasi</th><th>Harga</th><th>Stok</th><th>Rating</th><th>Voucher</th><th>Aksi</th></tr></thead><tbody>';
+                let html = '<div class="table-wrapper"><table><thead><tr><th>Thumb</th><th>Nama</th><th>Kategori</th><th>Durasi</th><th>Harga</th><th>Stok</th><th>Rating</th><th>Voucher</th><th>Aksi</th></tr></thead><tbody>';
                 sewaProducts.forEach(p => {
                     const voucherBadge = p.allowVoucher !== false 
                         ? '<span class="voucher-badge-active">✅ Bisa</span>' 
@@ -622,6 +623,63 @@ function deleteVoucher(voucherId) {
 }
 
 // ========================================
+// VOUCHER INFO SETTINGS (ADMIN)
+// ========================================
+
+// Load settings ke form di tab Voucher Info
+function loadVoucherInfoSettingsToForm() {
+    database.ref('settings/voucherInfo').once('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            document.getElementById('voucherInfoEnabled').value = data.enabled ? 'true' : 'false';
+            document.getElementById('voucherInfoText').value = data.text || '';
+            document.getElementById('voucherInfoBadge').value = data.badgeText || '';
+            document.getElementById('voucherInfoHero').value = data.heroMessage || '';
+            updateVoucherInfoPreview();
+        } else {
+            document.getElementById('voucherInfoEnabled').value = 'false';
+            document.getElementById('voucherInfoText').value = '';
+            document.getElementById('voucherInfoBadge').value = '';
+            document.getElementById('voucherInfoHero').value = '';
+        }
+    });
+}
+
+// Update preview di admin panel
+function updateVoucherInfoPreview() {
+    const badgeText = document.getElementById('voucherInfoBadge').value || 'UPDATE TERBARU';
+    const marqueeText = document.getElementById('voucherInfoText').value || '';
+    const heroMessage = document.getElementById('voucherInfoHero').value || 'Dapatkan potongan harga dengan menggunakan kode voucher di halaman keranjang.';
+    
+    const previewBadge = document.getElementById('previewBadge');
+    const previewMarquee = document.getElementById('previewMarqueeText');
+    const previewHero = document.getElementById('previewHeroMessage');
+    
+    if (previewBadge) previewBadge.textContent = badgeText;
+    if (previewMarquee) previewMarquee.textContent = marqueeText || '🔥 PROMO SPESIAL! Dapatkan diskon hingga 50%!';
+    if (previewHero) previewHero.textContent = heroMessage;
+}
+
+// Save voucher info settings ke Firebase
+function saveVoucherInfoSettings() {
+    const enabled = document.getElementById('voucherInfoEnabled').value === 'true';
+    const text = document.getElementById('voucherInfoText').value;
+    const badgeText = document.getElementById('voucherInfoBadge').value;
+    const heroMessage = document.getElementById('voucherInfoHero').value;
+    
+    const settings = {
+        enabled: enabled,
+        text: text,
+        badgeText: badgeText,
+        heroMessage: heroMessage,
+        updatedAt: new Date().toISOString()
+    };
+    
+    database.ref('settings/voucherInfo').set(settings);
+    showNotification('✅ Pengaturan Info Voucher berhasil disimpan!', 'success');
+}
+
+// ========================================
 // MARQUEE MANAGEMENT
 // ========================================
 function loadMarqueeSettings() {
@@ -670,7 +728,7 @@ function loadOrders() {
             container.innerHTML = '<p style="color: #888;">Belum ada pesanan</p>';
             return;
         }
-        let html = '<div class="table-wrapper"><tr><thead><tr><th>Order ID</th><th>Pembeli</th><th>Produk</th><th>Total</th><th>Status</th><th>Tanggal</th><tr></thead><tbody>';
+        let html = '<div class="table-wrapper"><table><thead><tr><th>Order ID</th><th>Pembeli</th><th>Produk</th><th>Total</th><th>Status</th><th>Tanggal</th></tr></thead><tbody>';
         snapshot.forEach(child => {
             const order = child.val();
             let productsHtml = '';
@@ -707,7 +765,7 @@ function loadPayments() {
             container.innerHTML = '<p style="color: #888;">Belum ada bukti pembayaran</p>';
             return;
         }
-        let html = '<div class="table-wrapper"></tr><thead><tr><th>Bukti</th><th>Pembeli</th><th>Order ID</th><th>Upload</th></tr></thead><tbody>';
+        let html = '<div class="table-wrapper"><table><thead><tr><th>Bukti</th><th>Pembeli</th><th>Order ID</th><th>Upload</th></tr></thead><tbody>';
         snapshot.forEach(child => {
             const payment = child.val();
             html += `<tr>
@@ -805,7 +863,7 @@ async function loadTransferHistory() {
         const response = await fetch(`https://qris.zakki.store/mytransfer?token=${PAYMENT_GATEWAYS.zakki.token}&type=all`);
         const data = await response.json();
         if (data.code === 200 && data.data) {
-            let html = '<div class="table-wrapper"><tr><thead><tr><th>ID Transfer</th><th>Amount</th><th>Tipe</th><th>Tanggal</th></tr></thead><tbody>';
+            let html = '<div class="table-wrapper"><table><thead><tr><th>ID Transfer</th><th>Amount</th><th>Tipe</th><th>Tanggal</th></tr></thead><tbody>';
             if (data.data.riwayat && data.data.riwayat.length > 0) {
                 data.data.riwayat.forEach(transfer => {
                     html += `<tr>
@@ -959,6 +1017,13 @@ document.getElementById('popupImageUrl')?.addEventListener('input', updatePopupP
 document.getElementById('popupTitle')?.addEventListener('input', updatePopupPreview);
 document.getElementById('popupMessage')?.addEventListener('input', updatePopupPreview);
 document.getElementById('popupButtonText')?.addEventListener('input', updatePopupPreview);
+
+// Event listener untuk preview voucher info
+if (document.getElementById('voucherInfoText')) {
+    document.getElementById('voucherInfoText').addEventListener('input', updateVoucherInfoPreview);
+    document.getElementById('voucherInfoBadge').addEventListener('input', updateVoucherInfoPreview);
+    document.getElementById('voucherInfoHero').addEventListener('input', updateVoucherInfoPreview);
+}
 
 // ========================================
 // INITIALIZE

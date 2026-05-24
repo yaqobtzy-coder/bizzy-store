@@ -428,6 +428,44 @@ td {
     gap: 8px;
 }
 
+/* ========== INFO PREVIEW (UNTUK VOUCHER INFO) ========== */
+.info-preview {
+    background: linear-gradient(135deg, #f5f7fa, #eef2f7);
+    border-radius: 16px;
+    padding: 24px;
+    text-align: center;
+    border: 1px solid #e2e8f0;
+}
+
+.preview-badge {
+    display: inline-block;
+    background: #fef2e8;
+    color: #e67e22;
+    padding: 4px 12px;
+    border-radius: 30px;
+    font-size: 0.75rem;
+    margin-bottom: 15px;
+    border: 1px solid #f7d5b5;
+}
+
+.preview-marquee {
+    background: linear-gradient(135deg, #f59e0b, #e67e22);
+    padding: 10px;
+    border-radius: 12px;
+    color: white;
+    font-size: 13px;
+    margin-bottom: 15px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.preview-hero {
+    color: #5a6c7e;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
 /* ========== MARQUEE PREVIEW ========== */
 .marquee-preview {
     background: linear-gradient(135deg, #3b82f6, #2563eb);
@@ -776,6 +814,16 @@ td {
     
     .voucher-detail {
         justify-content: center;
+    }
+    
+    .info-preview {
+        padding: 16px;
+    }
+    
+    .preview-marquee {
+        font-size: 11px;
+        white-space: normal;
+        word-break: break-word;
     }
 }
 
