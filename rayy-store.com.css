@@ -233,7 +233,7 @@ body {
     background: #3b82f6;
 }
 
-/* ========== MARQUEE / TEKS BERJALAN ========== */
+/* ========== MARQUEE ========== */
 .marquee-section {
     background: linear-gradient(135deg, #3b82f6, #2563eb);
     padding: 10px 0;
@@ -458,6 +458,22 @@ body {
 .stock-low { background: #fef3c7; color: #d97706; }
 .stock-out { background: #fee2e2; color: #dc2626; }
 
+.voucher-badge {
+    display: inline-block;
+    background: #fef3c7;
+    color: #d97706;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 600;
+    margin-top: 5px;
+}
+
+.voucher-badge.disabled {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
 /* ========== RATING STARS ========== */
 .product-rating {
     display: flex;
@@ -630,7 +646,7 @@ body {
     text-align: right;
 }
 
-/* ========== VOUCHER INPUT DI CART ========== */
+/* ========== VOUCHER INPUT ========== */
 .voucher-input-cart {
     display: flex;
     gap: 10px;
@@ -1272,6 +1288,118 @@ body {
 .history-item-artist {
     font-size: 9px;
     color: #64748b;
+}
+
+/* ========== MINI FLOATING PLAYER ========== */
+.floating-player {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 280px;
+    background: #ffffff;
+    border-radius: 60px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    z-index: 1500;
+    cursor: move;
+    border: 1px solid #e2e8f0;
+    transition: box-shadow 0.2s;
+}
+
+.floating-player:hover {
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+}
+
+.floating-player-content {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    gap: 10px;
+}
+
+.floating-player-content img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #f1f5f9;
+}
+
+.floating-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.floating-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #0f172a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.floating-artist {
+    font-size: 10px;
+    color: #64748b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.floating-controls {
+    display: flex;
+    gap: 8px;
+}
+
+.floating-controls button {
+    background: #f1f5f9;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.floating-controls button:hover {
+    background: #3b82f6;
+    color: white;
+}
+
+.floating-drag {
+    cursor: grab;
+    color: #94a3b8;
+    font-size: 14px;
+    padding: 0 5px;
+}
+
+.floating-drag:active {
+    cursor: grabbing;
+}
+
+@media (max-width: 480px) {
+    .floating-player {
+        width: 260px;
+        right: 10px;
+        bottom: 10px;
+    }
+    
+    .floating-title {
+        font-size: 11px;
+    }
+    
+    .floating-artist {
+        font-size: 9px;
+    }
+    
+    .floating-controls button {
+        width: 28px;
+        height: 28px;
+    }
 }
 
 /* ========== RESPONSIVE ========== */
