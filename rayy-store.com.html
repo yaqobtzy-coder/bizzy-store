@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Rayy-store.com - Toko Digital Premium</title>
+    <title>Rayy Store - Toko Digital Premium</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css">
@@ -23,7 +23,7 @@
         </div>
     </div>
 
-    <!-- POPUP MODAL - DENGAN TOMBOL VOUCHER CENTER -->
+    <!-- POPUP MODAL -->
     <div id="popupModal" class="popup-modal" style="display: none;">
         <div class="popup-content">
             <button class="popup-close" id="closePopupBtn">&times;</button>
@@ -56,6 +56,8 @@
                 <a href="rayy-store.com.html"><i class="fas fa-home"></i> Beranda</a>
                 <a href="profile.html"><i class="fas fa-user"></i> Profil</a>
                 <a href="vouchers.html"><i class="fas fa-ticket-alt"></i> Voucher</a>
+                <a href="news.com.html"><i class="fas fa-newspaper"></i> News</a>
+                <a href="buy-panel.html"><i class="fas fa-server"></i> Panel</a>
                 <a href="#" id="musicBtn"><i class="fas fa-music"></i> Musik</a>
                 <div class="cart-icon" onclick="toggleCart()">
                     <i class="fas fa-shopping-bag"></i>
@@ -206,27 +208,32 @@
         <footer class="footer">
             <div class="footer-content">
                 <div class="footer-section">
-                    <h4>Rayy-store.com</h4>
+                    <h4>Rayy Store</h4>
                     <p>Toko digital premium terpercaya sejak 2024.</p>
                     <div class="social-links">
-                        <a href="#"><i class="fab fa-instagram"></i></a>
-                        <a href="#"><i class="fab fa-tiktok"></i></a>
-                        <a href="#"><i class="fab fa-whatsapp"></i></a>
+                        <a href="https://www.tiktok.com/@r_itsmyinitials" target="_blank"><i class="fab fa-tiktok"></i></a>
+                        <a href="https://t.me/DeltaxReal" target="_blank"><i class="fab fa-telegram"></i></a>
+                        <a href="https://wa.me/6285794545996" target="_blank"><i class="fab fa-whatsapp"></i></a>
+                        <a href="https://www.instagram.com/rayystore" target="_blank"><i class="fab fa-instagram"></i></a>
                     </div>
                 </div>
                 <div class="footer-section">
-                    <h4>Kontak</h4>
+                    <h4>Kontak Resmi</h4>
                     <p><i class="fab fa-whatsapp"></i> +62 857-9454-5996</p>
-                    <p><i class="fas fa-envelope"></i> support@rayy-store.com</p>
+                    <p><i class="fab fa-telegram"></i> @DeltaxReal</p>
+                    <p><i class="fab fa-tiktok"></i> @r_itsmyinitials</p>
+                    <p><i class="fas fa-envelope"></i> rayystore@myruko.web.id</p>
                 </div>
                 <div class="footer-section">
                     <h4>Metode Pembayaran</h4>
                     <p><i class="fas fa-qrcode"></i> QRIS</p>
                     <p><i class="fas fa-credit-card"></i> Bank Transfer</p>
+                    <p><i class="fas fa-mobile-alt"></i> E-Wallet</p>
                 </div>
             </div>
             <div class="copyright">
-                &copy; 2024 Rayy-store.com. All rights reserved.
+                <p>&copy; 2024 Rayy Store | All rights reserved</p>
+                <p>📧 rayystore@myruko.web.id | 📱 +62 857-9454-5996</p>
             </div>
         </footer>
     </div>
@@ -240,7 +247,6 @@
         </div>
         <div class="cart-items" id="cartItems"></div>
         
-        <!-- INPUT VOUCHER DI DALAM KERANJANG -->
         <div class="voucher-input-cart">
             <input type="text" id="voucherCodeCart" placeholder="Masukkan kode voucher">
             <button onclick="applyVoucherFromCart()">Pakai Voucher</button>

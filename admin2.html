@@ -14,6 +14,7 @@
         <div class="nav-links">
             <a href="rayy-store.com.html"><i class="fas fa-home"></i> Beranda</a>
             <a href="profile.html"><i class="fas fa-user"></i> Profil</a>
+            <a href="buy-panel.html"><i class="fas fa-server"></i> Panel</a>
         </div>
     </nav>
 
@@ -33,9 +34,11 @@
             <button class="tab-btn" data-tab="balance">💰 Cek Saldo</button>
             <button class="tab-btn" data-tab="gateway">⚙️ Gateway</button>
             <button class="tab-btn" data-tab="transfer">📊 Riwayat Transfer</button>
+            <button class="tab-btn" data-tab="panelOrders">🖥️ Panel Orders</button>
+            <button class="tab-btn" data-tab="waBot">🤖 WA Bot CMD</button>
         </div>
 
-        <!-- ==================== PRODUK TAB ==================== -->
+        <!-- PRODUK TAB -->
         <div id="products" class="tab-content active">
             <div class="card">
                 <h3>➕ Tambah Produk Baru</h3>
@@ -45,6 +48,7 @@
                         <select id="productType">
                             <option value="sewa">Sewa Bot</option>
                             <option value="script">Script Bot</option>
+                            <option value="panel">Panel Hosting</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -98,6 +102,53 @@
                         <small class="form-note">Jika dicentang, produk ini bisa mendapatkan diskon dari voucher</small>
                     </label>
                 </div>
+
+                <!-- Panel Hosting Fields -->
+                <div id="panelSpecFields" style="display: none;">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>RAM</label>
+                            <select id="productRam">
+                                <option value="1gb">1 GB RAM</option>
+                                <option value="2gb">2 GB RAM</option>
+                                <option value="3gb">3 GB RAM</option>
+                                <option value="4gb">4 GB RAM</option>
+                                <option value="5gb">5 GB RAM</option>
+                                <option value="6gb">6 GB RAM</option>
+                                <option value="7gb">7 GB RAM</option>
+                                <option value="8gb">8 GB RAM</option>
+                                <option value="9gb">9 GB RAM</option>
+                                <option value="10gb">10 GB RAM</option>
+                                <option value="11gb">11 GB RAM</option>
+                                <option value="12gb">12 GB RAM</option>
+                                <option value="13gb">13 GB RAM</option>
+                                <option value="14gb">14 GB RAM</option>
+                                <option value="15gb">15 GB RAM</option>
+                                <option value="16gb">16 GB RAM</option>
+                                <option value="17gb">17 GB RAM</option>
+                                <option value="18gb">18 GB RAM</option>
+                                <option value="19gb">19 GB RAM</option>
+                                <option value="20gb">20 GB RAM</option>
+                                <option value="unli">UNLIMITED RAM</option>
+                            </select>
+                            <small class="form-note">Pilih spesifikasi RAM untuk panel hosting</small>
+                        </div>
+                        <div class="form-group">
+                            <label>CPU (%)</label>
+                            <input type="text" id="productCpu" placeholder="Contoh: 30" value="30">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Disk (MB)</label>
+                            <input type="text" id="productDisk" placeholder="Contoh: 2048" value="2048">
+                        </div>
+                        <div class="form-group">
+                            <label>Harga Otomatis</label>
+                            <input type="text" id="autoPrice" readonly style="background:#f1f5f9;">
+                        </div>
+                    </div>
+                </div>
                 
                 <button class="btn" onclick="addProduct()">Tambah Produk</button>
             </div>
@@ -111,15 +162,20 @@
                 <h3>📋 Daftar Produk Script</h3>
                 <div id="scriptProductsList"></div>
             </div>
+
+            <div class="card">
+                <h3>📋 Daftar Produk Panel</h3>
+                <div id="panelProductsList"></div>
+            </div>
         </div>
 
-        <!-- ==================== KATEGORI TAB ==================== -->
+        <!-- KATEGORI TAB -->
         <div id="categories" class="tab-content">
             <div class="card">
                 <h3>➕ Tambah Kategori Baru</h3>
                 <div class="form-group">
                     <label>Nama Kategori</label>
-                    <input type="text" id="newCategory" placeholder="Contoh: Sewa Bot, Script Premium">
+                    <input type="text" id="newCategory" placeholder="Contoh: Sewa Bot, Script Premium, Panel Hosting">
                 </div>
                 <button class="btn" onclick="addCategory()">Tambah Kategori</button>
             </div>
@@ -129,7 +185,7 @@
             </div>
         </div>
 
-        <!-- ==================== TIPE PRODUK TAB ==================== -->
+        <!-- TIPE PRODUK TAB -->
         <div id="productTypes" class="tab-content">
             <div class="card">
                 <h3>🏷️ Manajemen Tipe Produk</h3>
@@ -146,7 +202,7 @@
             </div>
         </div>
 
-        <!-- ==================== SLIDER TAB ==================== -->
+        <!-- SLIDER TAB -->
         <div id="slider" class="tab-content">
             <div class="card">
                 <h3>➕ Tambah Slide Baru</h3>
@@ -175,7 +231,7 @@
             </div>
         </div>
 
-        <!-- ==================== POPUP TAB ==================== -->
+        <!-- POPUP TAB -->
         <div id="popup" class="tab-content">
             <div class="card">
                 <h3>🪟 Pengaturan Popup Modal</h3>
@@ -239,7 +295,7 @@
             </div>
         </div>
 
-        <!-- ==================== VOUCHER TAB ==================== -->
+        <!-- VOUCHER TAB -->
         <div id="voucher" class="tab-content">
             <div class="card">
                 <h3>🎟️ Tambah Voucher Baru</h3>
@@ -290,7 +346,7 @@
             </div>
         </div>
 
-        <!-- ==================== INFO VOUCHER TAB ==================== -->
+        <!-- INFO VOUCHER TAB -->
         <div id="voucherInfo" class="tab-content">
             <div class="card">
                 <h3>📢 Pengaturan Info Voucher (Halaman Voucher Center)</h3>
@@ -304,23 +360,20 @@
                 <div class="form-group">
                     <label>Teks Info Berjalan</label>
                     <textarea id="voucherInfoText" rows="2" placeholder="Contoh: 🔥 PROMO SPESIAL! Dapatkan diskon hingga 50%!"></textarea>
-                    <small class="form-note">Teks ini akan berjalan di marquee halaman Voucher Center</small>
                 </div>
                 <div class="form-group">
                     <label>Badge Info (di samping judul)</label>
                     <input type="text" id="voucherInfoBadge" placeholder="Contoh: UPDATE TERBARU / PROMO SPESIAL">
-                    <small class="form-note">Muncul sebagai badge di atas judul halaman Voucher Center</small>
                 </div>
                 <div class="form-group">
                     <label>Pesan Hero (di bawah judul)</label>
                     <textarea id="voucherInfoHero" rows="3" placeholder="Dapatkan potongan harga dengan menggunakan kode voucher..."></textarea>
-                    <small class="form-note">Deskripsi utama yang tampil di halaman Voucher Center</small>
                 </div>
                 <button class="btn" onclick="saveVoucherInfoSettings()">💾 Simpan Pengaturan Info Voucher</button>
             </div>
             
             <div class="card">
-                <h3>📋 Preview Info Voucher (Style seperti News.com)</h3>
+                <h3>📋 Preview Info Voucher</h3>
                 <div class="info-preview">
                     <div class="preview-badge" id="previewBadge">UPDATE TERBARU</div>
                     <div class="preview-marquee" id="previewMarqueeText">🔥 PROMO SPESIAL! Dapatkan diskon hingga 50%!</div>
@@ -329,7 +382,7 @@
             </div>
         </div>
 
-        <!-- ==================== MARQUEE TAB ==================== -->
+        <!-- MARQUEE TAB -->
         <div id="marquee" class="tab-content">
             <div class="card">
                 <h3>📢 Pengaturan Teks Berjalan (Marquee) - Halaman Utama</h3>
@@ -343,7 +396,6 @@
                 <div class="form-group">
                     <label>Teks Berjalan</label>
                     <textarea id="marqueeText" rows="3" placeholder="Contoh: 🔥 PROMO SPESIAL! Diskon hingga 50% untuk pembelian pertama! 🎉"></textarea>
-                    <small class="form-note">Gunakan emoji untuk menarik perhatian</small>
                 </div>
                 <button class="btn" onclick="saveMarqueeSettings()">💾 Simpan Pengaturan Marquee</button>
             </div>
@@ -356,7 +408,7 @@
             </div>
         </div>
 
-        <!-- ==================== PESANAN TAB ==================== -->
+        <!-- PESANAN TAB -->
         <div id="orders" class="tab-content">
             <div class="card">
                 <h3>📦 Pesanan Masuk</h3>
@@ -364,7 +416,7 @@
             </div>
         </div>
 
-        <!-- ==================== PEMBAYARAN TAB ==================== -->
+        <!-- PEMBAYARAN TAB -->
         <div id="payments" class="tab-content">
             <div class="card">
                 <h3>💳 Bukti Pembayaran</h3>
@@ -372,7 +424,7 @@
             </div>
         </div>
 
-        <!-- ==================== CANVAS TAB ==================== -->
+        <!-- CANVAS TAB -->
         <div id="canvas" class="tab-content">
             <div class="card">
                 <h3>🎨 Done Canvas yang Digenerate</h3>
@@ -380,7 +432,7 @@
             </div>
         </div>
 
-        <!-- ==================== CEK SALDO TAB ==================== -->
+        <!-- CEK SALDO TAB -->
         <div id="balance" class="tab-content">
             <div class="card balance-card">
                 <h3>💰 Saldo Payment Gateway</h3>
@@ -396,7 +448,7 @@
             </div>
         </div>
 
-        <!-- ==================== GATEWAY TAB ==================== -->
+        <!-- GATEWAY TAB -->
         <div id="gateway" class="tab-content">
             <div class="card">
                 <h3>⚙️ Pengaturan Payment Gateway</h3>
@@ -420,11 +472,38 @@
             </div>
         </div>
 
-        <!-- ==================== RIWAYAT TRANSFER TAB ==================== -->
+        <!-- RIWAYAT TRANSFER TAB -->
         <div id="transfer" class="tab-content">
             <div class="card">
                 <h3>📊 Riwayat Transfer</h3>
                 <div id="transferList"></div>
+            </div>
+        </div>
+
+        <!-- PANEL ORDERS TAB -->
+        <div id="panelOrders" class="tab-content">
+            <div class="card">
+                <h3>🖥️ Pesanan Panel Hosting</h3>
+                <div id="panelOrdersList"></div>
+            </div>
+        </div>
+
+        <!-- WA BOT COMMANDS TAB -->
+        <div id="waBot" class="tab-content">
+            <div class="card">
+                <h3>🤖 Perintah WA Bot - Sewa Bot</h3>
+                <div class="info-box">
+                    <i class="fas fa-info-circle"></i> 
+                    <strong>Informasi Grup WA Bot:</strong><br>
+                    📱 Link Grup: <code>https://chat.whatsapp.com/D8vUgdWpJgaHij1tNfyFpK</code><br>
+                    🆔 ID Grup: <code>120363425398406088@g.us</code><br>
+                    📝 Format Perintah: <code>.addsewagc [link_grup] [durasi_hari]</code>
+                    <hr style="margin: 10px 0; border-color: rgba(79,172,254,0.2);">
+                    <i class="fas fa-sync-alt"></i> Perintah akan otomatis terkirim ke WA Bot setelah pembayaran dikonfirmasi.
+                </div>
+                <div id="waBotCommandsList">
+                    <div class="loading"><i class="fas fa-spinner"></i> Memuat perintah...</div>
+                </div>
             </div>
         </div>
     </div>

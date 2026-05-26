@@ -2,19 +2,16 @@
 // VOUCHER CENTER - Rayy Store
 // ========================================
 
-// Set current date
 const dateBadge = document.getElementById('dateBadge');
 if (dateBadge) {
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     dateBadge.innerHTML = `<i class="far fa-calendar-alt"></i> ${new Date().toLocaleDateString('id-ID', options)}`;
 }
 
-// Go to store
 function goToStore() {
     window.location.href = 'rayy-store.com.html';
 }
 
-// Show toast notification
 function showToast(msg) {
     const toast = document.getElementById('toast');
     toast.innerHTML = `<i class="fas fa-info-circle"></i> ${msg}`;
@@ -24,19 +21,16 @@ function showToast(msg) {
     }, 3000);
 }
 
-// Copy voucher code
 function copyVoucherCode(code) {
     navigator.clipboard.writeText(code);
     showToast(`✅ Kode ${code} berhasil disalin! Gunakan di halaman keranjang.`);
 }
 
-// Format number
 function formatNumber(num) {
     if (!num) return '0';
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 }
 
-// Escape HTML
 function escapeHtml(text) {
     if (!text) return '';
     const div = document.createElement('div');
@@ -44,10 +38,7 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// ========================================
-// LOAD INFO VOUCHER SETTINGS FROM FIREBASE
-// (SAMA SEPERTI NEWS.COM)
-// ========================================
+// Load info voucher settings
 function loadVoucherInfoSettings() {
     database.ref('settings/voucherInfo').on('value', (snapshot) => {
         const data = snapshot.val();
@@ -58,7 +49,6 @@ function loadVoucherInfoSettings() {
         const infoBadge = document.getElementById('infoBadge');
         
         if (data) {
-            // Handle Marquee (Info Berjalan)
             if (data.enabled && data.text) {
                 marqueeSection.style.display = 'block';
                 marqueeText.innerHTML = `<i class="fas fa-fire"></i> ${escapeHtml(data.text)}`;
@@ -66,21 +56,18 @@ function loadVoucherInfoSettings() {
                 marqueeSection.style.display = 'none';
             }
             
-            // Handle Badge
             if (data.badgeText) {
                 infoBadge.innerHTML = `<i class="fas fa-gift fa-beat"></i> ${escapeHtml(data.badgeText)}`;
             } else {
                 infoBadge.innerHTML = `<i class="fas fa-gift fa-beat"></i> UPDATE TERBARU`;
             }
             
-            // Handle Hero Message
             if (data.heroMessage) {
                 heroMessage.innerText = data.heroMessage;
             } else {
                 heroMessage.innerText = 'Dapatkan potongan harga dengan menggunakan kode voucher di halaman keranjang. Jangan sampai kehabisan, setiap voucher terbatas!';
             }
         } else {
-            // Default jika belum ada setting
             marqueeSection.style.display = 'none';
             infoBadge.innerHTML = `<i class="fas fa-gift fa-beat"></i> UPDATE TERBARU`;
             heroMessage.innerText = 'Dapatkan potongan harga dengan menggunakan kode voucher di halaman keranjang. Jangan sampai kehabisan, setiap voucher terbatas!';
@@ -88,9 +75,7 @@ function loadVoucherInfoSettings() {
     });
 }
 
-// ========================================
-// LOAD VOUCHERS FROM FIREBASE
-// ========================================
+// Load vouchers
 function loadVouchers() {
     const activeGrid = document.getElementById('voucherGrid');
     const expiredGrid = document.getElementById('expiredVoucherGrid');
@@ -122,11 +107,9 @@ function loadVouchers() {
             }
         });
         
-        // Sort active vouchers by created date (newest first)
         activeVouchers.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         expiredVouchers.sort((a, b) => new Date(b.expiredAt) - new Date(a.expiredAt));
         
-        // Render active vouchers
         if (activeVouchers.length === 0) {
             activeGrid.innerHTML = '<div class="empty-message">✨ Belum ada voucher aktif. Pantau terus ya!</div>';
         } else {
@@ -169,7 +152,6 @@ function loadVouchers() {
             }).join('');
         }
         
-        // Render expired/inactive vouchers
         if (expiredVouchers.length === 0) {
             expiredGrid.innerHTML = '<div class="empty-message">✨ Belum ada voucher kadaluarsa</div>';
         } else {
@@ -204,8 +186,6 @@ function loadVouchers() {
     });
 }
 
-// ========================================
-// INITIALIZE
-// ========================================
+// Initialize
 loadVoucherInfoSettings();
 loadVouchers();

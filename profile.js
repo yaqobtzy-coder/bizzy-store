@@ -7,7 +7,7 @@ function loadUserData() {
         document.getElementById('displayName').textContent = savedName;
         document.getElementById('userNameInput').value = savedName;
     } else {
-        document.getElementById('displayName').textContent = '';
+        document.getElementById('displayName').textContent = 'Customer';
         document.getElementById('userNameInput').value = '';
     }
     
@@ -37,7 +37,7 @@ function saveName() {
     // Tampilkan notifikasi
     const notif = document.createElement('div');
     notif.className = 'notification success';
-    notif.innerHTML = '<i class="fas fa-check-circle"></i> Nama berhasil disimpan! Mengalihkan...';
+    notif.innerHTML = '<i class="fas fa-check-circle"></i> Nama berhasil disimpan!';
     notif.style.cssText = `
         position: fixed;
         bottom: 20px;
@@ -51,7 +51,6 @@ function saveName() {
     `;
     document.body.appendChild(notif);
     
-    // Redirect ke toko setelah 1.5 detik
     setTimeout(() => {
         window.location.href = 'rayy-store.com.html';
     }, 1500);

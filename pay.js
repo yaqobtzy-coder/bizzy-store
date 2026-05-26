@@ -434,7 +434,7 @@ function startCountdown(expiredAt) {
     }, 1000);
 }
 
-// Payment success untuk pembayaran normal (TANPA WA OTOMATIS)
+// Payment success untuk pembayaran normal
 async function paymentSuccess() {
     clearInterval(statusInterval);
     
@@ -464,6 +464,8 @@ async function paymentSuccess() {
                 await notifySewaSuccess(finalOrderData);
             } else if (orderData.type === 'script') {
                 await notifyScriptSuccess(finalOrderData);
+            } else if (orderData.type === 'panel') {
+                await notifyPanelOrder(finalOrderData);
             }
         }
     } catch(e) {
@@ -483,11 +485,10 @@ async function paymentSuccess() {
     localStorage.setItem('lastOrderId', orderId);
     localStorage.setItem('lastOrderData', JSON.stringify(finalOrderData));
     
-    // LANGSUNG KE UPLOAD BUKTI, BUKAN WA
     window.location.href = 'upload-bukti.html';
 }
 
-// Payment success untuk GRATIS (TANPA WA OTOMATIS)
+// Payment success untuk GRATIS
 async function paymentSuccessGratis() {
     const orderId = Date.now().toString();
     const finalOrderData = {

@@ -11,7 +11,6 @@ body {
     min-height: 100vh;
 }
 
-/* ========== HEADER - SAMA PERSIS DENGAN NEWS.COM ========== */
 .news-header {
     background: #ffffff;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
@@ -76,14 +75,12 @@ body {
     background: #e0e4e8;
 }
 
-/* ========== CONTAINER ========== */
 .container {
     max-width: 1200px;
     margin: 0 auto;
     padding: 30px 20px;
 }
 
-/* ========== HERO SECTION - SAMA PERSIS DENGAN NEWS.COM ========== */
 .hero-section {
     text-align: center;
     margin-bottom: 40px;
@@ -116,7 +113,6 @@ body {
     color: #5a6c7e;
 }
 
-/* ========== MARQUEE SECTION - SAMA PERSIS DENGAN NEWS.COM ========== */
 .marquee-section {
     background: linear-gradient(135deg, #f59e0b, #e67e22);
     padding: 10px 0;
@@ -153,7 +149,6 @@ body {
     100% { transform: translateX(-100%); }
 }
 
-/* ========== SECTION TITLE - SAMA PERSIS DENGAN NEWS.COM ========== */
 .section-title {
     font-size: 1.4rem;
     margin: 40px 0 20px 0;
@@ -169,7 +164,6 @@ body {
     color: #f59e0b;
 }
 
-/* ========== VOUCHER GRID ========== */
 .voucher-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
@@ -290,7 +284,6 @@ body {
     color: #d97706;
 }
 
-/* ========== TIPS CARD ========== */
 .tips-card {
     background: #ffffff;
     border-radius: 20px;
@@ -322,7 +315,6 @@ body {
     margin: 5px 0;
 }
 
-/* ========== EMPTY MESSAGE ========== */
 .empty-message {
     text-align: center;
     padding: 40px;
@@ -332,7 +324,6 @@ body {
     border: 1px solid #e8ecef;
 }
 
-/* ========== LOADING SPINNER ========== */
 .loading-spinner {
     text-align: center;
     padding: 60px;
@@ -350,7 +341,6 @@ body {
     to { transform: rotate(360deg); }
 }
 
-/* ========== TOAST ========== */
 .toast {
     position: fixed;
     bottom: 20px;
@@ -379,7 +369,6 @@ body {
     }
 }
 
-/* ========== FOOTER - SAMA PERSIS DENGAN NEWS.COM ========== */
 .footer {
     text-align: center;
     padding: 30px 20px;
@@ -408,7 +397,6 @@ body {
     transform: translateY(-3px);
 }
 
-/* ========== ANIMATIONS ========== */
 @keyframes fadeInUp {
     from {
         opacity: 0;
@@ -420,7 +408,6 @@ body {
     }
 }
 
-/* ========== RESPONSIVE ========== */
 @media (max-width: 768px) {
     .voucher-grid {
         grid-template-columns: 1fr;

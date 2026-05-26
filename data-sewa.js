@@ -1,7 +1,6 @@
 let cart = [];
 let total = 0;
 
-// Load cart data
 function loadCartData() {
     cart = JSON.parse(localStorage.getItem('checkoutCart')) || [];
     total = parseInt(localStorage.getItem('checkoutTotal')) || 0;
@@ -16,21 +15,30 @@ function loadCartData() {
 
 function displayOrderSummary() {
     const container = document.getElementById('orderSummary');
+    if (!container) return;
+    
     let itemsHtml = '';
+    let durasi = '';
+    let totalHarga = 0;
+    
     cart.forEach(item => {
+        const itemTotal = item.price * item.quantity;
+        totalHarga += itemTotal;
         itemsHtml += `
             <div class="order-item">
                 <span>${escapeHtml(item.name)} x${item.quantity}</span>
-                <span>Rp ${formatNumber(item.price * item.quantity)}</span>
+                <span>Rp ${formatNumber(itemTotal)}</span>
             </div>
         `;
+        if (item.duration) durasi = item.duration;
     });
     
     container.innerHTML = `
         ${itemsHtml}
+        ${durasi ? `<div class="order-item"><span>📅 Durasi Sewa</span><span>${escapeHtml(durasi)}</span></div>` : ''}
         <div class="order-total">
-            <span>Total</span>
-            <span>Rp ${formatNumber(total)}</span>
+            <span>Total Pembayaran</span>
+            <span>Rp ${formatNumber(totalHarga)}</span>
         </div>
     `;
 }
@@ -43,13 +51,25 @@ function escapeHtml(text) {
 }
 
 function formatNumber(num) {
+    if (!num) return '0';
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+}
+
+function showLoading() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) overlay.style.display = 'flex';
+}
+
+function hideLoading() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) overlay.style.display = 'none';
 }
 
 async function submitData() {
     const buyerName = document.getElementById('buyerName').value.trim();
     const buyerPhone = document.getElementById('buyerPhone').value.trim();
     const linkGroup = document.getElementById('linkGroup').value.trim();
+    const notes = document.getElementById('notes').value.trim();
     
     if (!buyerName) {
         alert('Masukkan nama pembeli!');
@@ -66,12 +86,26 @@ async function submitData() {
         return;
     }
     
-    // Save data sewa
+    if (!linkGroup.includes('chat.whatsapp.com')) {
+        alert('Masukkan link grup WhatsApp yang valid! (contoh: https://chat.whatsapp.com/...)');
+        return;
+    }
+    
+    showLoading();
+    
+    let durasi = 1;
+    if (cart[0] && cart[0].duration) {
+        const match = cart[0].duration.match(/(\d+)/);
+        if (match) durasi = parseInt(match[1]);
+    }
+    
     const orderData = {
         type: 'sewa',
         buyerName: buyerName,
         buyerPhone: buyerPhone,
         linkGroup: linkGroup,
+        notes: notes,
+        durasi: durasi,
         cart: cart,
         total: total,
         createdAt: new Date().toISOString()
@@ -80,20 +114,22 @@ async function submitData() {
     localStorage.setItem('orderData', JSON.stringify(orderData));
     localStorage.setItem('buyerName', buyerName);
     
-    // Kirim notifikasi ke Telegram bahwa data sewa telah diisi
-    if (typeof notifyOrderProcessing !== 'undefined') {
-        const processingData = {
-            id: Date.now().toString(),
-            type: 'sewa',
-            cart: cart,
-            total: total,
-            customerData: orderData,
-            status: 'data_filled',
-            createdAt: new Date().toISOString()
-        };
-        await notifyOrderProcessing(processingData);
+    if (typeof sendTelegramNotification !== 'undefined') {
+        const produkList = cart.map(item => `${item.name} x${item.quantity}`).join(', ');
+        const messageTelegram = `🛍️ *PRODUK DIPROSES (CHECKOUT)*\n\n` +
+            `👤 User: ${buyerName}\n` +
+            `📱 No WA: ${buyerPhone}\n` +
+            `🔗 Link Grup: ${linkGroup}\n` +
+            `📦 Produk: ${produkList}\n` +
+            `💰 Total Harga: Rp ${formatNumber(total)}\n` +
+            `📅 Durasi: ${durasi} hari\n` +
+            `📂 Kategori: SEWA BOT\n` +
+            `⏰ Waktu: ${new Date().toLocaleString('id-ID')}`;
+        
+        await sendTelegramNotification(messageTelegram);
     }
     
+    hideLoading();
     window.location.href = 'pay.html';
 }
 

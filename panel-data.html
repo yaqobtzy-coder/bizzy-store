@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Data Panel Saya - Rayy Store</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="panel-data.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">Rayy<span>Store</span></div>
+        <div class="nav-links">
+            <a href="rayy-store.com.html"><i class="fas fa-home"></i> Beranda</a>
+            <a href="profile.html"><i class="fas fa-user"></i> Profil</a>
+            <a href="buy-panel.html"><i class="fas fa-server"></i> Beli Panel</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="card">
+            <h3><i class="fas fa-server"></i> Data Panel Saya</h3>
+            <div id="panelList"></div>
+        </div>
+        <button class="btn-secondary" onclick="window.location.href='rayy-store.com.html'">
+            <i class="fas fa-arrow-left"></i> Kembali ke Toko
+        </button>
+    </div>
+
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="loading-content">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Memuat data...</p>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="panel-data.js"></script>
+</body>
+</html>

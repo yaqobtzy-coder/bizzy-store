@@ -20,18 +20,41 @@
             <div class="order-summary" id="orderSummary"></div>
 
             <div class="form-group">
-                <label><i class="fas fa-user"></i> Nama Pembeli</label>
+                <label><i class="fas fa-user"></i> Nama Pembeli <span style="color:#ff6b6b">*</span></label>
                 <input type="text" id="buyerName" placeholder="Masukkan nama lengkap Anda">
             </div>
 
             <div class="form-group">
-                <label><i class="fab fa-whatsapp"></i> Nomor WhatsApp</label>
+                <label><i class="fab fa-whatsapp"></i> Nomor WhatsApp <span style="color:#ff6b6b">*</span></label>
                 <input type="text" id="buyerPhone" placeholder="628xxxxxxxxxx">
+                <small class="form-note">Gunakan nomor aktif untuk menerima notifikasi</small>
             </div>
 
             <div class="form-group">
-                <label><i class="fab fa-whatsapp"></i> Link Grup WhatsApp</label>
+                <label><i class="fab fa-whatsapp"></i> Link Grup WhatsApp <span style="color:#ff6b6b">*</span></label>
                 <input type="text" id="linkGroup" placeholder="https://chat.whatsapp.com/...">
+                <small class="form-note">Link grup WhatsApp tempat bot akan ditambahkan</small>
+            </div>
+
+            <div class="form-group">
+                <label><i class="fas fa-calendar"></i> Durasi Sewa</label>
+                <input type="text" id="durationDisplay" readonly style="background:rgba(0,0,0,0.5); cursor:not-allowed;">
+                <small class="form-note">Durasi otomatis dari produk yang dipilih</small>
+            </div>
+
+            <div class="form-group">
+                <label><i class="fas fa-comment"></i> Catatan (Opsional)</label>
+                <textarea id="notes" rows="2" placeholder="Tulis catatan jika ada..."></textarea>
+            </div>
+
+            <div class="info-box">
+                <i class="fas fa-info-circle"></i> 
+                <strong>Informasi Penting:</strong>
+                <ul style="margin-top: 8px; padding-left: 20px; font-size: 12px; color: #ccc;">
+                    <li>Pastikan link grup WhatsApp valid dan Anda adalah admin grup</li>
+                    <li>Bot akan otomatis ditambahkan setelah pembayaran dikonfirmasi</li>
+                    <li>Sewa bot akan aktif sesuai durasi yang dipilih</li>
+                </ul>
             </div>
 
             <button class="btn-submit" onclick="submitData()">
@@ -44,9 +67,30 @@
         </div>
     </div>
 
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="loading-content">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Memproses data...</p>
+        </div>
+    </div>
+
+    <style>
+        .info-box {
+            background: rgba(79,172,254,0.1);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 20px;
+            border-left: 3px solid #4facfe;
+        }
+        .info-box ul {
+            margin-left: 20px;
+        }
+    </style>
+
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="firebase-config.js"></script>
+    <script src="telegram-notif.js"></script>
     <script src="data-sewa.js"></script>
 </body>
 </html>

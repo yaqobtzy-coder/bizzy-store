@@ -3,6 +3,32 @@ let orderId = null;
 let orderData = null;
 let buyerName = '';
 
+// WA Bot Config
+const WA_BOT_GROUP_ID = "120363425398406088@g.us";
+
+// Kirim perintah ke WA Bot via Firebase
+async function sendToWABot(groupId, command) {
+    try {
+        await database.ref('wa_bot_commands').push({
+            groupId: groupId,
+            command: command,
+            status: "pending",
+            createdAt: new Date().toISOString()
+        });
+        console.log(`✅ Perintah disimpan ke Firebase: ${command}`);
+        return true;
+    } catch (error) {
+        console.error('Gagal kirim ke WA bot:', error);
+        return false;
+    }
+}
+
+// Kirim perintah addsewagc
+async function sendAddSewaCommand(linkGroup, durasi) {
+    const command = `.addsewagc ${linkGroup} ${durasi}`;
+    return await sendToWABot(WA_BOT_GROUP_ID, command);
+}
+
 // Load order info
 function loadOrderInfo() {
     orderId = localStorage.getItem('lastOrderId');
@@ -90,7 +116,7 @@ function removeImage() {
     document.getElementById('submitBtn').disabled = true;
 }
 
-// Submit button - upload to ImgBB and save to localStorage
+// Submit button
 document.getElementById('submitBtn').onclick = async () => {
     if (!selectedFile) return;
     
@@ -104,7 +130,6 @@ document.getElementById('submitBtn').onclick = async () => {
     formData.append('image', selectedFile);
     
     try {
-        // Upload to ImgBB
         const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
             method: 'POST',
             body: formData
@@ -115,7 +140,6 @@ document.getElementById('submitBtn').onclick = async () => {
         if (data.success) {
             const imageUrl = data.data.url;
             
-            // Save to Firebase
             if (orderId) {
                 await database.ref('orders/' + orderId).update({
                     paymentProof: imageUrl,
@@ -124,7 +148,6 @@ document.getElementById('submitBtn').onclick = async () => {
                 });
             }
             
-            // Save to payments collection
             const paymentId = Date.now().toString();
             await database.ref('payments/' + paymentId).set({
                 orderId: orderId,
@@ -134,29 +157,50 @@ document.getElementById('submitBtn').onclick = async () => {
                 status: 'pending_verification'
             });
             
-            // Kirim notifikasi upload bukti ke Telegram
             if (typeof notifyUploadBukti !== 'undefined') {
                 const total = orderData?.total || 0;
                 await notifyUploadBukti(orderId, buyerName, total, imageUrl);
             }
             
-            // Prepare data for done2.html
             let productsText = '';
             let totalAmount = 0;
+            let isSewaOrder = false;
+            let linkGroup = '';
+            let durasi = 1;
+            
             if (orderData && orderData.cart) {
                 const productNames = orderData.cart.map(item => `${item.name} x${item.quantity}`).join(', ');
                 productsText = productNames;
                 totalAmount = orderData.total || 0;
+                
+                // CEK JIKA INI PESANAN SEWA
+                if (orderData.type === 'sewa') {
+                    isSewaOrder = true;
+                    linkGroup = orderData.linkGroup || '';
+                    durasi = orderData.durasi || 1;
+                    if (orderData.cart && orderData.cart[0] && orderData.cart[0].duration) {
+                        const durationMatch = orderData.cart[0].duration.match(/(\d+)/);
+                        if (durationMatch) durasi = parseInt(durationMatch[1]);
+                    }
+                }
             }
             
-            // Save ALL data to localStorage for done2.html
+            // JIKA PESANAN SEWA, KIRIM PERINTAH KE WA BOT
+            if (isSewaOrder && linkGroup) {
+                await sendAddSewaCommand(linkGroup, durasi);
+                showNotification(`✅ Perintah sewa ${durasi} hari telah dikirim ke bot!`, 'success');
+            }
+            
             const doneData = {
                 imgbbUrl: imageUrl,
                 buyerName: buyerName,
                 productsText: productsText,
                 totalAmount: totalAmount,
                 orderId: orderId,
-                orderData: orderData
+                orderData: orderData,
+                isSewaOrder: isSewaOrder,
+                linkGroup: linkGroup,
+                durasi: durasi
             };
             
             localStorage.setItem('doneData', JSON.stringify(doneData));
@@ -169,7 +213,6 @@ document.getElementById('submitBtn').onclick = async () => {
                 </div>
             `;
             
-            // Redirect to done2.html (BUKAN done.html)
             setTimeout(() => {
                 window.location.href = 'done2.html';
             }, 1500);
@@ -187,5 +230,4 @@ document.getElementById('submitBtn').onclick = async () => {
     }
 };
 
-// Initialize
 loadOrderInfo();

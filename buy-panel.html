@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Beli Panel Hosting - Rayy Store</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="buy-panel.css">
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="logo">
+                <h1>Beli Panel Hosting</h1>
+                <p>Pilih spesifikasi panel yang Anda butuhkan</p>
+            </div>
+
+            <div class="product-grid" id="productGrid"></div>
+
+            <div class="form-group">
+                <label><i class="fas fa-user"></i> Username Panel <span class="required">*</span></label>
+                <input type="text" id="panelUsername" placeholder="Masukkan username untuk login panel">
+                <small class="form-note">Username akan digunakan untuk login ke panel Pterodactyl</small>
+            </div>
+
+            <div class="form-group">
+                <label><i class="fas fa-lock"></i> Password Panel <span class="required">*</span></label>
+                <input type="password" id="panelPassword" placeholder="Masukkan password untuk login panel">
+                <small class="form-note">Simpan password ini dengan aman</small>
+            </div>
+
+            <div class="form-group">
+                <label><i class="fab fa-whatsapp"></i> Nomor WhatsApp (Opsional)</label>
+                <input type="tel" id="waNumber" placeholder="628xxxxxxxxxx">
+                <small class="form-note">Diisi jika ingin dikirimi notifikasi via WhatsApp</small>
+            </div>
+
+            <div class="form-group">
+                <label><i class="fas fa-comment"></i> Catatan (Opsional)</label>
+                <textarea id="notes" rows="2" placeholder="Tulis catatan jika ada..."></textarea>
+            </div>
+
+            <button class="btn-primary" id="submitBtn">
+                <i class="fas fa-arrow-right"></i> Lanjut ke Pembayaran
+            </button>
+            <button class="btn-secondary" onclick="window.location.href='rayy-store.com.html'">
+                <i class="fas fa-arrow-left"></i> Kembali ke Toko
+            </button>
+        </div>
+    </div>
+
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="loading-content">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Memproses...</p>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="telegram-notif.js"></script>
+    <script src="buy-panel.js"></script>
+</body>
+</html>

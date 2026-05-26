@@ -112,7 +112,6 @@ h2 {
     color: white;
     font-weight: 600;
     cursor: pointer;
-    transition: opacity 0.2s;
 }
 
 .btn-save:hover {
@@ -170,7 +169,6 @@ h2 {
     color: white;
     font-weight: 600;
     cursor: pointer;
-    transition: opacity 0.2s;
 }
 
 .btn-logout:hover {

@@ -1,21 +1,16 @@
 // ========================================
-// GLOBAL VARIABLES
+// RAYY STORE - MAIN JAVASCRIPT
 // ========================================
-let products = [];
+
 let sewaProducts = [];
 let scriptProducts = [];
 let cart = JSON.parse(localStorage.getItem('cart')) || [];
-let currentUser = JSON.parse(localStorage.getItem('currentUser')) || { name: '' };
 let swiperInstance = null;
 let activeVoucher = null;
 let voucherDiscount = 0;
-let voucherType = 'percentage';
-let voucherValue = 0;
 let voucherUsed = false;
 
-// ========================================
-// MUSIC PLAYER GLOBAL
-// ========================================
+// Music Player
 let musicPlayer = { 
     audio: null, 
     currentTrack: null, 
@@ -26,7 +21,7 @@ let musicPlayer = {
 };
 
 // ========================================
-// CEK NAMA USER DI AWAL
+// CEK USER LOGIN
 // ========================================
 function checkUserIdentity() {
     const userName = localStorage.getItem('userName');
@@ -38,7 +33,7 @@ function checkUserIdentity() {
 }
 
 // ========================================
-// LOAD MARQUEE TEXT
+// LOAD MARQUEE
 // ========================================
 function loadMarqueeText() {
     database.ref('settings/marquee').on('value', (snapshot) => {
@@ -56,8 +51,77 @@ function loadMarqueeText() {
 }
 
 // ========================================
-// LOAD VOUCHER FOR POPUP
+// LOAD SLIDER
 // ========================================
+function loadSlider() {
+    database.ref('slider').on('value', (snapshot) => {
+        const sliderSection = document.getElementById('sliderSection');
+        const swiperWrapper = document.getElementById('swiperWrapper');
+        
+        if (!snapshot.exists() || snapshot.numChildren() === 0) {
+            sliderSection.style.display = 'none';
+            return;
+        }
+        
+        sliderSection.style.display = 'block';
+        swiperWrapper.innerHTML = '';
+        
+        snapshot.forEach((child) => {
+            const slide = child.val();
+            const isVideo = slide.type === 'video' || (slide.url && (slide.url.includes('.mp4') || slide.url.includes('.webm')));
+            
+            if (isVideo) {
+                swiperWrapper.innerHTML += `<div class="swiper-slide"><video autoplay muted loop playsinline><source src="${slide.url}" type="video/mp4"></video></div>`;
+            } else {
+                swiperWrapper.innerHTML += `<div class="swiper-slide"><img src="${slide.url}" alt="${slide.title || 'Slider'}" loading="lazy"></div>`;
+            }
+        });
+        
+        if (swiperInstance) swiperInstance.destroy();
+        swiperInstance = new Swiper('.mySwiper', {
+            loop: true,
+            autoplay: { delay: 4000, disableOnInteraction: false },
+            pagination: { el: '.swiper-pagination', clickable: true },
+            navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' },
+            effect: 'slide',
+        });
+    });
+}
+
+// ========================================
+// LOAD POPUP
+// ========================================
+function loadPopupSettings() {
+    database.ref('popupSettings').on('value', (snapshot) => {
+        const data = snapshot.val();
+        const popupModal = document.getElementById('popupModal');
+        
+        if (!data || data.enabled === false) {
+            popupModal.style.display = 'none';
+            return;
+        }
+        
+        const popupMedia = document.getElementById('popupMedia');
+        const mediaType = data.mediaType || 'icon';
+        const mediaValue = data.mediaValue || 'fab fa-whatsapp';
+        
+        if (mediaType === 'icon') {
+            popupMedia.innerHTML = `<i class="${mediaValue}"></i>`;
+        } else {
+            popupMedia.innerHTML = `<img src="${mediaValue}">`;
+        }
+        
+        document.getElementById('popupTitle').innerText = data.title || 'JOIN CHANNEL';
+        document.getElementById('popupMessage').innerText = data.message || 'Dapatkan info update produk terbaru dan promo menarik!';
+        
+        const button = document.getElementById('popupButton');
+        button.innerHTML = `<i class="${mediaType === 'icon' ? mediaValue : 'fab fa-whatsapp'}"></i> ${data.buttonText || 'Gabung Sekarang'}`;
+        button.href = data.buttonLink || 'https://wa.me/6285794545996';
+        
+        loadVoucherForPopup();
+    });
+}
+
 function loadVoucherForPopup() {
     database.ref('vouchers').orderByChild('showInPopup').equalTo(true).once('value', (snapshot) => {
         const voucherList = [];
@@ -86,7 +150,6 @@ function displayVoucherInPopup(voucher) {
         
         voucherCodeDisplay.innerHTML = `${voucher.code}<br><small style="font-size:11px;color:#b45309;">${discountText}</small>`;
         voucherDiv.style.display = 'block';
-        
         sessionStorage.setItem('popupVoucher', JSON.stringify(voucher));
     }
 }
@@ -95,161 +158,37 @@ function copyVoucherCode() {
     const voucherCode = document.getElementById('voucherCodeDisplay')?.innerText.split('\n')[0];
     if (voucherCode) {
         navigator.clipboard.writeText(voucherCode);
-        showNotification('✅ Kode voucher disalin! Gunakan di halaman keranjang.', 'success');
+        showNotification('✅ Kode voucher disalin!', 'success');
     }
 }
 
-// ========================================
-// SPLASH SCREEN
-// ========================================
-setTimeout(() => {
-    const splash = document.getElementById('splashScreen');
-    if (splash) {
-        splash.classList.add('hide');
-        setTimeout(() => {
-            const mainContent = document.getElementById('mainContent');
-            if (mainContent) mainContent.classList.add('visible');
-        }, 300);
-    }
-}, 2000);
-
-// ========================================
-// LOAD SLIDER
-// ========================================
-function loadSlider() {
-    database.ref('slider').on('value', (snapshot) => {
-        const sliderSection = document.getElementById('sliderSection');
-        const swiperWrapper = document.getElementById('swiperWrapper');
-        
-        if (!snapshot.exists() || snapshot.numChildren() === 0) {
-            sliderSection.style.display = 'none';
-            return;
-        }
-        
-        sliderSection.style.display = 'block';
-        swiperWrapper.innerHTML = '';
-        
-        snapshot.forEach((child) => {
-            const slide = child.val();
-            const isVideo = slide.type === 'video' || (slide.url && (slide.url.includes('.mp4') || slide.url.includes('.webm')));
-            
-            if (isVideo) {
-                swiperWrapper.innerHTML += `
-                    <div class="swiper-slide">
-                        <video autoplay muted loop playsinline>
-                            <source src="${slide.url}" type="video/mp4">
-                        </video>
-                    </div>
-                `;
-            } else {
-                swiperWrapper.innerHTML += `
-                    <div class="swiper-slide">
-                        <img src="${slide.url}" alt="${slide.title || 'Slider'}" loading="lazy">
-                    </div>
-                `;
-            }
-        });
-        
-        if (swiperInstance) swiperInstance.destroy();
-        swiperInstance = new Swiper('.mySwiper', {
-            loop: true,
-            autoplay: { delay: 4000, disableOnInteraction: false },
-            pagination: { el: '.swiper-pagination', clickable: true },
-            navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' },
-            effect: 'slide',
-        });
-    });
-}
-
-// ========================================
-// LOAD POPUP SETTINGS
-// ========================================
-function loadPopupSettings() {
-    database.ref('popupSettings').on('value', (snapshot) => {
-        const data = snapshot.val();
-        const popupModal = document.getElementById('popupModal');
-        
-        if (!data || data.enabled === false) {
-            popupModal.style.display = 'none';
-            return;
-        }
-        
-        const popupMedia = document.getElementById('popupMedia');
-        const mediaType = data.mediaType || 'icon';
-        const mediaValue = data.mediaValue || 'fab fa-whatsapp';
-        
-        if (mediaType === 'icon') {
-            popupMedia.innerHTML = `<i class="${mediaValue}"></i>`;
-        } else {
-            popupMedia.innerHTML = `<img src="${mediaValue}">`;
-        }
-        
-        document.getElementById('popupTitle').innerText = data.title || 'JOIN CHANNEL';
-        document.getElementById('popupMessage').innerText = data.message || 'Dapatkan info update produk terbaru dan promo menarik!';
-        
-        // Update tombol utama (WhatsApp/Telegram)
-        const button = document.getElementById('popupButton');
-        button.innerHTML = `<i class="${mediaType === 'icon' ? mediaValue : 'fab fa-whatsapp'}"></i> ${data.buttonText || 'Gabung Sekarang'}`;
-        button.href = data.buttonLink || 'https://wa.me/6285794545996';
-        
-        // Tombol Voucher Center sudah ada di HTML, tidak perlu diubah
-        
-        loadVoucherForPopup();
-    });
-}
-
-// ========================================
-// SHOW POPUP
-// ========================================
 function showPopup() {
     const popup = document.getElementById('popupModal');
     if (popup && popup.style.display !== 'flex') {
         popup.style.display = 'flex';
-        popup.style.animation = 'fadeIn 0.3s ease';
     }
 }
 
-// ========================================
-// CLOSE POPUP
-// ========================================
 function closePopup() {
     const popup = document.getElementById('popupModal');
-    if (popup) {
-        popup.style.animation = 'fadeOut 0.2s ease';
-        setTimeout(() => {
-            popup.style.display = 'none';
-        }, 200);
-    }
+    if (popup) popup.style.display = 'none';
     sessionStorage.setItem('popupShown', 'true');
 }
 
-// ========================================
-// CEK APAKAH POPUP HARUS DITAMPILKAN
-// ========================================
 function shouldShowPopup() {
     if (sessionStorage.getItem('popupShown') === 'true') return false;
     return true;
 }
 
-// ========================================
-// INIT POPUP
-// ========================================
 function initPopup() {
     loadPopupSettings();
-    setTimeout(() => { 
-        if (shouldShowPopup()) showPopup(); 
-    }, 2500);
+    setTimeout(() => { if (shouldShowPopup()) showPopup(); }, 2500);
 }
 
-// Event listener untuk close popup
 document.getElementById('closePopupBtn').onclick = closePopup;
-
-// Tutup popup jika klik di luar content
 const popupModalElem = document.getElementById('popupModal');
 if (popupModalElem) {
-    popupModalElem.onclick = (e) => { 
-        if (e.target === popupModalElem) closePopup(); 
-    };
+    popupModalElem.onclick = (e) => { if (e.target === popupModalElem) closePopup(); };
 }
 
 // ========================================
@@ -281,18 +220,6 @@ function loadProducts() {
     loadSavedVoucher();
 }
 
-function renderRatingStars(rating, reviewCount) {
-    const numRating = parseFloat(rating) || 0;
-    const fullStars = Math.floor(numRating);
-    const halfStar = (numRating % 1) >= 0.5;
-    const emptyStars = 5 - fullStars - (halfStar ? 1 : 0);
-    let starsHtml = '';
-    for (let i = 0; i < fullStars; i++) starsHtml += '<i class="fas fa-star"></i>';
-    if (halfStar) starsHtml += '<i class="fas fa-star-half-alt"></i>';
-    for (let i = 0; i < emptyStars; i++) starsHtml += '<i class="far fa-star empty"></i>';
-    return `<div class="product-rating"><div class="stars">${starsHtml}</div><span class="rating-count">(${reviewCount || 0})</span></div>`;
-}
-
 function renderSewaProducts() {
     const container = document.getElementById('sewaProductsGrid');
     if (!container) return;
@@ -308,13 +235,9 @@ function renderSewaProducts() {
                 <div class="product-title">${escapeHtml(product.name)}</div>
                 <div class="product-category"><i class="fas fa-calendar-alt"></i> Sewa ${product.duration || '7 Hari'}</div>
                 <div class="product-price">Rp ${formatNumber(product.price || 0)}</div>
-                ${renderRatingStars(product.rating, product.reviewCount)}
                 <div class="product-stock">${getStockBadge(product.stock || 0)}</div>
                 ${product.allowVoucher !== false ? '<div class="voucher-badge"><i class="fas fa-ticket-alt"></i> Bisa Pakai Voucher</div>' : '<div class="voucher-badge disabled"><i class="fas fa-ban"></i> Tidak Bisa Voucher</div>'}
-                <button class="add-to-cart" ${(product.stock || 0) <= 0 ? 'disabled' : ''} onclick="addToCart('${product.id}', 'sewa')">
-                    <i class="fas ${(product.stock || 0) <= 0 ? 'fa-ban' : 'fa-cart-plus'}"></i>
-                    ${(product.stock || 0) <= 0 ? 'Stok Habis' : 'Sewa Sekarang'}
-                </button>
+                <button class="add-to-cart" ${(product.stock || 0) <= 0 ? 'disabled' : ''} onclick="addToCart('${product.id}', 'sewa')">${(product.stock || 0) <= 0 ? 'Stok Habis' : 'Sewa Sekarang'}</button>
             </div>
         </div>
     `).join('');
@@ -335,13 +258,9 @@ function renderScriptProducts() {
                 <div class="product-title">${escapeHtml(product.name)}</div>
                 <div class="product-category"><i class="fas fa-code"></i> ${product.category || 'Script'}</div>
                 <div class="product-price">Rp ${formatNumber(product.price || 0)}</div>
-                ${renderRatingStars(product.rating, product.reviewCount)}
                 <div class="product-stock">${getStockBadge(product.stock || 0)}</div>
                 ${product.allowVoucher !== false ? '<div class="voucher-badge"><i class="fas fa-ticket-alt"></i> Bisa Pakai Voucher</div>' : '<div class="voucher-badge disabled"><i class="fas fa-ban"></i> Tidak Bisa Voucher</div>'}
-                <button class="add-to-cart" ${(product.stock || 0) <= 0 ? 'disabled' : ''} onclick="addToCart('${product.id}', 'script')">
-                    <i class="fas ${(product.stock || 0) <= 0 ? 'fa-ban' : 'fa-cart-plus'}"></i>
-                    ${(product.stock || 0) <= 0 ? 'Stok Habis' : 'Beli Sekarang'}
-                </button>
+                <button class="add-to-cart" ${(product.stock || 0) <= 0 ? 'disabled' : ''} onclick="addToCart('${product.id}', 'script')">${(product.stock || 0) <= 0 ? 'Stok Habis' : 'Beli Sekarang'}</button>
             </div>
         </div>
     `).join('');
@@ -360,9 +279,9 @@ function formatNumber(num) {
 }
 
 function getStockBadge(stock) {
-    if (stock <= 0) return '<span class="stock-badge stock-out"><i class="fas fa-times-circle"></i> Stok Habis</span>';
-    if (stock < 5) return '<span class="stock-badge stock-low"><i class="fas fa-exclamation-triangle"></i> Sisa ' + stock + '</span>';
-    return '<span class="stock-badge stock-available"><i class="fas fa-check-circle"></i> Tersedia</span>';
+    if (stock <= 0) return '<span class="stock-badge stock-out">Stok Habis</span>';
+    if (stock < 5) return '<span class="stock-badge stock-low">Sisa ' + stock + '</span>';
+    return '<span class="stock-badge stock-available">Tersedia</span>';
 }
 
 function showNotification(msg, type) {
@@ -374,131 +293,6 @@ function showNotification(msg, type) {
         notif.style.animation = 'slideOut 0.3s ease';
         setTimeout(() => notif.remove(), 300);
     }, 2000);
-}
-
-// ========================================
-// MINI FLOATING PLAYER FUNCTIONS
-// ========================================
-let isDragging = false;
-let dragStartX, dragStartY, playerStartX, playerStartY;
-
-function initFloatingPlayer() {
-    const floatingPlayer = document.getElementById('floatingPlayer');
-    const dragHandle = document.getElementById('floatingDrag');
-    
-    if (!dragHandle) return;
-    
-    dragHandle.addEventListener('mousedown', startDrag);
-    dragHandle.addEventListener('touchstart', startDrag, { passive: false });
-    
-    document.addEventListener('mousemove', onDrag);
-    document.addEventListener('mouseup', stopDrag);
-    document.addEventListener('touchmove', onDrag, { passive: false });
-    document.addEventListener('touchend', stopDrag);
-    
-    // Floating player buttons
-    document.getElementById('floatingPlayPause').onclick = () => {
-        if (musicPlayer.isPlaying) {
-            musicPlayer.audio.pause();
-            musicPlayer.isPlaying = false;
-            document.getElementById('floatingPlayPause').innerHTML = '<i class="fas fa-play"></i>';
-            document.getElementById('musicPlayPauseBtn').innerHTML = '<i class="fas fa-play"></i>';
-        } else {
-            if (musicPlayer.audio && musicPlayer.currentTrack) {
-                musicPlayer.audio.play();
-                musicPlayer.isPlaying = true;
-                document.getElementById('floatingPlayPause').innerHTML = '<i class="fas fa-pause"></i>';
-                document.getElementById('musicPlayPauseBtn').innerHTML = '<i class="fas fa-pause"></i>';
-            } else {
-                showNotification('Pilih lagu terlebih dahulu', 'error');
-            }
-        }
-    };
-    
-    document.getElementById('floatingStop').onclick = () => {
-        stopMusic();
-        document.getElementById('floatingPlayPause').innerHTML = '<i class="fas fa-play"></i>';
-    };
-    
-    document.getElementById('floatingClose').onclick = () => {
-        stopMusic();
-        document.getElementById('floatingPlayer').style.display = 'none';
-    };
-}
-
-function startDrag(e) {
-    isDragging = true;
-    const floatingPlayer = document.getElementById('floatingPlayer');
-    const rect = floatingPlayer.getBoundingClientRect();
-    
-    if (e.type === 'mousedown') {
-        dragStartX = e.clientX - rect.left;
-        dragStartY = e.clientY - rect.top;
-    } else {
-        dragStartX = e.touches[0].clientX - rect.left;
-        dragStartY = e.touches[0].clientY - rect.top;
-    }
-    
-    playerStartX = rect.left;
-    playerStartY = rect.top;
-    
-    floatingPlayer.style.transition = 'none';
-    e.preventDefault();
-}
-
-function onDrag(e) {
-    if (!isDragging) return;
-    
-    let clientX, clientY;
-    if (e.type === 'mousemove') {
-        clientX = e.clientX;
-        clientY = e.clientY;
-    } else {
-        clientX = e.touches[0].clientX;
-        clientY = e.touches[0].clientY;
-    }
-    
-    let newX = clientX - dragStartX;
-    let newY = clientY - dragStartY;
-    
-    const floatingPlayer = document.getElementById('floatingPlayer');
-    const maxX = window.innerWidth - floatingPlayer.offsetWidth - 10;
-    const maxY = window.innerHeight - floatingPlayer.offsetHeight - 10;
-    
-    newX = Math.min(Math.max(newX, 10), maxX);
-    newY = Math.min(Math.max(newY, 10), maxY);
-    
-    floatingPlayer.style.left = newX + 'px';
-    floatingPlayer.style.top = newY + 'px';
-    floatingPlayer.style.right = 'auto';
-    floatingPlayer.style.bottom = 'auto';
-    
-    e.preventDefault();
-}
-
-function stopDrag() {
-    isDragging = false;
-    const floatingPlayer = document.getElementById('floatingPlayer');
-    floatingPlayer.style.transition = '';
-}
-
-function updateFloatingPlayer(track) {
-    const floatingPlayer = document.getElementById('floatingPlayer');
-    if (!track) {
-        floatingPlayer.style.display = 'none';
-        return;
-    }
-    
-    floatingPlayer.style.display = 'block';
-    document.getElementById('floatingThumb').src = track.thumbnail || 'https://via.placeholder.com/40x40?text=🎵';
-    document.getElementById('floatingTitle').innerText = track.title || 'Unknown Title';
-    document.getElementById('floatingArtist').innerText = track.artist || 'Unknown Artist';
-    
-    if (musicPlayer.isPlaying) {
-        document.getElementById('floatingPlayPause').innerHTML = '<i class="fas fa-pause"></i>';
-    } else {
-        document.getElementById('floatingPlayPause').innerHTML = '<i class="fas fa-play"></i>';
-    }
 }
 
 // ========================================
@@ -514,10 +308,6 @@ function addToCart(productId, productType) {
         if (existing.quantity < product.stock) {
             existing.quantity++;
             showNotification('Produk ditambahkan', 'success');
-            if (typeof notifyAddToCartTelegram !== 'undefined') {
-                const userName = localStorage.getItem('userName') || 'Guest';
-                notifyAddToCartTelegram(product.name, product.price, existing.quantity, userName);
-            }
         } else {
             showNotification('Stok tidak mencukupi!', 'error');
             return;
@@ -534,10 +324,6 @@ function addToCart(productId, productType) {
             allowVoucher: product.allowVoucher !== false
         });
         showNotification('Produk ditambahkan ke keranjang', 'success');
-        if (typeof notifyAddToCartTelegram !== 'undefined') {
-            const userName = localStorage.getItem('userName') || 'Guest';
-            notifyAddToCartTelegram(product.name, product.price, 1, userName);
-        }
     }
     
     localStorage.setItem('cart', JSON.stringify(cart));
@@ -556,11 +342,9 @@ function renderCartItems() {
     if (!container) return;
     
     if (cart.length === 0) {
-        container.innerHTML = `<div class="empty-cart"><i class="fas fa-shopping-bag"></i><p>Keranjang belanja kosong</p><small>Yuk, belanja produk menarik di Rayy Store!</small></div>`;
+        container.innerHTML = `<div class="empty-cart"><i class="fas fa-shopping-bag"></i><p>Keranjang belanja kosong</p></div>`;
         document.getElementById('subtotalAmount').innerHTML = 'Rp 0';
         document.getElementById('cartTotal').innerHTML = 'Rp 0';
-        document.getElementById('discountRow').style.display = 'none';
-        document.getElementById('voucherInfo').style.display = 'none';
         return;
     }
     
@@ -592,7 +376,6 @@ function renderCartItems() {
     if (activeVoucher && voucherDiscount > 0 && !voucherUsed) {
         discountAmount = Math.min(voucherDiscount, subtotal);
         finalTotal = subtotal - discountAmount;
-        
         if (finalTotal <= 0) finalTotal = 0;
         
         document.getElementById('voucherInfo').style.display = 'block';
@@ -647,46 +430,20 @@ function checkout() {
         return;
     }
     
-    if (activeVoucher && !voucherUsed) {
-        const hasNonVoucherProduct = cart.some(item => item.allowVoucher === false);
-        if (hasNonVoucherProduct) {
-            showNotification('Tidak bisa pakai voucher! Ada produk yang tidak mendukung voucher.', 'error');
-            return;
-        }
-    }
-    
     const firstItem = cart[0];
     let total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     let isGratis = false;
     
     if (activeVoucher && voucherDiscount > 0 && !voucherUsed) {
         total = total - Math.min(voucherDiscount, total);
-        if (total <= 0) {
-            isGratis = true;
-            total = 0;
-        }
+        if (total <= 0) isGratis = true;
         voucherUsed = true;
-        if (activeVoucher.id) {
-            database.ref(`vouchers/${activeVoucher.id}/used`).transaction((current) => {
-                return (current || 0) + 1;
-            });
-        }
     }
     
     localStorage.setItem('checkoutCart', JSON.stringify(cart));
     localStorage.setItem('checkoutTotal', total);
     
-    if (activeVoucher) {
-        localStorage.setItem('checkoutVoucher', JSON.stringify({
-            code: activeVoucher.code,
-            discount: voucherDiscount,
-            isGratis: isGratis
-        }));
-    }
-    
-    if (isGratis) {
-        showNotification('🎉 Selamat! Pesanan Anda GRATIS! Lanjut ke pengisian data.', 'success');
-    }
+    if (isGratis) showNotification('🎉 Selamat! Pesanan Anda GRATIS!', 'success');
     
     window.location.href = firstItem.type === 'sewa' ? 'data-sewa.html' : 'data-script.html';
 }
@@ -695,11 +452,6 @@ function checkout() {
 // VOUCHER FUNCTIONS
 // ========================================
 function applyVoucherFromCart() {
-    if (voucherUsed) {
-        showVoucherMessageCart('Voucher sudah digunakan!', 'error');
-        return;
-    }
-    
     const code = document.getElementById('voucherCodeCart').value.trim().toUpperCase();
     if (!code) {
         showVoucherMessageCart('Masukkan kode voucher!', 'error');
@@ -721,7 +473,6 @@ function applyVoucherFromCart() {
                     showVoucherMessageCart('Voucher sudah mencapai batas penggunaan!', 'error');
                     return;
                 }
-                
                 if (expired < now) {
                     showVoucherMessageCart('Voucher sudah kadaluarsa!', 'error');
                     return;
@@ -729,14 +480,11 @@ function applyVoucherFromCart() {
                 
                 const hasNonVoucherProduct = cart.some(item => item.allowVoucher === false);
                 if (hasNonVoucherProduct) {
-                    showVoucherMessageCart('Tidak bisa pakai voucher! Ada produk yang tidak mendukung voucher.', 'error');
+                    showVoucherMessageCart('Ada produk yang tidak mendukung voucher!', 'error');
                     return;
                 }
                 
                 activeVoucher = voucher;
-                voucherType = voucher.type;
-                voucherValue = voucher.value;
-                
                 const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
                 if (voucher.type === 'percentage') {
                     voucherDiscount = (subtotal * voucher.value) / 100;
@@ -744,21 +492,7 @@ function applyVoucherFromCart() {
                     voucherDiscount = Math.min(voucher.value, subtotal);
                 }
                 
-                const finalTotal = subtotal - voucherDiscount;
-                if (finalTotal <= 0) {
-                    showVoucherMessageCart(`✅ Voucher ${voucher.code} berhasil dipakai! Total menjadi GRATIS!`, 'success');
-                } else {
-                    showVoucherMessageCart(`✅ Voucher ${voucher.code} berhasil dipakai! Potongan Rp ${formatNumber(voucherDiscount)}`, 'success');
-                }
-                
-                localStorage.setItem('activeVoucher', JSON.stringify({
-                    id: voucher.id,
-                    code: voucher.code,
-                    type: voucher.type,
-                    value: voucher.value,
-                    discount: voucherDiscount
-                }));
-                
+                showVoucherMessageCart(`✅ Voucher ${voucher.code} berhasil dipakai!`, 'success');
                 document.getElementById('voucherCodeCart').value = '';
                 renderCartItems();
             }
@@ -769,10 +503,6 @@ function applyVoucherFromCart() {
 }
 
 function removeVoucherFromCart() {
-    if (voucherUsed) {
-        showVoucherMessageCart('Voucher sudah digunakan, tidak bisa dihapus!', 'error');
-        return;
-    }
     activeVoucher = null;
     voucherDiscount = 0;
     localStorage.removeItem('activeVoucher');
@@ -797,21 +527,26 @@ function loadSavedVoucher() {
             const voucher = JSON.parse(saved);
             activeVoucher = { code: voucher.code, id: voucher.id, type: voucher.type, value: voucher.value };
             voucherDiscount = voucher.discount;
-            voucherType = voucher.type;
-            voucherValue = voucher.value;
         } catch(e) {}
     }
 }
 
-function loadUserProfile() {
-    const savedName = localStorage.getItem('userName');
-    if (savedName && savedName !== 'Customer' && savedName !== 'null') {
-        currentUser.name = savedName;
+// ========================================
+// SPLASH SCREEN
+// ========================================
+setTimeout(() => {
+    const splash = document.getElementById('splashScreen');
+    if (splash) {
+        splash.classList.add('hide');
+        setTimeout(() => {
+            const mainContent = document.getElementById('mainContent');
+            if (mainContent) mainContent.classList.add('visible');
+        }, 300);
     }
-}
+}, 2000);
 
 // ========================================
-// MUSIC PLAYER CORE
+// MUSIC PLAYER
 // ========================================
 function loadMusicHistory() {
     const saved = localStorage.getItem('rayy_music_history');
@@ -854,7 +589,7 @@ function renderMusicHistory() {
         return;
     }
     historyList.innerHTML = musicPlayer.playHistory.map((track, index) => `
-        <div class="history-item" onclick="window.playFromHistory(${index})">
+        <div class="history-item" onclick="playFromHistory(${index})">
             <img src="${track.thumbnail || 'https://via.placeholder.com/35x35?text=🎵'}" onerror="this.src='https://via.placeholder.com/35x35?text=🎵'">
             <div class="history-item-info">
                 <div class="history-item-title">${escapeHtml(track.title.substring(0, 40))}${track.title.length > 40 ? '...' : ''}</div>
@@ -865,10 +600,10 @@ function renderMusicHistory() {
     `).join('');
 }
 
-window.playFromHistory = function(index) {
+function playFromHistory(index) {
     const track = musicPlayer.playHistory[index];
     if (track && track.url) playMusic(track.title, track.url, track.thumbnail, track.artist);
-};
+}
 
 function clearMusicHistory() {
     if (confirm('Hapus semua riwayat putar?')) {
@@ -883,7 +618,7 @@ function clearMusicHistory() {
 async function searchMusic(query) {
     const resultsList = document.getElementById('musicResultsList');
     if (!query.trim()) {
-        resultsList.innerHTML = '<div class="empty-message"><i class="fas fa-exclamation-triangle"></i> Masukkan judul lagu</div>';
+        resultsList.innerHTML = '<div class="empty-message">Masukkan judul lagu</div>';
         return;
     }
     resultsList.innerHTML = '<div class="loading-indicator"><i class="fas fa-spinner fa-pulse"></i> Mencari lagu...</div>';
@@ -898,17 +633,17 @@ async function searchMusic(query) {
                 <div class="result-info">
                     <div class="result-title">${escapeHtml(r.title)}</div>
                     <div class="result-artist">${escapeHtml(r.author)}</div>
-                    <div class="result-duration">⏱️ ${r.duration_timestamp || '0:00'}</div>
+                    <div class="result-duration">${r.duration_timestamp || '0:00'}</div>
                 </div>
             </div>`;
             document.querySelector('#musicResultsList .result-item').addEventListener('click', function() {
                 playMusic(this.dataset.title, this.dataset.url, this.dataset.thumb, this.dataset.artist);
             });
         } else {
-            resultsList.innerHTML = '<div class="empty-message"><i class="fas fa-music-slash"></i> Lagu tidak ditemukan</div>';
+            resultsList.innerHTML = '<div class="empty-message">Lagu tidak ditemukan</div>';
         }
     } catch (error) {
-        resultsList.innerHTML = '<div class="empty-message"><i class="fas fa-wifi"></i> Error koneksi, coba lagi</div>';
+        resultsList.innerHTML = '<div class="empty-message">Error koneksi, coba lagi</div>';
     }
 }
 
@@ -1053,22 +788,102 @@ function initMusicEventListeners() {
     else setMusicVolume(70);
 }
 
-// Tambahkan CSS animation untuk popup
-const popupStyle = document.createElement('style');
-popupStyle.textContent = `
-    @keyframes fadeIn {
-        from { opacity: 0; transform: scale(0.95); }
-        to { opacity: 1; transform: scale(1); }
+// Floating Player
+let isDragging = false;
+let dragStartX, dragStartY;
+
+function initFloatingPlayer() {
+    const floatingPlayer = document.getElementById('floatingPlayer');
+    const dragHandle = document.getElementById('floatingDrag');
+    
+    if (!dragHandle) return;
+    
+    dragHandle.addEventListener('mousedown', startDrag);
+    dragHandle.addEventListener('touchstart', startDrag, { passive: false });
+    
+    document.addEventListener('mousemove', onDrag);
+    document.addEventListener('mouseup', stopDrag);
+    document.addEventListener('touchmove', onDrag, { passive: false });
+    document.addEventListener('touchend', stopDrag);
+    
+    document.getElementById('floatingPlayPause').onclick = () => togglePlayPause();
+    document.getElementById('floatingStop').onclick = () => stopMusic();
+    document.getElementById('floatingClose').onclick = () => {
+        stopMusic();
+        floatingPlayer.style.display = 'none';
+    };
+}
+
+function startDrag(e) {
+    isDragging = true;
+    const floatingPlayer = document.getElementById('floatingPlayer');
+    const rect = floatingPlayer.getBoundingClientRect();
+    
+    if (e.type === 'mousedown') {
+        dragStartX = e.clientX - rect.left;
+        dragStartY = e.clientY - rect.top;
+    } else {
+        dragStartX = e.touches[0].clientX - rect.left;
+        dragStartY = e.touches[0].clientY - rect.top;
     }
-    @keyframes fadeOut {
-        from { opacity: 1; transform: scale(1); }
-        to { opacity: 0; transform: scale(0.95); }
+    
+    floatingPlayer.style.transition = 'none';
+    e.preventDefault();
+}
+
+function onDrag(e) {
+    if (!isDragging) return;
+    
+    let clientX, clientY;
+    if (e.type === 'mousemove') {
+        clientX = e.clientX;
+        clientY = e.clientY;
+    } else {
+        clientX = e.touches[0].clientX;
+        clientY = e.touches[0].clientY;
     }
-    .popup-modal {
-        transition: all 0.2s ease;
+    
+    const floatingPlayer = document.getElementById('floatingPlayer');
+    let newX = clientX - dragStartX;
+    let newY = clientY - dragStartY;
+    const maxX = window.innerWidth - floatingPlayer.offsetWidth - 10;
+    const maxY = window.innerHeight - floatingPlayer.offsetHeight - 10;
+    
+    newX = Math.min(Math.max(newX, 10), maxX);
+    newY = Math.min(Math.max(newY, 10), maxY);
+    
+    floatingPlayer.style.left = newX + 'px';
+    floatingPlayer.style.top = newY + 'px';
+    floatingPlayer.style.right = 'auto';
+    floatingPlayer.style.bottom = 'auto';
+    
+    e.preventDefault();
+}
+
+function stopDrag() {
+    isDragging = false;
+    const floatingPlayer = document.getElementById('floatingPlayer');
+    floatingPlayer.style.transition = '';
+}
+
+function updateFloatingPlayer(track) {
+    const floatingPlayer = document.getElementById('floatingPlayer');
+    if (!track) {
+        floatingPlayer.style.display = 'none';
+        return;
     }
-`;
-document.head.appendChild(popupStyle);
+    
+    floatingPlayer.style.display = 'block';
+    document.getElementById('floatingThumb').src = track.thumbnail || 'https://via.placeholder.com/40x40?text=🎵';
+    document.getElementById('floatingTitle').innerText = track.title || 'Unknown Title';
+    document.getElementById('floatingArtist').innerText = track.artist || 'Unknown Artist';
+    
+    if (musicPlayer.isPlaying) {
+        document.getElementById('floatingPlayPause').innerHTML = '<i class="fas fa-pause"></i>';
+    } else {
+        document.getElementById('floatingPlayPause').innerHTML = '<i class="fas fa-play"></i>';
+    }
+}
 
 // ========================================
 // INITIALIZE
@@ -1076,7 +891,6 @@ document.head.appendChild(popupStyle);
 if (!checkUserIdentity()) {
     // Redirect to profile
 } else {
-    loadUserProfile();
     loadSlider();
     loadMarqueeText();
     loadProducts();
@@ -1085,7 +899,7 @@ if (!checkUserIdentity()) {
     initFloatingPlayer();
 }
 
-// Export functions to global
+// Global functions
 window.addToCart = addToCart;
 window.updateQuantity = updateQuantity;
 window.removeFromCart = removeFromCart;

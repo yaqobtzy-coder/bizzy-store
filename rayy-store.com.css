@@ -2,7 +2,6 @@
    RAYY STORE - CLEAN & PROFESSIONAL
    ======================================== */
 
-/* Reset */
 * {
     margin: 0;
     padding: 0;
@@ -158,18 +157,18 @@ body {
     color: #3b82f6;
 }
 
-/* Style khusus link Voucher di navbar */
 .nav-links a[href="vouchers.html"] {
     background: linear-gradient(135deg, #f59e0b, #e67e22);
     color: white;
     padding: 6px 14px;
     border-radius: 30px;
-    transition: all 0.2s;
 }
 
-.nav-links a[href="vouchers.html"]:hover {
-    background: linear-gradient(135deg, #e67e22, #d97706);
-    transform: translateY(-2px);
+.nav-links a[href="buy-panel.html"] {
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    color: white;
+    padding: 6px 14px;
+    border-radius: 30px;
 }
 
 .cart-icon {
@@ -488,39 +487,6 @@ body {
     color: #dc2626;
 }
 
-/* ========== RATING STARS ========== */
-.product-rating {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin: 8px 0;
-}
-
-.stars {
-    display: flex;
-    gap: 2px;
-}
-
-.stars i {
-    font-size: 11px;
-    color: #fbbf24;
-}
-
-.stars i.far.fa-star {
-    color: #cbd5e1;
-}
-
-.rating-count {
-    font-size: 10px;
-    color: #94a3b8;
-}
-
-.product-reviews {
-    font-size: 10px;
-    color: #94a3b8;
-    margin-top: 3px;
-}
-
 /* ========== ADD TO CART BUTTON ========== */
 .add-to-cart {
     width: 100%;
@@ -532,7 +498,6 @@ body {
     font-weight: 600;
     font-size: 12px;
     cursor: pointer;
-    transition: background 0.2s;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -579,7 +544,6 @@ body {
     color: #475569;
     font-size: 16px;
     cursor: pointer;
-    transition: background 0.2s;
 }
 
 .close-cart:hover { background: #e2e8f0; }
@@ -639,7 +603,6 @@ body {
     color: #475569;
     cursor: pointer;
     font-weight: 600;
-    transition: background 0.2s;
 }
 
 .cart-item-qty button:hover { background: #cbd5e1; }
@@ -690,7 +653,6 @@ body {
     font-weight: 600;
     font-size: 13px;
     cursor: pointer;
-    transition: background 0.2s;
 }
 
 .voucher-input-cart button:hover { background: #2563eb; }
@@ -768,7 +730,6 @@ body {
     font-weight: 600;
     font-size: 14px;
     cursor: pointer;
-    transition: background 0.2s;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1237,7 +1198,6 @@ body {
     border-radius: 10px;
     margin-bottom: 8px;
     cursor: pointer;
-    transition: background 0.2s;
 }
 .result-item:hover { background: #eef2ff; }
 .result-item img {
@@ -1456,8 +1416,8 @@ body {
     .voucher-input-cart { flex-direction: column; }
     .voucher-input-cart button { width: 100%; }
     
-    /* Navbar link voucher responsive */
-    .nav-links a[href="vouchers.html"] {
+    .nav-links a[href="vouchers.html"],
+    .nav-links a[href="buy-panel.html"] {
         padding: 4px 10px;
         font-size: 12px;
     }
@@ -1470,7 +1430,8 @@ body {
         gap: 10px;
     }
     
-    .nav-links a[href="vouchers.html"] {
+    .nav-links a[href="vouchers.html"],
+    .nav-links a[href="buy-panel.html"] {
         padding: 4px 10px;
         font-size: 11px;
     }

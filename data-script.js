@@ -45,8 +45,15 @@ function formatNumber(num) {
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 }
 
+function showLoading() {
+    document.getElementById('loadingOverlay').style.display = 'flex';
+}
+
+function hideLoading() {
+    document.getElementById('loadingOverlay').style.display = 'none';
+}
+
 async function submitData() {
-    // Validasi data wajib
     const requiredFields = {
         ownerName: 'Nama Owner',
         ownerPhone: 'Nomor Owner',
@@ -67,7 +74,8 @@ async function submitData() {
         }
     }
     
-    // Kumpulkan data
+    showLoading();
+    
     const scriptData = {
         type: 'script',
         wajib: {
@@ -94,7 +102,6 @@ async function submitData() {
     localStorage.setItem('orderData', JSON.stringify(scriptData));
     localStorage.setItem('buyerName', scriptData.wajib.ownerName);
     
-    // Kirim notifikasi ke Telegram bahwa data script telah diisi
     if (typeof notifyOrderProcessing !== 'undefined') {
         const processingData = {
             id: Date.now().toString(),
@@ -108,6 +115,7 @@ async function submitData() {
         await notifyOrderProcessing(processingData);
     }
     
+    hideLoading();
     window.location.href = 'pay.html';
 }
 

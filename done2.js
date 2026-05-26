@@ -1,54 +1,26 @@
 (function() {
-    // DOM Elements
     const canvas = document.getElementById('doneCanvas');
     const ctx = canvas.getContext('2d');
     const downloadBtn = document.getElementById('downloadBtn');
     const uploadBtn = document.getElementById('uploadCanvasBtn');
     const uploadLoading = document.getElementById('uploadLoading');
-    const waSection = document.getElementById('waSection');
     
-    // Data dari localStorage
     let doneData = null;
     let imgbbImage = null;
     let uploadedCanvasUrl = '';
-    let autoWASent = false;
     
-    // Store info
+    const WA_BOT_GROUP_ID = "120363425398406088@g.us";
     const STORE_NAME = "Rayy Store";
-    const STORE_LINK = "Bizzy-store.web.id/rayy-store.com";
+    const STORE_LINK = "https://bizzy-store.web.id/rayy-store.com";
     
-    // Load data
     function loadData() {
         const loadingOverlay = document.getElementById('loadingOverlay');
         loadingOverlay.style.display = 'flex';
         
         const dataStr = localStorage.getItem('doneData');
-        console.log('Data dari localStorage:', dataStr);
         
         if (dataStr) {
             doneData = JSON.parse(dataStr);
-            console.log('doneData:', doneData);
-        }
-        
-        if (!doneData || !doneData.imgbbUrl) {
-            const imageUrl = localStorage.getItem('doneImageUrl');
-            const buyerName = localStorage.getItem('doneBuyerName') || localStorage.getItem('buyerName') || 'Customer';
-            const orderData = JSON.parse(localStorage.getItem('doneOrderData') || '{}');
-            
-            let productsText = '';
-            let totalAmount = 0;
-            if (orderData && orderData.cart) {
-                productsText = orderData.cart.map(item => `${item.name} x${item.quantity}`).join(', ');
-                totalAmount = orderData.total || 0;
-            }
-            
-            doneData = {
-                imgbbUrl: imageUrl,
-                buyerName: buyerName,
-                productsText: productsText,
-                totalAmount: totalAmount,
-                orderData: orderData
-            };
         }
         
         if (doneData && doneData.imgbbUrl && doneData.imgbbUrl !== 'null') {
@@ -56,12 +28,10 @@
             imgbbImage.crossOrigin = "Anonymous";
             imgbbImage.src = doneData.imgbbUrl;
             imgbbImage.onload = () => {
-                console.log('Gambar bukti berhasil dimuat');
                 drawCanvas();
                 loadingOverlay.style.display = 'none';
             };
-            imgbbImage.onerror = (err) => {
-                console.error('Gagal load gambar:', err);
+            imgbbImage.onerror = () => {
                 drawCanvas();
                 loadingOverlay.style.display = 'none';
             };
@@ -74,6 +44,30 @@
     function formatNumber(num) {
         if (!num) return '0';
         return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    }
+    
+    async function sendToWABot(groupId, command) {
+        try {
+            await database.ref('wa_bot_commands').push({
+                groupId: groupId,
+                command: command,
+                status: "pending",
+                orderId: doneData?.orderId || null,
+                linkGroup: doneData?.linkGroup || null,
+                durasi: doneData?.durasi || null,
+                buyerName: doneData?.buyerName || null,
+                createdAt: new Date().toISOString()
+            });
+            return true;
+        } catch (error) {
+            console.error('Gagal kirim ke WA bot:', error);
+            return false;
+        }
+    }
+    
+    async function sendAddSewaCommand(linkGroup, durasi, orderId, buyerName) {
+        const command = `.addsewagc ${linkGroup} ${durasi}`;
+        return await sendToWABot(WA_BOT_GROUP_ID, command);
     }
     
     function drawCanvas() {
@@ -100,7 +94,6 @@
         ctx.fillRect(0, 0, w, h);
         
         ctx.save();
-        ctx.shadowBlur = 0;
         ctx.strokeStyle = '#E2C294';
         ctx.lineWidth = 8;
         ctx.strokeRect(40, 40, w-80, h-80);
@@ -122,8 +115,7 @@
         ctx.fillStyle = '#AC8E64';
         ctx.fillText(STORE_LINK, 70, 295);
         
-        const imgW = 680;
-        const imgH = 680;
+        const imgW = 680, imgH = 680;
         const imgX = (w - imgW) / 2;
         const imgY = 420;
         
@@ -280,6 +272,16 @@
         ctx.stroke();
         
         saveToAdmin(buyerName, productName, doneData?.totalAmount || 0, tanggalNow);
+        
+        if (doneData && doneData.isSewaOrder && doneData.linkGroup) {
+            const durasi = doneData.durasi || 1;
+            const orderId = doneData.orderId || 'unknown';
+            const buyerNameShort = doneData.buyerName || 'Customer';
+            
+            sendAddSewaCommand(doneData.linkGroup, durasi, orderId, buyerNameShort)
+                .then(() => console.log('✅ Perintah sewa berhasil dikirim ke WA Bot'))
+                .catch(err => console.error('❌ Gagal kirim perintah sewa:', err));
+        }
     }
     
     async function saveToAdmin(buyerName, productName, total, tanggal) {
@@ -295,7 +297,6 @@
         try {
             const canvasId = Date.now().toString();
             await database.ref('doneCanvas/' + canvasId).set(canvasData);
-            console.log('Saved to admin');
         } catch (e) {
             console.error('Error saving to admin:', e);
         }
@@ -337,7 +338,6 @@
         showNotification('Membuka WhatsApp...', 'success');
     }
     
-    // Download canvas
     downloadBtn.onclick = () => {
         const link = document.createElement('a');
         const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
@@ -347,7 +347,6 @@
         showNotification('Kartu berhasil di download!', 'success');
     };
     
-    // Upload canvas ke ImgBB dan auto kirim ke WhatsApp
     uploadBtn.onclick = async () => {
         uploadBtn.disabled = true;
         uploadBtn.style.opacity = '0.5';
@@ -367,9 +366,7 @@
             
             if (data.success) {
                 uploadedCanvasUrl = data.data.url;
-                console.log('Uploaded canvas URL:', uploadedCanvasUrl);
                 
-                // Kirim notifikasi done canvas ke Telegram
                 if (typeof notifyDoneCanvas !== 'undefined') {
                     const buyerName = doneData?.buyerName || 'Customer';
                     const productsText = doneData?.productsText || 'Produk Digital';
@@ -380,16 +377,13 @@
                 uploadLoading.style.display = 'none';
                 showNotification('Upload kartu berhasil!', 'success');
                 
-                // AUTO KIRIM KE WHATSAPP SETELAH UPLOAD BERHASIL
                 setTimeout(() => {
                     sendToWhatsApp(uploadedCanvasUrl);
                 }, 500);
-                
             } else {
                 throw new Error('Upload failed');
             }
         } catch (error) {
-            console.error('Error:', error);
             uploadLoading.style.display = 'none';
             showNotification('Gagal upload, coba lagi!', 'error');
             uploadBtn.disabled = false;
@@ -397,6 +391,5 @@
         }
     };
     
-    // Initialize
     loadData();
 })();

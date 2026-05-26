@@ -9,7 +9,6 @@
     <link rel="stylesheet" href="vouchers.css">
 </head>
 <body>
-    <!-- HEADER - SAMA PERSIS DENGAN NEWS.COM -->
     <div class="news-header">
         <div class="header-container">
             <div class="logo">
@@ -27,7 +26,6 @@
     </div>
 
     <div class="container">
-        <!-- HERO SECTION - SAMA PERSIS DENGAN NEWS.COM -->
         <div class="hero-section">
             <div class="maintenance-badge" id="infoBadge">
                 <i class="fas fa-gift fa-beat"></i> UPDATE TERBARU
@@ -39,7 +37,6 @@
             </p>
         </div>
 
-        <!-- MARQUEE SECTION - SAMA PERSIS DENGAN NEWS.COM -->
         <div class="marquee-section" id="infoMarquee" style="display: none;">
             <div class="marquee-wrapper">
                 <div class="marquee-content" id="marqueeContent">
@@ -48,7 +45,6 @@
             </div>
         </div>
 
-        <!-- SECTION TITLE - VOUCHER AKTIF -->
         <div class="section-title">
             <i class="fas fa-ticket-alt"></i>
             <span>🎁 VOUCHER AKTIF</span>
@@ -61,7 +57,6 @@
             </div>
         </div>
 
-        <!-- SECTION TITLE - VOUCHER KADALUARSA -->
         <div class="section-title">
             <i class="fas fa-history"></i>
             <span>⏰ VOUCHER KADALUARSA / HABIS</span>
@@ -71,7 +66,6 @@
             <div class="empty-message">Belum ada voucher kadaluarsa</div>
         </div>
 
-        <!-- SECTION TITLE - CARA PENGGUNAAN -->
         <div class="section-title">
             <i class="fas fa-question-circle"></i>
             <span>📖 CARA MENGGUNAKAN VOUCHER</span>
@@ -89,24 +83,23 @@
             </ol>
         </div>
 
-        <!-- FOOTER - SAMA PERSIS DENGAN NEWS.COM -->
         <div class="footer">
             <div class="social-icons">
-                <a onclick="showToast('Telegram: @BizzyImpactBot')"><i class="fab fa-telegram"></i></a>
-                <a onclick="showToast('Instagram: @bizzy.tools')"><i class="fab fa-instagram"></i></a>
-                <a onclick="showToast('TikTok: @bizzy.tools')"><i class="fab fa-tiktok"></i></a>
-                <a onclick="showToast('WhatsApp: +62 857-9454-5996')"><i class="fab fa-whatsapp"></i></a>
+                <a onclick="window.open('https://t.me/DeltaxReal', '_blank')"><i class="fab fa-telegram"></i></a>
+                <a onclick="window.open('https://www.tiktok.com/@r_itsmyinitials', '_blank')"><i class="fab fa-tiktok"></i></a>
+                <a onclick="window.open('https://wa.me/6285794545996', '_blank')"><i class="fab fa-whatsapp"></i></a>
+                <a onclick="window.open('https://www.instagram.com/rayystore', '_blank')"><i class="fab fa-instagram"></i></a>
+                <a onclick="showToast('Email: rayystore@myruko.web.id')"><i class="fas fa-envelope"></i></a>
             </div>
             <p style="font-size: 0.75rem; opacity: 0.6;">
                 <i class="fas fa-copyright"></i> 2026 Rayy Store | Voucher Center
             </p>
             <p style="font-size: 0.7rem; opacity: 0.4; margin-top: 8px;">
-                Voucher diperbarui secara berkala
+                📧 rayystore@myruko.web.id | 📱 +62 857-9454-5996 | Telegram: @DeltaxReal | TikTok: @r_itsmyinitials
             </p>
         </div>
     </div>
 
-    <!-- TOAST NOTIFICATION -->
     <div id="toast" class="toast" style="display: none;"></div>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
