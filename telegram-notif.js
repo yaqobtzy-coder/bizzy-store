@@ -2,7 +2,7 @@
 // TELEGRAM & WHATSAPP NOTIFICATION
 // ========================================
 
-// TELEGRAM BOT TOKEN BARU
+// TELEGRAM BOT TOKEN
 const TELEGRAM_BOT_TOKEN = "8996706964:AAEXwbGDvtJC3l2X6WTeFfk3K5KZb7JxtLQ";
 const TELEGRAM_CHAT_ID = "7966336512";
 
@@ -115,8 +115,9 @@ async function notifySewaSuccess(orderData) {
                  orderData.customerData?.ownerPhone || '-';
     const idTransaksi = orderData.depositId || orderData.id || '-';
     const gateway = orderData.gateway || 'unknown';
+    const isRenew = orderData.isRenew ? ' (PERPANJANGAN)' : '';
     
-    const messageTelegram = `✅ *PEMBAYARAN BERHASIL - SEWA* ✅\n\n` +
+    const messageTelegram = `✅ *PEMBAYARAN BERHASIL - SEWA${isRenew}* ✅\n\n` +
         `👤 Pembeli: ${user}\n` +
         `📦 Produk: ${produkText}\n` +
         `💰 Total: Rp ${formatNumberTele(orderData.total || 0)}\n` +
@@ -126,7 +127,7 @@ async function notifySewaSuccess(orderData) {
         `💳 Gateway: ${gateway}\n` +
         `⏰ Waktu: ${new Date().toLocaleString('id-ID')}`;
     
-    const messageWA = `✅ *PEMBAYARAN BERHASIL - SEWA* ✅%0A%0A` +
+    const messageWA = `✅ *PEMBAYARAN BERHASIL - SEWA${isRenew}* ✅%0A%0A` +
         `👤 Pembeli: ${user}%0A` +
         `📦 Produk: ${produkText}%0A` +
         `💰 Total: Rp ${formatNumberTele(orderData.total || 0)}%0A` +
