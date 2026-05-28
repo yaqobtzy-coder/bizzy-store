@@ -21,6 +21,28 @@ let musicPlayer = {
 };
 
 // ========================================
+// SIDEBAR FUNCTIONS
+// ========================================
+function openSidebar() {
+    document.getElementById('sidebar').classList.add('open');
+    document.getElementById('overlay').classList.add('active');
+}
+
+function closeSidebar() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('overlay').classList.remove('active');
+}
+
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar.classList.contains('open')) {
+        closeSidebar();
+    } else {
+        openSidebar();
+    }
+}
+
+// ========================================
 // CEK USER LOGIN
 // ========================================
 function checkUserIdentity() {
@@ -30,6 +52,13 @@ function checkUserIdentity() {
         return false;
     }
     return true;
+}
+
+function updateSidebarProfile() {
+    const userName = localStorage.getItem('userName') || 'Customer';
+    const userEmail = localStorage.getItem('userEmail') || 'customer@rayystore.com';
+    document.getElementById('sidebarName').innerText = userName;
+    document.getElementById('sidebarEmail').innerText = userEmail;
 }
 
 // ========================================
@@ -334,7 +363,11 @@ function addToCart(productId, productType) {
 function updateCartCount() {
     const total = cart.reduce((sum, item) => sum + item.quantity, 0);
     const cartCount = document.getElementById('cartCount');
+    const topCartCount = document.getElementById('topCartCount');
+    const sidebarCartCount = document.getElementById('sidebarCartCount');
     if (cartCount) cartCount.textContent = total;
+    if (topCartCount) topCartCount.textContent = total;
+    if (sidebarCartCount) sidebarCartCount.textContent = total;
 }
 
 function renderCartItems() {
@@ -418,11 +451,16 @@ function removeFromCart(id) {
 
 function toggleCart() {
     const sidebar = document.getElementById('cartSidebar');
-    const overlay = document.getElementById('overlay');
     if (sidebar) sidebar.classList.toggle('open');
-    if (overlay) overlay.classList.toggle('active');
     if (sidebar && sidebar.classList.contains('open')) renderCartItems();
 }
+
+// Close cart when clicking outside
+document.getElementById('overlay')?.addEventListener('click', () => {
+    closeSidebar();
+    const cartSidebar = document.getElementById('cartSidebar');
+    if (cartSidebar) cartSidebar.classList.remove('open');
+});
 
 function checkout() {
     if (cart.length === 0) {
@@ -763,10 +801,22 @@ function closeMusicModal() {
 }
 
 function initMusicEventListeners() {
-    document.getElementById('musicBtn').onclick = (e) => { 
-        e.preventDefault(); 
-        openMusicModal(); 
-    };
+    const musicBtn = document.getElementById('musicBtn');
+    const sidebarMusicBtn = document.getElementById('sidebarMusicBtn');
+    
+    if (musicBtn) {
+        musicBtn.onclick = (e) => { 
+            e.preventDefault(); 
+            openMusicModal(); 
+        };
+    }
+    if (sidebarMusicBtn) {
+        sidebarMusicBtn.onclick = (e) => { 
+            e.preventDefault(); 
+            openMusicModal(); 
+        };
+    }
+    
     document.getElementById('closeMusicModal').onclick = closeMusicModal;
     document.getElementById('musicPlayPauseBtn').onclick = togglePlayPause;
     document.getElementById('musicStopBtn').onclick = stopMusic;
@@ -888,9 +938,13 @@ function updateFloatingPlayer(track) {
 // ========================================
 // INITIALIZE
 // ========================================
+document.getElementById('menuToggle').onclick = toggleSidebar;
+document.getElementById('sidebarClose').onclick = closeSidebar;
+
 if (!checkUserIdentity()) {
     // Redirect to profile
 } else {
+    updateSidebarProfile();
     loadSlider();
     loadMarqueeText();
     loadProducts();
@@ -912,3 +966,5 @@ window.playFromHistory = playFromHistory;
 window.applyVoucherFromCart = applyVoucherFromCart;
 window.removeVoucherFromCart = removeVoucherFromCart;
 window.copyVoucherCode = copyVoucherCode;
+window.closeSidebar = closeSidebar;
+window.openSidebar = openSidebar;

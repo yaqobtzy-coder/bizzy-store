@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Sewa Aktif - Rayy Store</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{background:#f8fafc;font-family:'Inter',sans-serif;overflow-x:hidden;color:#1e293b}
+        
+        /* SIDEBAR */
+        .sidebar{position:fixed;top:0;left:-280px;width:280px;height:100%;background:#fff;z-index:1002;transition:left .3s;display:flex;flex-direction:column;box-shadow:2px 0 10px rgba(0,0,0,.1);border-right:1px solid #e2e8f0}
+        .sidebar.open{left:0}
+        .sidebar-header{display:flex;justify-content:space-between;align-items:center;padding:20px;border-bottom:1px solid #e2e8f0}
+        .sidebar-logo{font-size:20px;font-weight:700;color:#0f172a}
+        .sidebar-logo span{color:#3b82f6}
+        .sidebar-close{background:0;border:none;font-size:24px;color:#94a3b8;cursor:pointer}
+        .sidebar-close:hover{color:#ef4444}
+        .sidebar-profile{padding:20px;text-align:center;border-bottom:1px solid #e2e8f0}
+        .sidebar-avatar i{font-size:60px;color:#3b82f6}
+        .sidebar-name{font-weight:600;color:#0f172a;margin-top:8px}
+        .sidebar-email{font-size:11px;color:#94a3b8;margin-top:4px}
+        .sidebar-nav{flex:1;padding:20px 0}
+        .sidebar-link{display:flex;align-items:center;gap:12px;padding:12px 20px;color:#475569;text-decoration:none;font-size:14px;font-weight:500}
+        .sidebar-link:hover{background:#f1f5f9;color:#3b82f6}
+        .sidebar-link.active{background:#eef2ff;color:#3b82f6;border-right:3px solid #3b82f6}
+        .sidebar-footer{padding:20px;border-top:1px solid #e2e8f0}
+        .cart-icon-sidebar{display:flex;align-items:center;gap:12px;padding:10px;background:#f8fafc;border-radius:12px;cursor:pointer}
+        .cart-icon-sidebar:hover{background:#eef2ff}
+        .cart-icon-sidebar i{font-size:18px;color:#3b82f6}
+        .cart-icon-sidebar .cart-count{background:#3b82f6;color:#fff;border-radius:50%;padding:2px 6px;font-size:10px;font-weight:600;min-width:18px;text-align:center}
+        .cart-icon-sidebar span:last-child{flex:1;color:#475569;font-weight:500}
+        .overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:1001;display:none}
+        .overlay.active{display:block}
+        
+        /* TOP NAVBAR */
+        .top-navbar{background:#fff;padding:12px 20px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;border-bottom:1px solid #e2e8f0}
+        .menu-toggle{background:0;border:none;font-size:22px;color:#475569;cursor:pointer}
+        .logo-small{font-size:18px;font-weight:700;color:#0f172a}
+        .logo-small span{color:#3b82f6}
+        .top-cart-icon{position:relative;cursor:pointer;font-size:20px;color:#475569}
+        .top-cart-icon .cart-count{position:absolute;top:-8px;right:-10px;background:#3b82f6;color:#fff;border-radius:50%;padding:2px 6px;font-size:10px;font-weight:600;min-width:18px;text-align:center}
+        
+        /* MAIN */
+        .main-content{min-height:100vh}
+        .container{max-width:1000px;margin:0 auto;padding:30px 20px}
+        .page-header{text-align:center;margin-bottom:30px}
+        .page-header h1{font-size:28px;font-weight:700;color:#0f172a;margin-bottom:8px}
+        .page-header h1 i{color:#3b82f6}
+        .page-header p{color:#64748b;font-size:14px}
+        
+        /* SEWA LIST */
+        .sewa-list{display:flex;flex-direction:column;gap:20px}
+        .sewa-card{background:#fff;border-radius:20px;border:1px solid #e2e8f0;overflow:hidden;transition:all .3s}
+        .sewa-card:hover{transform:translateY(-3px);box-shadow:0 12px 25px rgba(0,0,0,.08);border-color:#3b82f6}
+        .sewa-header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;background:linear-gradient(135deg,#f8fafc,#fff);border-bottom:1px solid #e2e8f0;flex-wrap:wrap;gap:10px}
+        .sewa-status{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600}
+        .status-active{background:#dcfce7;color:#16a34a}
+        .status-warning{background:#fef3c7;color:#d97706}
+        .status-critical{background:#fee2e2;color:#dc2626}
+        .status-expired{background:#6c757d;color:#fff}
+        .sewa-product{font-weight:600;font-size:14px;color:#1e293b}
+        .sewa-body{padding:20px}
+        .info-row{display:flex;margin-bottom:12px;font-size:13px;flex-wrap:wrap}
+        .info-label{width:120px;color:#64748b}
+        .info-value{flex:1;color:#1e293b;font-weight:500;word-break:break-all}
+        .countdown-timer{background:#f1f5f9;border-radius:12px;padding:15px;text-align:center;margin:15px 0}
+        .timer-value{font-size:32px;font-weight:700;font-family:'Courier New',monospace;color:#3b82f6}
+        .timer-value.warning{color:#d97706}
+        .timer-value.critical{color:#dc2626;animation:pulse 1s infinite}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+        .timer-label{font-size:11px;color:#64748b;margin-top:5px}
+        .sewa-footer{display:flex;gap:12px;padding:16px 20px;background:#fafcfd;border-top:1px solid #e2e8f0}
+        .btn-renew-now{flex:1;background:linear-gradient(135deg,#f59e0b,#e67e22);border:none;padding:10px;border-radius:12px;color:#fff;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+        .btn-renew-now:hover{opacity:.85}
+        .btn-wa-support{flex:1;background:#25D366;border:none;padding:10px;border-radius:12px;color:#fff;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none}
+        .btn-wa-support:hover{opacity:.85}
+        
+        /* EMPTY STATE */
+        .empty-state{text-align:center;padding:60px 20px;background:#fff;border-radius:20px;border:1px solid #e2e8f0}
+        .empty-state i{font-size:60px;color:#cbd5e1;margin-bottom:16px}
+        .empty-state p{color:#64748b;font-size:14px;margin-bottom:20px}
+        .btn-primary{background:#3b82f6;border:none;padding:10px 24px;border-radius:30px;color:#fff;font-weight:600;cursor:pointer;text-decoration:none;display:inline-block}
+        .btn-primary:hover{background:#2563eb}
+        
+        /* LOADING */
+        .loading-spinner{text-align:center;padding:60px;color:#94a3b8}
+        .loading-spinner i{font-size:40px;color:#3b82f6;animation:spin 1s linear infinite}
+        @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+        
+        /* NOTIFICATION */
+        .toast-notification{position:fixed;bottom:20px;right:20px;padding:10px 20px;border-radius:40px;color:#fff;font-weight:500;z-index:1002;animation:slideIn .3s ease;font-size:13px}
+        .toast-notification.success{background:#22c55e}
+        .toast-notification.error{background:#ef4444}
+        .toast-notification.warning{background:#f59e0b}
+        @keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+        @keyframes slideOut{from{transform:translateX(0);opacity:1}to{transform:translateX(100%);opacity:0}}
+        
+        /* MODAL */
+        .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:2000;display:flex;justify-content:center;align-items:center}
+        .modal-content{background:#fff;border-radius:20px;width:90%;max-width:500px;max-height:85vh;overflow-y:auto;padding:24px;position:relative}
+        .modal-close{position:absolute;top:15px;right:20px;background:0;border:none;font-size:24px;color:#94a3b8;cursor:pointer}
+        .modal-close:hover{color:#ef4444}
+        .modal-content h3{color:#0f172a;margin-bottom:20px;font-size:18px;font-weight:600;border-left:3px solid #3b82f6;padding-left:12px}
+        .form-group{margin-bottom:16px}
+        .form-group label{display:block;color:#334155;margin-bottom:6px;font-size:13px;font-weight:500}
+        .form-group input,.form-group select{width:100%;padding:10px 12px;background:#fff;border:1px solid #cbd5e1;border-radius:8px;color:#1e293b;font-size:14px;font-family:inherit}
+        .form-group input:focus,.form-group select:focus{outline:0;border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.1)}
+        .checkbox-group{margin:16px 0}
+        .checkbox-label{display:flex;align-items:center;gap:10px;cursor:pointer;color:#334155;font-size:13px;font-weight:500}
+        .checkbox-label input{width:18px;height:18px;cursor:pointer;margin:0}
+        
+        /* MUSIC MODAL */
+        .music-modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:2000;display:flex;justify-content:center;align-items:center}
+        .music-modal-content{background:#fff;border-radius:20px;width:90%;max-width:500px;max-height:85vh;overflow-y:auto}
+        .music-modal-header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid #e2e8f0}
+        .close-modal{background:0;border:none;color:#94a3b8;font-size:24px;cursor:pointer}
+        .music-modal-body{padding:20px}
+        
+        /* FLOATING PLAYER */
+        .floating-player{position:fixed;bottom:20px;right:20px;width:280px;background:#fff;border-radius:60px;box-shadow:0 8px 25px rgba(0,0,0,.15);z-index:1500;border:1px solid #e2e8f0}
+        .floating-player-content{display:flex;align-items:center;padding:8px 12px;gap:10px}
+        .floating-info{flex:1;min-width:0}
+        .floating-title{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .floating-artist{font-size:10px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .floating-controls{display:flex;gap:8px}
+        .floating-controls button{background:#f1f5f9;border:none;width:32px;height:32px;border-radius:50%;cursor:pointer}
+        .floating-controls button:hover{background:#3b82f6;color:#fff}
+        .floating-drag{cursor:grab;color:#94a3b8;padding:0 5px}
+        
+        @media (max-width:768px){
+            .page-header h1{font-size:22px}
+            .sewa-header{flex-direction:column;align-items:flex-start}
+            .sewa-footer{flex-direction:column}
+            .btn-renew-now,.btn-wa-support{width:100%}
+            .sidebar{width:260px;left:-260px}
+            .info-label{width:100px}
+            .timer-value{font-size:24px}
+            .modal-content{width:95%;padding:20px}
+        }
+        @media (min-width:769px){.menu-toggle{display:none}}
+    </style>
+</head>
+<body>
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">Rayy<span>Store</span></div>
+            <button class="sidebar-close" id="sidebarClose">&times;</button>
+        </div>
+        <div class="sidebar-profile">
+            <div class="sidebar-avatar"><i class="fas fa-user-circle"></i></div>
+            <div class="sidebar-name" id="sidebarName">Customer</div>
+            <div class="sidebar-email" id="sidebarEmail">customer@rayystore.com</div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="rayy-store.com.html" class="sidebar-link"><i class="fas fa-home"></i> Beranda</a>
+            <a href="profile.html" class="sidebar-link"><i class="fas fa-user"></i> Profil</a>
+            <a href="vouchers.html" class="sidebar-link"><i class="fas fa-ticket-alt"></i> Voucher</a>
+            <a href="news.com.html" class="sidebar-link"><i class="fas fa-newspaper"></i> News</a>
+            <a href="buy-panel.html" class="sidebar-link"><i class="fas fa-server"></i> Panel</a>
+            <a href="#" id="sidebarMusicBtn" class="sidebar-link"><i class="fas fa-music"></i> Musik</a>
+            <a href="history.html" class="sidebar-link"><i class="fas fa-history"></i> Histori Belanja</a>
+            <a href="active-sewa.html" class="sidebar-link active"><i class="fas fa-calendar-check"></i> Sewa Aktif</a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="cart-icon-sidebar" onclick="window.location.href='rayy-store.com.html'">
+                <i class="fas fa-shopping-bag"></i>
+                <span class="cart-count" id="sidebarCartCount">0</span>
+                <span>Keranjang</span>
+            </div>
+        </div>
+    </div>
+    <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+    <div class="main-content">
+        <nav class="top-navbar">
+            <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+            <div class="logo-small">Rayy<span>Store</span></div>
+            <div class="top-cart-icon" onclick="window.location.href='rayy-store.com.html'">
+                <i class="fas fa-shopping-bag"></i>
+                <span class="cart-count" id="topCartCount">0</span>
+            </div>
+        </nav>
+
+        <div class="container">
+            <div class="page-header">
+                <h1><i class="fas fa-calendar-check"></i> Sewa Bot Aktif</h1>
+                <p>Pantau masa aktif sewa bot Anda secara realtime</p>
+            </div>
+            <div class="sewa-list" id="sewaList">
+                <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>Memuat data sewa aktif...</p></div>
+            </div>
+        </div>
+
+        <div id="musicModal" class="music-modal" style="display:none">
+            <div class="music-modal-content">
+                <div class="music-modal-header"><h3><i class="fas fa-music"></i> Music Player</h3><button class="close-modal" id="closeMusicModal">&times;</button></div>
+                <div class="music-modal-body">
+                    <div class="music-now-playing" id="musicNowPlaying" style="display:none">
+                        <img id="musicThumb" src="https://via.placeholder.com/60x60">
+                        <div class="music-info"><div class="music-title" id="musicTitle">-</div><div class="music-artist" id="musicArtist">-</div></div>
+                        <button class="music-stop-btn" id="musicStopBtn"><i class="fas fa-stop"></i></button>
+                    </div>
+                    <div class="music-progress"><div class="progress-bar" id="musicProgressBar"><div class="progress-filled" id="musicProgressFilled"></div></div><div class="music-time"><span id="musicCurrentTime">0:00</span><span id="musicDuration">0:00</span></div></div>
+                    <div class="music-controls"><button class="music-control-btn" id="musicPlayPauseBtn"><i class="fas fa-play"></i></button></div>
+                    <div class="music-volume"><button class="volume-btn" id="musicVolDown"><i class="fas fa-volume-down"></i></button><input type="range" id="musicVolumeSlider" min="0" max="100" value="70"><button class="volume-btn" id="musicVolUp"><i class="fas fa-volume-up"></i></button></div>
+                    <div class="music-search"><input type="text" id="musicSearchInput" placeholder="Cari lagu..."><button id="musicSearchBtn"><i class="fas fa-search"></i> Cari</button></div>
+                    <div class="music-results"><div class="results-title">HASIL PENCARIAN</div><div class="results-list" id="musicResultsList"><div class="empty-message">Cari lagu favoritmu</div></div></div>
+                    <div class="music-history" id="musicHistorySection" style="display:none"><div class="history-title"><i class="fas fa-history"></i> RIWAYAT PUTAR<button class="clear-history" id="clearMusicHistory"><i class="fas fa-trash"></i></button></div><div class="history-list" id="musicHistoryList"></div></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="floatingPlayer" class="floating-player" style="display:none">
+            <div class="floating-player-content">
+                <img id="floatingThumb" src="https://via.placeholder.com/40x40">
+                <div class="floating-info"><div class="floating-title" id="floatingTitle">-</div><div class="floating-artist" id="floatingArtist">-</div></div>
+                <div class="floating-controls"><button id="floatingPlayPause"><i class="fas fa-play"></i></button><button id="floatingStop"><i class="fas fa-stop"></i></button><button id="floatingClose"><i class="fas fa-times"></i></button></div>
+                <div class="floating-drag"><i class="fas fa-grip-vertical"></i></div>
+            </div>
+        </div>
+        <audio id="globalAudio" style="display:none"></audio>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="telegram-notif.js"></script>
+    <script>
+        // ==================== ACTIVE SEWA PAGE ====================
+        let activeSewas = [];
+        let countdownIntervals = [];
+        let currentUserName = '';
+        let musicPlayer = {audio:null,currentTrack:null,isPlaying:false,volume:70,playHistory:[],updateInterval:null};
+
+        // Sidebar functions
+        function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('overlay').classList.add('active');}
+        function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('active');}
+        function toggleSidebar(){const s=document.getElementById('sidebar');if(s.classList.contains('open'))closeSidebar();else openSidebar();}
+        
+        function updateSidebarProfile(){
+            const un=localStorage.getItem('userName')||'Customer';
+            const ue=localStorage.getItem('userEmail')||'customer@rayystore.com';
+            const sn=document.getElementById('sidebarName'),se=document.getElementById('sidebarEmail');
+            if(sn)sn.innerText=un;if(se)se.innerText=ue;currentUserName=un;
+        }
+        
+        function updateCartCount(){
+            const cart=JSON.parse(localStorage.getItem('cart'))||[];
+            const total=cart.reduce((s,i)=>s+(i.quantity||1),0);
+            const tc=document.getElementById('topCartCount'),sc=document.getElementById('sidebarCartCount');
+            if(tc)tc.textContent=total;if(sc)sc.textContent=total;
+        }
+        
+        function escapeHtml(t){if(!t)return '';const d=document.createElement('div');d.textContent=t;return d.innerHTML;}
+        function formatNumber(n){if(!n||isNaN(n))return '0';return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g,".");}
+        function formatDate(ds){if(!ds)return '-';const d=new Date(ds);if(isNaN(d.getTime()))return '-';return d.toLocaleDateString('id-ID',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).replace(/\./g,':');}
+        
+        function showToast(msg,type){
+            const old=document.querySelector('.toast-notification');if(old)old.remove();
+            const n=document.createElement('div');n.className=`toast-notification ${type}`;
+            n.innerHTML=`<i class="fas ${type==='success'?'fa-check-circle':type==='warning'?'fa-exclamation-triangle':'fa-exclamation-circle'}"></i> ${msg}`;
+            document.body.appendChild(n);
+            setTimeout(()=>{if(n){n.style.animation='slideOut .3s ease';setTimeout(()=>{if(n&&n.remove)n.remove();},300);}},3000);
+        }
+        
+        async function loadActiveSewa(){
+            const c=document.getElementById('sewaList');if(!c)return;
+            c.innerHTML='<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>Memuat data sewa aktif...</p></div>';
+            const un=localStorage.getItem('userName');
+            if(!un||un==='Customer'||un==='null'){
+                c.innerHTML=`<div class="empty-state"><i class="fas fa-user-slash"></i><p>Anda belum login.</p><a href="profile.html" class="btn-primary">Login Sekarang</a></div>`;
+                return;
+            }
+            countdownIntervals.forEach(i=>clearInterval(i));countdownIntervals=[];activeSewas=[];
+            try{
+                const so=await database.ref('sewa_orders').once('value');
+                if(so.exists()){
+                    so.forEach(ch=>{
+                        const o=ch.val();o.orderId=ch.key;
+                        if((o.username===un||o.buyerName===un)&&(o.status==='success'||o.status==='active'||o.status==='approved')&&o.expiredAt){
+                            if(new Date(o.expiredAt).getTime()>Date.now()||o.status==='success')activeSewas.push(o);
+                        }
+                    });
+                }
+                const ord=await database.ref('orders').once('value');
+                if(ord.exists()){
+                    ord.forEach(ch=>{
+                        const o=ch.val();o.orderId=ch.key;
+                        const isSewa=(o.type==='sewa'||o.customerData?.type==='sewa');
+                        const isUser=(o.customerData?.buyerName===un||o.buyerName===un||o.username===un);
+                        if(isSewa&&isUser&&(o.status==='completed'||o.status==='success')&&o.expiredAt){
+                            if(!activeSewas.some(a=>a.orderId===o.orderId))activeSewas.push(o);
+                        }
+                    });
+                }
+                activeSewas.sort((a,b)=>new Date(a.expiredAt||0)-new Date(b.expiredAt||0));
+                renderActiveSewas();startAllCountdowns();
+            }catch(e){console.error(e);c.innerHTML=`<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Gagal memuat data.</p><button onclick="loadActiveSewa()" class="btn-primary">Coba Lagi</button></div>`;}
+        }
+        
+        function renderActiveSewas(){
+            const c=document.getElementById('sewaList');if(!c)return;
+            if(activeSewas.length===0){
+                c.innerHTML=`<div class="empty-state"><i class="fas fa-calendar-times"></i><p>Anda belum memiliki sewa bot aktif.</p><a href="rayy-store.com.html" class="btn-primary">Sewa Bot Sekarang</a></div>`;
+                return;
+            }
+            c.innerHTML=activeSewas.map(s=>{
+                const expiredAt=s.expiredAt?new Date(s.expiredAt).getTime():null;
+                let pn='Sewa Bot',pp=0,dur=7;
+                if(s.cart&&s.cart[0]){pn=s.cart[0].name||'Sewa Bot';pp=s.cart[0].price||0;dur=parseInt(s.cart[0].duration)||7;}
+                else if(s.productName){pn=s.productName;pp=s.productPrice||s.total||0;}
+                const bn=s.buyerName||s.username||s.customerData?.buyerName||'Customer';
+                const lg=s.linkGroup||s.customerData?.linkGroup||'-';
+                const bp=s.buyerPhone||s.customerData?.buyerPhone||'-';
+                const sd=formatDate(s.createdAt||s.startDate||s.timestamp);
+                const ed=formatDate(s.expiredAt);
+                let countdownText='Menghitung...',statusClass='status-active',timerClass='';
+                if(expiredAt){
+                    const ms=expiredAt-Date.now();
+                    if(ms<=0){countdownText='EXPIRED';statusClass='status-expired';timerClass='critical';}
+                    else{
+                        const d=Math.floor(ms/(86400000));
+                        if(d<=0){statusClass='status-critical';timerClass='critical';}
+                        else if(d<=3){statusClass='status-warning';timerClass='warning';}
+                        const days=Math.floor(ms/86400000),hours=Math.floor((ms%86400000)/3600000),mins=Math.floor((ms%3600000)/60000),secs=Math.floor((ms%60000)/1000);
+                        if(days>0)countdownText=`${days} hari ${hours} jam ${mins} menit`;
+                        else if(hours>0)countdownText=`${hours} jam ${mins} menit ${secs} detik`;
+                        else if(mins>0)countdownText=`${mins} menit ${secs} detik`;
+                        else countdownText=`${secs} detik`;
+                    }
+                }
+                const sid=(s.orderId||s.id||'').replace(/[^a-zA-Z0-9]/g,'_');
+                return `<div class="sewa-card" data-sewa-id="${escapeHtml(s.orderId||'')}" data-expired-at="${expiredAt||''}">
+                    <div class="sewa-header"><span class="sewa-status ${statusClass}"><i class="fas ${statusClass==='status-active'?'fa-check-circle':statusClass==='status-warning'?'fa-clock':'fa-exclamation-triangle'}"></i> ${statusClass==='status-active'?'AKTIF':statusClass==='status-warning'?'HAMPIR HABIS':statusClass==='status-critical'?'SEGERA EXPIRED':'EXPIRED'}</span><span class="sewa-product">${escapeHtml(pn)}</span></div>
+                    <div class="sewa-body"><div class="info-row"><span class="info-label"><i class="fas fa-user"></i> Pembeli:</span><span class="info-value">${escapeHtml(bn)}</span></div>
+                    <div class="info-row"><span class="info-label"><i class="fab fa-whatsapp"></i> No WA:</span><span class="info-value">${escapeHtml(bp)}</span></div>
+                    <div class="info-row"><span class="info-label"><i class="fas fa-link"></i> Link Grup:</span><span class="info-value">${escapeHtml(lg)}</span></div>
+                    <div class="info-row"><span class="info-label"><i class="fas fa-calendar"></i> Mulai:</span><span class="info-value">${sd}</span></div>
+                    <div class="info-row"><span class="info-label"><i class="fas fa-calendar-times"></i> Berakhir:</span><span class="info-value">${ed}</span></div>
+                    <div class="info-row"><span class="info-label"><i class="fas fa-money-bill"></i> Harga:</span><span class="info-value">Rp ${formatNumber(pp)}</span></div>
+                    <div class="countdown-timer"><div class="timer-value ${timerClass}" id="timer_${sid}">${countdownText}</div><div class="timer-label">Sisa Masa Aktif</div></div></div>
+                    <div class="sewa-footer"><button class="btn-renew-now" onclick="renewFromActive('${escapeHtml(s.orderId||s.id||'')}')"><i class="fas fa-sync-alt"></i> Perpanjang</button>
+                    <a href="https://wa.me/${bp!=='-'?bp.replace(/[^0-9]/g,''):'6285794545996'}?text=Halo%20Admin%2C%20saya%20ingin%20bertanya%20tentang%20sewa%20bot%20${encodeURIComponent(pn)}" class="btn-wa-support" target="_blank"><i class="fab fa-whatsapp"></i> Hubungi Admin</a></div></div>`;
+            }).join('');
+        }
+        
+        function startAllCountdowns(){
+            countdownIntervals.forEach(i=>clearInterval(i));countdownIntervals=[];
+            activeSewas.forEach(s=>{if(s.expiredAt){const i=setInterval(()=>updateCountdownForSewa(s),1000);countdownIntervals.push(i);}});
+        }
+        
+        function updateCountdownForSewa(s){
+            const expiredAt=new Date(s.expiredAt).getTime(),ms=expiredAt-Date.now();
+            const sid=(s.orderId||s.id||'').replace(/[^a-zA-Z0-9]/g,'_');
+            const te=document.getElementById(`timer_${sid}`);if(!te)return;
+            if(ms<=0){te.textContent='EXPIRED';te.classList.add('critical');const card=te.closest('.sewa-card');if(card){const sb=card.querySelector('.sewa-status');if(sb){sb.className='sewa-status status-expired';sb.innerHTML='<i class="fas fa-exclamation-triangle"></i> EXPIRED';}}return;}
+            const days=Math.floor(ms/86400000),hours=Math.floor((ms%86400000)/3600000),mins=Math.floor((ms%3600000)/60000),secs=Math.floor((ms%60000)/1000);
+            let txt='';if(days>0)txt=`${days} hari ${hours} jam ${mins} menit`;else if(hours>0)txt=`${hours} jam ${mins} menit ${secs} detik`;else if(mins>0)txt=`${mins} menit ${secs} detik`;else txt=`${secs} detik`;
+            te.textContent=txt;te.classList.remove('warning','critical');
+            if(days<=0)te.classList.add('critical');else if(days<=3)te.classList.add('warning');
+            const card=te.closest('.sewa-card');if(card){const sb=card.querySelector('.sewa-status');if(sb){if(days<=0){sb.className='sewa-status status-critical';sb.innerHTML='<i class="fas fa-exclamation-triangle"></i> SEGERA EXPIRED';}else if(days<=3){sb.className='sewa-status status-warning';sb.innerHTML='<i class="fas fa-clock"></i> HAMPIR HABIS';}}}
+        }
+        
+        async function renewFromActive(sewaId){
+            const s=activeSewas.find(a=>a.orderId===sewaId||a.id===sewaId);if(!s){showToast('Data sewa tidak ditemukan!','error');return;}
+            let bn='',bp='',lg='',op=null;
+            if(s.customerData){bn=s.customerData.buyerName||s.customerData.wajib?.ownerName||'';bp=s.customerData.buyerPhone||s.customerData.wajib?.ownerPhone||'';lg=s.customerData.linkGroup||'';}
+            if(s.buyerName)bn=s.buyerName;if(s.buyerPhone)bp=s.buyerPhone;if(s.linkGroup)lg=s.linkGroup;if(s.username)bn=s.username;
+            if(s.cart&&s.cart[0])op=s.cart[0];
+            if(!op){showToast('Data produk tidak ditemukan!','error');return;}
+            await showRenewModal(op,bn,bp,lg);
+        }
+        
+        async function showRenewModal(product,buyerName,buyerPhone,linkGroup){
+            const existing=document.getElementById('renewModal');if(existing)existing.remove();
+            try{
+                const snap=await database.ref('products/sewa').once('value');
+                const sp=[];snap.forEach(c=>{const p=c.val();p.id=c.key;sp.push(p);});
+                if(sp.length===0){showToast('Belum ada produk sewa!','error');return;}
+                let mp=sp;if(product.name){mp=sp.filter(p=>(p.name||'').toLowerCase().includes((product.name||'').toLowerCase())||(product.name||'').toLowerCase().includes((p.name||'').toLowerCase()));}
+                if(mp.length===0)mp=sp;
+                const modal=document.createElement('div');modal.id='renewModal';modal.className='modal-overlay';
+                modal.innerHTML=`<div class="modal-content"><button class="modal-close" onclick="closeRenewModal()">&times;</button><h3><i class="fas fa-sync-alt"></i> Perpanjang Sewa</h3>
+                    <div class="form-group"><label>Nama Pembeli</label><input type="text" id="renewBuyerName" value="${escapeHtml(buyerName)}" readonly style="background:#f1f5f9"></div>
+                    <div class="form-group"><label>Nomor WhatsApp</label><input type="text" id="renewBuyerPhone" value="${escapeHtml(buyerPhone)}" readonly style="background:#f1f5f9"></div>
+                    <div class="form-group"><label>Link Grup</label><input type="text" id="renewLinkGroup" value="${escapeHtml(linkGroup)}" readonly style="background:#f1f5f9"></div>
+                    <div class="form-group"><label>Pilih Paket</label><select id="renewProductSelect">${mp.map(p=>`<option value="${p.id}" data-price="${p.price}" data-duration="${p.duration||'7 Hari'}" data-name="${escapeHtml(p.name)}">${escapeHtml(p.name)} - Rp ${formatNumber(p.price)} (${p.duration||'7 Hari'})</option>`).join('')}</select></div>
+                    <div class="form-group"><label>Durasi</label><input type="text" id="renewDurationDisplay" readonly style="background:#f1f5f9"></div>
+                    <div class="form-group"><label>Harga</label><input type="text" id="renewPriceDisplay" readonly style="background:#f1f5f9"></div>
+                    <div class="checkbox-group"><label class="checkbox-label"><input type="checkbox" id="renewAllowVoucher" checked><span>✅ Gunakan Voucher</span></label></div>
+                    <button class="btn-primary" onclick="processRenewActive()"><i class="fas fa-arrow-right"></i> Lanjut ke Pembayaran</button></div>`;
+                document.body.appendChild(modal);
+                const sel=document.getElementById('renewProductSelect'),dd=document.getElementById('renewDurationDisplay'),pd=document.getElementById('renewPriceDisplay');
+                const update=()=>{const o=sel.options[sel.selectedIndex];if(dd)dd.value=o.dataset.duration||'-';if(pd)pd.value=`Rp ${formatNumber(o.dataset.price)}`;};
+                sel.addEventListener('change',update);update();
+            }catch(e){console.error(e);showToast('Gagal memuat produk','error');}
+        }
+        
+        function closeRenewModal(){const m=document.getElementById('renewModal');if(m)m.remove();}
+        
+        async function processRenewActive(){
+            const bn=document.getElementById('renewBuyerName')?.value,bp=document.getElementById('renewBuyerPhone')?.value,lg=document.getElementById('renewLinkGroup')?.value,sel=document.getElementById('renewProductSelect'),av=document.getElementById('renewAllowVoucher')?.checked;
+            if(!bn||!bp||!lg||!sel){showToast('Error: Form tidak lengkap','error');return;}
+            const o=sel.options[sel.selectedIndex],pid=sel.value,pn=o.dataset.name,pp=parseInt(o.dataset.price),dur=o.dataset.duration;
+            const ps=await database.ref(`products/sewa/${pid}`).once('value');const prod=ps.val();
+            if(!prod||prod.stock<=0){showToast('Produk habis stok!','error');return;}
+            const cart=[{id:pid,name:pn,price:pp,quantity:1,type:'sewa',duration:dur,thumbnail:prod.thumbnail||'https://placehold.co/300x200/1a1d24/4facfe?text=Sewa+Bot',allowVoucher:av!==false}];
+            const od={type:'sewa',buyerName:bn,buyerPhone:bp,linkGroup:lg,notes:'Perpanjangan sewa',durasi:parseInt(dur)||7,cart:cart,total:pp,isRenew:true,createdAt:new Date().toISOString()};
+            localStorage.setItem('checkoutCart',JSON.stringify(cart));localStorage.setItem('checkoutTotal',pp);localStorage.setItem('orderData',JSON.stringify(od));localStorage.setItem('buyerName',bn);
+            closeRenewModal();showToast('Mengalihkan ke pembayaran...','success');setTimeout(()=>{window.location.href='pay.html';},1000);
+        }
+        
+        // Music Player (simplified)
+        function loadMusicHistory(){const s=localStorage.getItem('rayy_music_history');if(s){try{musicPlayer.playHistory=JSON.parse(s);if(musicPlayer.playHistory.length>0){renderMusicHistory();const hs=document.getElementById('musicHistorySection');if(hs)hs.style.display='block';}}catch(e){}}}
+        function saveMusicHistory(){localStorage.setItem('rayy_music_history',JSON.stringify(musicPlayer.playHistory));}
+        function renderMusicHistory(){const hl=document.getElementById('musicHistoryList');if(!hl)return;if(musicPlayer.playHistory.length===0){const hs=document.getElementById('musicHistorySection');if(hs)hs.style.display='none';return;}
+            hl.innerHTML=musicPlayer.playHistory.map((t,i)=>`<div class="history-item" onclick="playFromHistory(${i})"><img src="${t.thumbnail||'https://via.placeholder.com/35x35?text=🎵'}" onerror="this.src='https://via.placeholder.com/35x35?text=🎵'"><div class="history-item-info"><div class="history-item-title">${escapeHtml(t.title.substring(0,40))}${t.title.length>40?'...':''}</div><div class="history-item-artist">${escapeHtml(t.artist||'Unknown Artist')}</div></div><i class="fas fa-play-circle" style="color:#4facfe;opacity:0.6"></i></div>`).join('');
+        }
+        function playFromHistory(i){const t=musicPlayer.playHistory[i];if(t&&t.url)playMusic(t.title,t.url,t.thumbnail,t.artist);}
+        function clearMusicHistory(){if(confirm('Hapus semua riwayat putar?')){musicPlayer.playHistory=[];saveMusicHistory();renderMusicHistory();const hs=document.getElementById('musicHistorySection');if(hs)hs.style.display='none';showToast('Riwayat musik dihapus','success');}}
+        async function searchMusic(q){const rl=document.getElementById('musicResultsList');if(!q.trim()){rl.innerHTML='<div class="empty-message">Masukkan judul lagu</div>';return;}
+            rl.innerHTML='<div class="loading-indicator"><i class="fas fa-spinner fa-pulse"></i> Mencari...</div>';
+            try{const res=await fetch(`https://api-faa.my.id/faa/ytplay?query=${encodeURIComponent(q)}`);if(!res.ok)throw new Error();const d=await res.json();
+                if(d.status&&d.result){const r=d.result;rl.innerHTML=`<div class="result-item" data-title="${escapeHtml(r.title)}" data-url="${r.mp3}" data-thumb="${r.thumbnail}" data-artist="${escapeHtml(r.author)}"><img src="${r.thumbnail}" onerror="this.src='https://via.placeholder.com/45x45?text=🎵'"><div class="result-info"><div class="result-title">${escapeHtml(r.title)}</div><div class="result-artist">${escapeHtml(r.author)}</div><div class="result-duration">${r.duration_timestamp||'0:00'}</div></div></div>`;
+                    document.querySelector('#musicResultsList .result-item')?.addEventListener('click',function(){playMusic(this.dataset.title,this.dataset.url,this.dataset.thumb,this.dataset.artist);});
+                }else{rl.innerHTML='<div class="empty-message">Lagu tidak ditemukan</div>';}
+            }catch(e){rl.innerHTML='<div class="empty-message">Error koneksi</div>';}
+        }
+        function playMusic(title,url,thumbnail,artist){if(!url||url==='undefined'){showToast('URL tidak valid','error');return;}
+            const a=document.getElementById('globalAudio');if(!a)return;if(musicPlayer.updateInterval)clearInterval(musicPlayer.updateInterval);
+            musicPlayer.currentTrack={title,url,thumbnail,artist};musicPlayer.audio=a;a.src=url;a.load();a.play().catch(e=>console.log(e));musicPlayer.isPlaying=true;
+            const np=document.getElementById('musicNowPlaying'),mt=document.getElementById('musicThumb'),mti=document.getElementById('musicTitle'),ma=document.getElementById('musicArtist'),ppb=document.getElementById('musicPlayPauseBtn');
+            if(np)np.style.display='flex';if(mt)mt.src=thumbnail||'https://via.placeholder.com/60x60?text=🎵';if(mti)mti.innerText=title||'Unknown';if(ma)ma.innerText=artist||'Unknown';if(ppb)ppb.innerHTML='<i class="fas fa-pause"></i>';
+            updateFloatingPlayer({title,thumbnail,artist});addToMusicHistory({title,url,thumbnail,artist});showToast(`🎵 Memutar: ${title}`,'success');startProgressUpdate();
+        }
+        function addToMusicHistory(t){if(!t||!t.title)return;musicPlayer.playHistory=musicPlayer.playHistory.filter(h=>h.url!==t.url);musicPlayer.playHistory.unshift({title:t.title,url:t.url,thumbnail:t.thumbnail,artist:t.artist,timestamp:new Date().toISOString()});if(musicPlayer.playHistory.length>20)musicPlayer.playHistory=musicPlayer.playHistory.slice(0,20);saveMusicHistory();renderMusicHistory();const hs=document.getElementById('musicHistorySection');if(hs)hs.style.display='block';}
+        function stopMusic(){if(musicPlayer.audio){musicPlayer.audio.pause();musicPlayer.audio.currentTime=0;musicPlayer.isPlaying=false;musicPlayer.currentTrack=null;
+            const np=document.getElementById('musicNowPlaying'),ppb=document.getElementById('musicPlayPauseBtn'),pf=document.getElementById('musicProgressFilled'),ct=document.getElementById('musicCurrentTime');
+            if(np)np.style.display='none';if(ppb)ppb.innerHTML='<i class="fas fa-play"></i>';if(pf)pf.style.width='0%';if(ct)ct.innerText='0:00';updateFloatingPlayer(null);if(musicPlayer.updateInterval)clearInterval(musicPlayer.updateInterval);showToast('⏹️ Musik dihentikan','success');}}
+        function togglePlayPause(){if(!musicPlayer.audio||!musicPlayer.currentTrack){showToast('Pilih lagu dulu','error');return;}
+            if(musicPlayer.isPlaying){musicPlayer.audio.pause();musicPlayer.isPlaying=false;const ppb=document.getElementById('musicPlayPauseBtn'),fpp=document.getElementById('floatingPlayPause');if(ppb)ppb.innerHTML='<i class="fas fa-play"></i>';if(fpp)fpp.innerHTML='<i class="fas fa-play"></i>';}else{musicPlayer.audio.play().catch(e=>console.log(e));musicPlayer.isPlaying=true;const ppb=document.getElementById('musicPlayPauseBtn'),fpp=document.getElementById('floatingPlayPause');if(ppb)ppb.innerHTML='<i class="fas fa-pause"></i>';if(fpp)fpp.innerHTML='<i class="fas fa-pause"></i>';startProgressUpdate();}}
+        function startProgressUpdate(){if(musicPlayer.updateInterval)clearInterval(musicPlayer.updateInterval);musicPlayer.updateInterval=setInterval(()=>{if(musicPlayer.audio&&musicPlayer.audio.duration&&musicPlayer.isPlaying){const c=musicPlayer.audio.currentTime,d=musicPlayer.audio.duration,p=(c/d)*100;const pf=document.getElementById('musicProgressFilled'),ct=document.getElementById('musicCurrentTime'),de=document.getElementById('musicDuration');if(pf)pf.style.width=p+'%';if(ct)ct.innerText=formatMusicTime(c);if(de)de.innerText=formatMusicTime(d);}},500);}
+        function formatMusicTime(s){if(!s||isNaN(s))return '0:00';const m=Math.floor(s/60),sc=Math.floor(s%60);return `${m}:${sc.toString().padStart(2,'0')}`;}
+        function setMusicVolume(v){musicPlayer.volume=v;if(musicPlayer.audio)musicPlayer.audio.volume=v/100;const vs=document.getElementById('musicVolumeSlider');if(vs)vs.value=v;localStorage.setItem('rayy_music_volume',v);}
+        function openMusicModal(){const m=document.getElementById('musicModal');if(m)m.style.display='flex';loadMusicHistory();}
+        function closeMusicModal(){const m=document.getElementById('musicModal');if(m)m.style.display='none';}
+        let isDragging=false,dragStartX,dragStartY;
+        function initFloatingPlayer(){const fp=document.getElementById('floatingPlayer'),dh=document.getElementById('floatingDrag');if(!dh)return;
+            dh.addEventListener('mousedown',startDrag);dh.addEventListener('touchstart',startDrag,{passive:false});document.addEventListener('mousemove',onDrag);document.addEventListener('mouseup',stopDrag);document.addEventListener('touchmove',onDrag,{passive:false});document.addEventListener('touchend',stopDrag);
+            document.getElementById('floatingPlayPause').onclick=togglePlayPause;document.getElementById('floatingStop').onclick=stopMusic;document.getElementById('floatingClose').onclick=()=>{stopMusic();if(fp)fp.style.display='none';};
+        }
+        function startDrag(e){isDragging=true;const fp=document.getElementById('floatingPlayer');if(!fp)return;const rect=fp.getBoundingClientRect();
+            if(e.type==='mousedown'){dragStartX=e.clientX-rect.left;dragStartY=e.clientY-rect.top;}else{dragStartX=e.touches[0].clientX-rect.left;dragStartY=e.touches[0].clientY-rect.top;}
+            fp.style.transition='none';e.preventDefault();}
+        function onDrag(e){if(!isDragging)return;let cx,cy;if(e.type==='mousemove'){cx=e.clientX;cy=e.clientY;}else{cx=e.touches[0].clientX;cy=e.touches[0].clientY;}
+            const fp=document.getElementById('floatingPlayer');if(!fp)return;let nx=cx-dragStartX,ny=cy-dragStartY;const mx=window.innerWidth-fp.offsetWidth-10,my=window.innerHeight-fp.offsetHeight-10;
+            nx=Math.min(Math.max(nx,10),mx);ny=Math.min(Math.max(ny,10),my);fp.style.left=nx+'px';fp.style.top=ny+'px';fp.style.right='auto';fp.style.bottom='auto';e.preventDefault();}
+        function stopDrag(){isDragging=false;const fp=document.getElementById('floatingPlayer');if(fp)fp.style.transition='';}
+        function updateFloatingPlayer(t){const fp=document.getElementById('floatingPlayer');if(!fp)return;if(!t){fp.style.display='none';return;}
+            fp.style.display='block';const ft=document.getElementById('floatingThumb'),fti=document.getElementById('floatingTitle'),fa=document.getElementById('floatingArtist'),fpp=document.getElementById('floatingPlayPause');
+            if(ft)ft.src=t.thumbnail||'https://via.placeholder.com/40x40?text=🎵';if(fti)fti.innerText=t.title||'Unknown';if(fa)fa.innerText=t.artist||'Unknown';if(fpp)fpp.innerHTML=musicPlayer.isPlaying?'<i class="fas fa-pause"></i>':'<i class="fas fa-play"></i>';
+        }
+        function initMusicEventListeners(){
+            document.getElementById('sidebarMusicBtn').onclick=(e)=>{e.preventDefault();openMusicModal();};
+            document.getElementById('closeMusicModal').onclick=closeMusicModal;
+            document.getElementById('musicPlayPauseBtn').onclick=togglePlayPause;
+            document.getElementById('musicStopBtn').onclick=stopMusic;
+            document.getElementById('musicSearchBtn').onclick=()=>searchMusic(document.getElementById('musicSearchInput').value);
+            document.getElementById('musicSearchInput').onkeypress=(e)=>{if(e.key==='Enter')searchMusic(e.target.value);};
+            document.getElementById('musicVolumeSlider').oninput=(e)=>setMusicVolume(parseInt(e.target.value));
+            document.getElementById('musicVolDown').onclick=()=>setMusicVolume(Math.max(0,musicPlayer.volume-10));
+            document.getElementById('musicVolUp').onclick=()=>setMusicVolume(Math.min(100,musicPlayer.volume+10));
+            document.getElementById('musicProgressBar').onclick=(e)=>{if(musicPlayer.audio&&musicPlayer.audio.duration){const rect=e.currentTarget.getBoundingClientRect();const percent=(e.clientX-rect.left)/rect.width;musicPlayer.audio.currentTime=percent*musicPlayer.audio.duration;}};
+            document.getElementById('clearMusicHistory').onclick=clearMusicHistory;
+            document.getElementById('musicModal').onclick=(e)=>{if(e.target===document.getElementById('musicModal'))closeMusicModal();};
+            const sv=localStorage.getItem('rayy_music_volume');if(sv)setMusicVolume(parseInt(sv));else setMusicVolume(70);
+        }
+        
+        document.addEventListener('DOMContentLoaded',function(){
+            document.getElementById('menuToggle').onclick=toggleSidebar;
+            document.getElementById('sidebarClose').onclick=closeSidebar;
+            updateSidebarProfile();updateCartCount();loadActiveSewa();initMusicEventListeners();initFloatingPlayer();
+        });
+        window.closeRenewModal=closeRenewModal;window.renewFromActive=renewFromActive;window.processRenewActive=processRenewActive;window.closeSidebar=closeSidebar;window.openSidebar=openSidebar;window.toggleSidebar=toggleSidebar;window.loadActiveSewa=loadActiveSewa;window.playMusic=playMusic;window.stopMusic=stopMusic;window.togglePlayPause=togglePlayPause;window.playFromHistory=playFromHistory;
+    </script>
+</body>
+</html>

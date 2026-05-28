@@ -2,6 +2,14 @@
 // TELEGRAM & WHATSAPP NOTIFICATION
 // ========================================
 
+// TELEGRAM BOT TOKEN BARU
+const TELEGRAM_BOT_TOKEN = "8996706964:AAEXwbGDvtJC3l2X6WTeFfk3K5KZb7JxtLQ";
+const TELEGRAM_CHAT_ID = "7966336512";
+
+// WhatsApp Numbers
+const WHATSAPP_NUMBER = "6285794545996";
+const WHATSAPP_ADMIN2 = "6285189712417";
+
 function formatNumberTele(num) {
     if (!num) return '0';
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
@@ -45,7 +53,7 @@ function sendWhatsAppNotification(phoneNumber, message) {
     console.log('📱 Membuka WhatsApp untuk nomor:', phoneNumber);
 }
 
-// ==================== NOTIFIKASI 1: TAMBAH KE KERANJANG (TELEGRAM ONLY) ====================
+// ==================== NOTIFIKASI 1: TAMBAH KE KERANJANG ====================
 async function notifyAddToCartTelegram(productName, price, quantity, userName) {
     const messageTelegram = `🛒 *TAMBAH KE KERANJANG*\n\n` +
         `👤 User: ${userName || 'Guest'}\n` +
@@ -55,7 +63,6 @@ async function notifyAddToCartTelegram(productName, price, quantity, userName) {
         `⏰ Waktu: ${new Date().toLocaleString('id-ID')}`;
     
     await sendTelegramNotification(messageTelegram);
-    // TIDAK ADA WHATSAPP - HANYA TELEGRAM
 }
 
 // ==================== NOTIFIKASI 2: PROSES CHECKOUT ====================
@@ -63,6 +70,7 @@ async function notifyOrderProcessing(orderData) {
     const user = orderData.customerData?.buyerName || 
                  orderData.customerData?.wajib?.ownerName || 
                  orderData.customerData?.ownerName || 
+                 orderData.customerData?.panelUsername ||
                  'Customer';
     
     let produkText = '';
@@ -77,7 +85,7 @@ async function notifyOrderProcessing(orderData) {
         `📦 Produk: ${produkText}\n` +
         `🔢 Total Item: ${totalItem}\n` +
         `💰 Total Harga: Rp ${formatNumberTele(orderData.total || 0)}\n` +
-        `📂 Kategori: ${orderData.type === 'sewa' ? 'SEWA' : 'SCRIPT'}\n` +
+        `📂 Kategori: ${orderData.type === 'sewa' ? 'SEWA' : orderData.type === 'script' ? 'SCRIPT' : 'PANEL'}\n` +
         `⏰ Waktu: ${new Date().toLocaleString('id-ID')}`;
     
     const messageWA = `🛍️ *PRODUK DIPROSES (CHECKOUT)*%0A%0A` +
@@ -85,7 +93,7 @@ async function notifyOrderProcessing(orderData) {
         `📦 Produk: ${produkText}%0A` +
         `🔢 Total Item: ${totalItem}%0A` +
         `💰 Total Harga: Rp ${formatNumberTele(orderData.total || 0)}%0A` +
-        `📂 Kategori: ${orderData.type === 'sewa' ? 'SEWA' : 'SCRIPT'}%0A%0A` +
+        `📂 Kategori: ${orderData.type === 'sewa' ? 'SEWA' : orderData.type === 'script' ? 'SCRIPT' : 'PANEL'}%0A%0A` +
         `⏰ ${new Date().toLocaleString('id-ID')}`;
     
     await sendTelegramNotification(messageTelegram);
@@ -175,7 +183,34 @@ async function notifyScriptSuccess(orderData) {
     sendWhatsAppNotification(WHATSAPP_NUMBER, messageWA);
 }
 
-// ==================== NOTIFIKASI 5: UPLOAD BUKTI PEMBAYARAN ====================
+// ==================== NOTIFIKASI 5: PEMBAYARAN BERHASIL (PANEL) ====================
+async function notifyPanelOrder(orderData) {
+    const user = orderData.customerData?.panelUsername || orderData.customerData?.buyerName || 'Customer';
+    const spec = orderData.customerData?.specData || {};
+    const ramLabel = spec.ramLabel || spec.spec || '1GB';
+    
+    const messageTelegram = `🖥️ *PEMBAYARAN BERHASIL - PANEL HOSTING* 🖥️\n\n` +
+        `👤 Pembeli: ${user}\n` +
+        `📦 Produk: ${orderData.customerData?.productName || 'Panel Hosting'}\n` +
+        `💻 Spesifikasi: ${ramLabel} RAM | ${spec.cpu || '30'}% CPU | ${spec.disk ? Math.floor(spec.disk / 1024) : '2'} GB Disk\n` +
+        `💰 Total: Rp ${formatNumberTele(orderData.total || 0)}\n` +
+        `💳 Gateway: ${orderData.gateway || 'unknown'}\n` +
+        `⏰ Waktu: ${new Date().toLocaleString('id-ID')}`;
+    
+    const messageWA = `🖥️ *PEMBAYARAN BERHASIL - PANEL HOSTING* 🖥️%0A%0A` +
+        `👤 Pembeli: ${user}%0A` +
+        `📦 Produk: ${orderData.customerData?.productName}%0A` +
+        `💻 Spesifikasi: ${ramLabel} RAM | ${spec.cpu || '30'}% CPU%0A` +
+        `💰 Total: Rp ${formatNumberTele(orderData.total || 0)}%0A` +
+        `💳 Gateway: ${orderData.gateway}%0A%0A` +
+        `⏰ ${new Date().toLocaleString('id-ID')}`;
+    
+    await sendTelegramNotification(messageTelegram);
+    sendWhatsAppNotification(WHATSAPP_ADMIN2, messageWA);
+    sendWhatsAppNotification(WHATSAPP_NUMBER, messageWA);
+}
+
+// ==================== NOTIFIKASI 6: UPLOAD BUKTI PEMBAYARAN ====================
 async function notifyUploadBukti(orderId, buyerName, total, imageUrl) {
     let produkText = '';
     let orderData = JSON.parse(localStorage.getItem('lastOrderData') || '{}');
@@ -203,7 +238,7 @@ async function notifyUploadBukti(orderId, buyerName, total, imageUrl) {
     sendWhatsAppNotification(WHATSAPP_ADMIN2, messageWA);
 }
 
-// ==================== NOTIFIKASI 6: DONE CANVAS GENERATED ====================
+// ==================== NOTIFIKASI 7: DONE CANVAS GENERATED ====================
 async function notifyDoneCanvas(buyerName, productsText, totalAmount, canvasUrl) {
     const messageTelegram = `🎨 *DONE CANVAS GENERATED* 🎨\n\n` +
         `👤 Pembeli: ${buyerName}\n` +

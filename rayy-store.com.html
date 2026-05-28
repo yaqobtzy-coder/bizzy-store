@@ -10,15 +10,43 @@
     <link rel="stylesheet" href="rayy-store.com.css">
 </head>
 <body>
+    <!-- SIDEBAR -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">Rayy<span>Store</span></div>
+            <button class="sidebar-close" id="sidebarClose">&times;</button>
+        </div>
+        <div class="sidebar-profile">
+            <div class="sidebar-avatar"><i class="fas fa-user-circle"></i></div>
+            <div class="sidebar-name" id="sidebarName">Customer</div>
+            <div class="sidebar-email" id="sidebarEmail">customer@rayystore.com</div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="rayy-store.com.html" class="sidebar-link active"><i class="fas fa-home"></i> Beranda</a>
+            <a href="profile.html" class="sidebar-link"><i class="fas fa-user"></i> Profil</a>
+            <a href="vouchers.html" class="sidebar-link"><i class="fas fa-ticket-alt"></i> Voucher</a>
+            <a href="news.com.html" class="sidebar-link"><i class="fas fa-newspaper"></i> News</a>
+            <a href="buy-panel.html" class="sidebar-link"><i class="fas fa-server"></i> Panel</a>
+            <a href="#" id="sidebarMusicBtn" class="sidebar-link"><i class="fas fa-music"></i> Musik</a>
+            <a href="history.html" class="sidebar-link"><i class="fas fa-history"></i> Histori Belanja</a>
+            <a href="active-sewa.html" class="sidebar-link"><i class="fas fa-calendar-check"></i> Sewa Aktif</a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="cart-icon-sidebar" onclick="toggleCart()">
+                <i class="fas fa-shopping-bag"></i>
+                <span class="cart-count" id="sidebarCartCount">0</span>
+                <span>Keranjang</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
     <!-- SPLASH SCREEN -->
     <div class="splash-screen" id="splashScreen">
         <div class="splash-container">
-            <div class="logo-wrapper">
-                <div class="logo-r">R</div>
-            </div>
-            <div class="brand-text">
-                Rayy <span>Store</span>
-            </div>
+            <div class="logo-wrapper"><div class="logo-r">R</div></div>
+            <div class="brand-text">Rayy <span>Store</span></div>
             <div class="brand-line"></div>
         </div>
     </div>
@@ -27,9 +55,7 @@
     <div id="popupModal" class="popup-modal" style="display: none;">
         <div class="popup-content">
             <button class="popup-close" id="closePopupBtn">&times;</button>
-            <div class="popup-media" id="popupMedia">
-                <i class="fab fa-whatsapp"></i>
-            </div>
+            <div class="popup-media" id="popupMedia"><i class="fab fa-whatsapp"></i></div>
             <h2 id="popupTitle">JOIN CHANNEL</h2>
             <p id="popupMessage">Dapatkan info update produk terbaru dan promo menarik!</p>
             <div id="popupVoucher" class="popup-voucher" style="display: none;">
@@ -37,32 +63,21 @@
                 <button class="copy-voucher-btn" onclick="copyVoucherCode()">📋 Salin Kode</button>
             </div>
             <div class="popup-buttons">
-                <a href="#" id="popupButton" class="popup-btn" target="_blank">
-                    <i class="fab fa-whatsapp"></i> Gabung Sekarang
-                </a>
-                <a href="vouchers.html" id="popupVoucherCenterBtn" class="popup-btn popup-btn-secondary">
-                    <i class="fas fa-ticket-alt"></i> 🎫 Kunjungi Voucher Center
-                </a>
+                <a href="#" id="popupButton" class="popup-btn" target="_blank"><i class="fab fa-whatsapp"></i> Gabung Sekarang</a>
+                <a href="vouchers.html" id="popupVoucherCenterBtn" class="popup-btn popup-btn-secondary"><i class="fas fa-ticket-alt"></i> 🎫 Kunjungi Voucher Center</a>
             </div>
         </div>
     </div>
 
     <!-- MAIN CONTENT -->
     <div class="main-content" id="mainContent">
-        <!-- NAVBAR -->
-        <nav class="navbar">
+        <!-- TOP NAVBAR (Mobile) -->
+        <nav class="top-navbar">
+            <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
             <div class="logo-small">Rayy<span>Store</span></div>
-            <div class="nav-links">
-                <a href="rayy-store.com.html"><i class="fas fa-home"></i> Beranda</a>
-                <a href="profile.html"><i class="fas fa-user"></i> Profil</a>
-                <a href="vouchers.html"><i class="fas fa-ticket-alt"></i> Voucher</a>
-                <a href="news.com.html"><i class="fas fa-newspaper"></i> News</a>
-                <a href="buy-panel.html"><i class="fas fa-server"></i> Panel</a>
-                <a href="#" id="musicBtn"><i class="fas fa-music"></i> Musik</a>
-                <div class="cart-icon" onclick="toggleCart()">
-                    <i class="fas fa-shopping-bag"></i>
-                    <span class="cart-count" id="cartCount">0</span>
-                </div>
+            <div class="top-cart-icon" onclick="toggleCart()">
+                <i class="fas fa-shopping-bag"></i>
+                <span class="cart-count" id="topCartCount">0</span>
             </div>
         </nav>
 
@@ -96,38 +111,21 @@
         <!-- MAIN CONTAINER -->
         <div class="container">
             <!-- KATEGORI PRODUK -->
-            <div class="section-title">
-                <i class="fas fa-tags"></i>
-                <span>Kategori Produk</span>
-            </div>
+            <div class="section-title"><i class="fas fa-tags"></i><span>Kategori Produk</span></div>
             <div class="categories" id="categoriesContainer">
-                <button class="category-btn active" data-category="all">
-                    <i class="fas fa-th-large"></i> Semua
-                </button>
+                <button class="category-btn active" data-category="all"><i class="fas fa-th-large"></i> Semua</button>
             </div>
 
             <!-- PRODUK SEWA BOT -->
-            <div class="section-title">
-                <i class="fas fa-calendar-alt"></i>
-                <span>Produk Sewa Bot</span>
-            </div>
+            <div class="section-title"><i class="fas fa-calendar-alt"></i><span>Produk Sewa Bot</span></div>
             <div class="products-grid" id="sewaProductsGrid">
-                <div class="loading-spinner">
-                    <i class="fas fa-spinner"></i>
-                    <p>Memuat produk...</p>
-                </div>
+                <div class="loading-spinner"><i class="fas fa-spinner"></i><p>Memuat produk...</p></div>
             </div>
 
             <!-- PRODUK SCRIPT -->
-            <div class="section-title">
-                <i class="fas fa-code"></i>
-                <span>Produk Script</span>
-            </div>
+            <div class="section-title"><i class="fas fa-code"></i><span>Produk Script</span></div>
             <div class="products-grid" id="scriptProductsGrid">
-                <div class="loading-spinner">
-                    <i class="fas fa-spinner"></i>
-                    <p>Memuat produk...</p>
-                </div>
+                <div class="loading-spinner"><i class="fas fa-spinner"></i><p>Memuat produk...</p></div>
             </div>
         </div>
 
@@ -148,17 +146,10 @@
                         <button class="music-stop-btn" id="musicStopBtn"><i class="fas fa-stop"></i></button>
                     </div>
                     <div class="music-progress">
-                        <div class="progress-bar" id="musicProgressBar">
-                            <div class="progress-filled" id="musicProgressFilled"></div>
-                        </div>
-                        <div class="music-time">
-                            <span id="musicCurrentTime">0:00</span>
-                            <span id="musicDuration">0:00</span>
-                        </div>
+                        <div class="progress-bar" id="musicProgressBar"><div class="progress-filled" id="musicProgressFilled"></div></div>
+                        <div class="music-time"><span id="musicCurrentTime">0:00</span><span id="musicDuration">0:00</span></div>
                     </div>
-                    <div class="music-controls">
-                        <button class="music-control-btn" id="musicPlayPauseBtn"><i class="fas fa-play"></i></button>
-                    </div>
+                    <div class="music-controls"><button class="music-control-btn" id="musicPlayPauseBtn"><i class="fas fa-play"></i></button></div>
                     <div class="music-volume">
                         <button class="volume-btn" id="musicVolDown"><i class="fas fa-volume-down"></i></button>
                         <input type="range" id="musicVolumeSlider" min="0" max="100" value="70">
@@ -170,15 +161,10 @@
                     </div>
                     <div class="music-results">
                         <div class="results-title"><i class="fas fa-headphones"></i> HASIL PENCARIAN</div>
-                        <div class="results-list" id="musicResultsList">
-                            <div class="empty-message">Cari lagu favoritmu</div>
-                        </div>
+                        <div class="results-list" id="musicResultsList"><div class="empty-message">Cari lagu favoritmu</div></div>
                     </div>
                     <div class="music-history" id="musicHistorySection" style="display: none;">
-                        <div class="history-title">
-                            <i class="fas fa-history"></i> RIWAYAT PUTAR
-                            <button class="clear-history" id="clearMusicHistory"><i class="fas fa-trash"></i></button>
-                        </div>
+                        <div class="history-title"><i class="fas fa-history"></i> RIWAYAT PUTAR<button class="clear-history" id="clearMusicHistory"><i class="fas fa-trash"></i></button></div>
                         <div class="history-list" id="musicHistoryList"></div>
                     </div>
                 </div>
@@ -187,7 +173,7 @@
 
         <!-- MINI FLOATING PLAYER -->
         <div id="floatingPlayer" class="floating-player" style="display: none;">
-            <div class="floating-player-content" id="floatingPlayerContent">
+            <div class="floating-player-content">
                 <img id="floatingThumb" src="https://via.placeholder.com/40x40?text=🎵" alt="cover">
                 <div class="floating-info">
                     <div class="floating-title" id="floatingTitle">Tidak ada lagu</div>
@@ -198,9 +184,7 @@
                     <button id="floatingStop"><i class="fas fa-stop"></i></button>
                     <button id="floatingClose"><i class="fas fa-times"></i></button>
                 </div>
-                <div class="floating-drag" id="floatingDrag">
-                    <i class="fas fa-grip-vertical"></i>
-                </div>
+                <div class="floating-drag"><i class="fas fa-grip-vertical"></i></div>
             </div>
         </div>
 
@@ -239,20 +223,17 @@
     </div>
 
     <!-- CART SIDEBAR -->
-    <div class="overlay" id="overlay" onclick="toggleCart()"></div>
     <div class="cart-sidebar" id="cartSidebar">
         <div class="cart-header">
             <h3><i class="fas fa-shopping-bag"></i> Keranjang</h3>
             <button class="close-cart" onclick="toggleCart()"><i class="fas fa-times"></i></button>
         </div>
         <div class="cart-items" id="cartItems"></div>
-        
         <div class="voucher-input-cart">
             <input type="text" id="voucherCodeCart" placeholder="Masukkan kode voucher">
             <button onclick="applyVoucherFromCart()">Pakai Voucher</button>
         </div>
         <div id="voucherMessageCart" class="voucher-message-cart"></div>
-        
         <div class="voucher-info" id="voucherInfo" style="display: none;">
             <div class="voucher-applied">
                 <span id="voucherAppliedCode"></span>
@@ -260,23 +241,11 @@
                 <button onclick="removeVoucherFromCart()">✕</button>
             </div>
         </div>
-        
         <div class="cart-total">
-            <div class="total-row">
-                <span>Subtotal</span>
-                <span class="subtotal-amount" id="subtotalAmount">Rp 0</span>
-            </div>
-            <div class="total-row" id="discountRow" style="display: none;">
-                <span>Diskon</span>
-                <span class="discount-amount" id="discountAmount">Rp 0</span>
-            </div>
-            <div class="total-row">
-                <span>Total</span>
-                <span class="total-amount" id="cartTotal">Rp 0</span>
-            </div>
-            <button class="checkout-btn" onclick="checkout()">
-                <i class="fas fa-credit-card"></i> Checkout
-            </button>
+            <div class="total-row"><span>Subtotal</span><span class="subtotal-amount" id="subtotalAmount">Rp 0</span></div>
+            <div class="total-row" id="discountRow" style="display: none;"><span>Diskon</span><span class="discount-amount" id="discountAmount">Rp 0</span></div>
+            <div class="total-row"><span>Total</span><span class="total-amount" id="cartTotal">Rp 0</span></div>
+            <button class="checkout-btn" onclick="checkout()"><i class="fas fa-credit-card"></i> Checkout</button>
         </div>
     </div>
 

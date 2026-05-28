@@ -94,11 +94,19 @@ async function submitData() {
     showLoading();
     
     let durasi = 1;
-    if (cart[0] && cart[0].duration) {
-        const match = cart[0].duration.match(/(\d+)/);
-        if (match) durasi = parseInt(match[1]);
+    let productName = '';
+    let productPrice = 0;
+    
+    if (cart[0]) {
+        if (cart[0].duration) {
+            const match = cart[0].duration.match(/(\d+)/);
+            if (match) durasi = parseInt(match[1]);
+        }
+        productName = cart[0].name;
+        productPrice = cart[0].price;
     }
     
+    // Buat order dengan status pending_approval (menunggu admin approve lewat Telegram)
     const orderData = {
         type: 'sewa',
         buyerName: buyerName,
@@ -106,10 +114,17 @@ async function submitData() {
         linkGroup: linkGroup,
         notes: notes,
         durasi: durasi,
+        productName: productName,
+        productPrice: productPrice,
         cart: cart,
         total: total,
+        status: 'pending_approval',  // Menunggu persetujuan admin
         createdAt: new Date().toISOString()
     };
+    
+    // Simpan ke Firebase sewa_orders
+    const newOrderRef = database.ref('sewa_orders').push();
+    await newOrderRef.set(orderData);
     
     localStorage.setItem('orderData', JSON.stringify(orderData));
     localStorage.setItem('buyerName', buyerName);
@@ -130,7 +145,10 @@ async function submitData() {
     }
     
     hideLoading();
-    window.location.href = 'pay.html';
+    
+    // Arahkan ke halaman menunggu persetujuan
+    alert('✅ Pesanan Anda telah dikirim! Admin akan memproses dalam beberapa saat. Anda akan mendapat notifikasi saat sewa aktif.');
+    window.location.href = 'rayy-store.com.html';
 }
 
 loadCartData();
