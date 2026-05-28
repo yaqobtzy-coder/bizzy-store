@@ -9,8 +9,6 @@
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
         body{background:#f8fafc;font-family:'Inter',sans-serif;overflow-x:hidden;color:#1e293b}
-        
-        /* SIDEBAR */
         .sidebar{position:fixed;top:0;left:-280px;width:280px;height:100%;background:#fff;z-index:1002;transition:left .3s;display:flex;flex-direction:column;box-shadow:2px 0 10px rgba(0,0,0,.1);border-right:1px solid #e2e8f0}
         .sidebar.open{left:0}
         .sidebar-header{display:flex;justify-content:space-between;align-items:center;padding:20px;border-bottom:1px solid #e2e8f0}
@@ -34,24 +32,18 @@
         .cart-icon-sidebar span:last-child{flex:1;color:#475569;font-weight:500}
         .overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:1001;display:none}
         .overlay.active{display:block}
-        
-        /* TOP NAVBAR */
         .top-navbar{background:#fff;padding:12px 20px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;border-bottom:1px solid #e2e8f0}
         .menu-toggle{background:0;border:none;font-size:22px;color:#475569;cursor:pointer}
         .logo-small{font-size:18px;font-weight:700;color:#0f172a}
         .logo-small span{color:#3b82f6}
         .top-cart-icon{position:relative;cursor:pointer;font-size:20px;color:#475569}
         .top-cart-icon .cart-count{position:absolute;top:-8px;right:-10px;background:#3b82f6;color:#fff;border-radius:50%;padding:2px 6px;font-size:10px;font-weight:600;min-width:18px;text-align:center}
-        
-        /* MAIN */
         .main-content{min-height:100vh}
         .container{max-width:1000px;margin:0 auto;padding:30px 20px}
         .page-header{text-align:center;margin-bottom:30px}
         .page-header h1{font-size:28px;font-weight:700;color:#0f172a;margin-bottom:8px}
         .page-header h1 i{color:#3b82f6}
         .page-header p{color:#64748b;font-size:14px}
-        
-        /* SEWA LIST */
         .sewa-list{display:flex;flex-direction:column;gap:20px}
         .sewa-card{background:#fff;border-radius:20px;border:1px solid #e2e8f0;overflow:hidden;transition:all .3s}
         .sewa-card:hover{transform:translateY(-3px);box-shadow:0 12px 25px rgba(0,0,0,.08);border-color:#3b82f6}
@@ -77,28 +69,20 @@
         .btn-renew-now:hover{opacity:.85}
         .btn-wa-support{flex:1;background:#25D366;border:none;padding:10px;border-radius:12px;color:#fff;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none}
         .btn-wa-support:hover{opacity:.85}
-        
-        /* EMPTY STATE */
         .empty-state{text-align:center;padding:60px 20px;background:#fff;border-radius:20px;border:1px solid #e2e8f0}
         .empty-state i{font-size:60px;color:#cbd5e1;margin-bottom:16px}
         .empty-state p{color:#64748b;font-size:14px;margin-bottom:20px}
         .btn-primary{background:#3b82f6;border:none;padding:10px 24px;border-radius:30px;color:#fff;font-weight:600;cursor:pointer;text-decoration:none;display:inline-block}
         .btn-primary:hover{background:#2563eb}
-        
-        /* LOADING */
         .loading-spinner{text-align:center;padding:60px;color:#94a3b8}
         .loading-spinner i{font-size:40px;color:#3b82f6;animation:spin 1s linear infinite}
         @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
-        
-        /* NOTIFICATION */
         .toast-notification{position:fixed;bottom:20px;right:20px;padding:10px 20px;border-radius:40px;color:#fff;font-weight:500;z-index:1002;animation:slideIn .3s ease;font-size:13px}
         .toast-notification.success{background:#22c55e}
         .toast-notification.error{background:#ef4444}
         .toast-notification.warning{background:#f59e0b}
         @keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
         @keyframes slideOut{from{transform:translateX(0);opacity:1}to{transform:translateX(100%);opacity:0}}
-        
-        /* MODAL */
         .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:2000;display:flex;justify-content:center;align-items:center}
         .modal-content{background:#fff;border-radius:20px;width:90%;max-width:500px;max-height:85vh;overflow-y:auto;padding:24px;position:relative}
         .modal-close{position:absolute;top:15px;right:20px;background:0;border:none;font-size:24px;color:#94a3b8;cursor:pointer}
@@ -111,15 +95,11 @@
         .checkbox-group{margin:16px 0}
         .checkbox-label{display:flex;align-items:center;gap:10px;cursor:pointer;color:#334155;font-size:13px;font-weight:500}
         .checkbox-label input{width:18px;height:18px;cursor:pointer;margin:0}
-        
-        /* MUSIC MODAL */
         .music-modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:2000;display:flex;justify-content:center;align-items:center}
         .music-modal-content{background:#fff;border-radius:20px;width:90%;max-width:500px;max-height:85vh;overflow-y:auto}
         .music-modal-header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid #e2e8f0}
         .close-modal{background:0;border:none;color:#94a3b8;font-size:24px;cursor:pointer}
         .music-modal-body{padding:20px}
-        
-        /* FLOATING PLAYER */
         .floating-player{position:fixed;bottom:20px;right:20px;width:280px;background:#fff;border-radius:60px;box-shadow:0 8px 25px rgba(0,0,0,.15);z-index:1500;border:1px solid #e2e8f0}
         .floating-player-content{display:flex;align-items:center;padding:8px 12px;gap:10px}
         .floating-info{flex:1;min-width:0}
@@ -129,7 +109,6 @@
         .floating-controls button{background:#f1f5f9;border:none;width:32px;height:32px;border-radius:50%;cursor:pointer}
         .floating-controls button:hover{background:#3b82f6;color:#fff}
         .floating-drag{cursor:grab;color:#94a3b8;padding:0 5px}
-        
         @media (max-width:768px){
             .page-header h1{font-size:22px}
             .sewa-header{flex-direction:column;align-items:flex-start}
@@ -199,8 +178,7 @@
                 <div class="music-modal-header"><h3><i class="fas fa-music"></i> Music Player</h3><button class="close-modal" id="closeMusicModal">&times;</button></div>
                 <div class="music-modal-body">
                     <div class="music-now-playing" id="musicNowPlaying" style="display:none">
-                        <img id="musicThumb" src="https://via.placeholder.com/60x60">
-                        <div class="music-info"><div class="music-title" id="musicTitle">-</div><div class="music-artist" id="musicArtist">-</div></div>
+                        <img id="musicThumb" src="https://via.placeholder.com/60x60"><div class="music-info"><div class="music-title" id="musicTitle">-</div><div class="music-artist" id="musicArtist">-</div></div>
                         <button class="music-stop-btn" id="musicStopBtn"><i class="fas fa-stop"></i></button>
                     </div>
                     <div class="music-progress"><div class="progress-bar" id="musicProgressBar"><div class="progress-filled" id="musicProgressFilled"></div></div><div class="music-time"><span id="musicCurrentTime">0:00</span><span id="musicDuration">0:00</span></div></div>
@@ -229,7 +207,7 @@
     <script src="firebase-config.js"></script>
     <script src="telegram-notif.js"></script>
     <script>
-        // ==================== ACTIVE SEWA PAGE ====================
+        // ==================== ACTIVE SEWA PAGE - BACA DARI sewa_orders ====================
         let activeSewas = [];
         let countdownIntervals = [];
         let currentUserName = '';
@@ -266,39 +244,62 @@
             setTimeout(()=>{if(n){n.style.animation='slideOut .3s ease';setTimeout(()=>{if(n&&n.remove)n.remove();},300);}},3000);
         }
         
+        // ========== LOAD ACTIVE SEWA - BACA DARI sewa_orders ==========
         async function loadActiveSewa(){
             const c=document.getElementById('sewaList');if(!c)return;
             c.innerHTML='<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>Memuat data sewa aktif...</p></div>';
+            
             const un=localStorage.getItem('userName');
             if(!un||un==='Customer'||un==='null'){
                 c.innerHTML=`<div class="empty-state"><i class="fas fa-user-slash"></i><p>Anda belum login.</p><a href="profile.html" class="btn-primary">Login Sekarang</a></div>`;
                 return;
             }
-            countdownIntervals.forEach(i=>clearInterval(i));countdownIntervals=[];activeSewas=[];
-            try{
-                const so=await database.ref('sewa_orders').once('value');
-                if(so.exists()){
-                    so.forEach(ch=>{
-                        const o=ch.val();o.orderId=ch.key;
-                        if((o.username===un||o.buyerName===un)&&(o.status==='success'||o.status==='active'||o.status==='approved')&&o.expiredAt){
-                            if(new Date(o.expiredAt).getTime()>Date.now()||o.status==='success')activeSewas.push(o);
+            
+            // Hentikan semua interval lama
+            countdownIntervals.forEach(i=>clearInterval(i));
+            countdownIntervals=[];
+            activeSewas=[];
+            
+            try {
+                // ========== BACA DARI sewa_orders (data dari form sewa) ==========
+                const sewaOrdersSnapshot = await database.ref('sewa_orders').once('value');
+                
+                if(sewaOrdersSnapshot.exists()){
+                    sewaOrdersSnapshot.forEach(child => {
+                        const order = child.val();
+                        order.orderId = child.key;
+                        
+                        // Cek apakah milik user ini
+                        const isUserOrder = (order.buyerName === un || order.username === un);
+                        
+                        // Cek apakah status ACTIVE dan memiliki expiredAt
+                        const isActive = (order.status === 'active' || order.status === 'success');
+                        const hasExpiredAt = order.expiredAt && order.expiredAt > Date.now();
+                        
+                        console.log(`Order ditemukan: ${order.orderId}, Status: ${order.status}, isUser: ${isUserOrder}, isActive: ${isActive}`);
+                        
+                        if(isUserOrder && isActive && order.expiredAt){
+                            // Pastikan expiredAt masih berlaku
+                            if(order.expiredAt > Date.now()){
+                                activeSewas.push(order);
+                                console.log(`✅ Sewa aktif ditambahkan: ${order.orderId}`);
+                            }
                         }
                     });
                 }
-                const ord=await database.ref('orders').once('value');
-                if(ord.exists()){
-                    ord.forEach(ch=>{
-                        const o=ch.val();o.orderId=ch.key;
-                        const isSewa=(o.type==='sewa'||o.customerData?.type==='sewa');
-                        const isUser=(o.customerData?.buyerName===un||o.buyerName===un||o.username===un);
-                        if(isSewa&&isUser&&(o.status==='completed'||o.status==='success')&&o.expiredAt){
-                            if(!activeSewas.some(a=>a.orderId===o.orderId))activeSewas.push(o);
-                        }
-                    });
-                }
-                activeSewas.sort((a,b)=>new Date(a.expiredAt||0)-new Date(b.expiredAt||0));
-                renderActiveSewas();startAllCountdowns();
-            }catch(e){console.error(e);c.innerHTML=`<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Gagal memuat data.</p><button onclick="loadActiveSewa()" class="btn-primary">Coba Lagi</button></div>`;}
+                
+                console.log(`Total active sewa ditemukan: ${activeSewas.length}`);
+                
+                // Sort by expiredAt (paling cepat habis di atas)
+                activeSewas.sort((a,b) => a.expiredAt - b.expiredAt);
+                
+                renderActiveSewas();
+                startAllCountdowns();
+                
+            } catch(e){
+                console.error('Error loading active sewa:', e);
+                c.innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Gagal memuat data: ${e.message}</p><button onclick="loadActiveSewa()" class="btn-primary">Coba Lagi</button></div>`;
+            }
         }
         
         function renderActiveSewas(){
@@ -308,112 +309,303 @@
                 return;
             }
             c.innerHTML=activeSewas.map(s=>{
-                const expiredAt=s.expiredAt?new Date(s.expiredAt).getTime():null;
-                let pn='Sewa Bot',pp=0,dur=7;
-                if(s.cart&&s.cart[0]){pn=s.cart[0].name||'Sewa Bot';pp=s.cart[0].price||0;dur=parseInt(s.cart[0].duration)||7;}
-                else if(s.productName){pn=s.productName;pp=s.productPrice||s.total||0;}
-                const bn=s.buyerName||s.username||s.customerData?.buyerName||'Customer';
-                const lg=s.linkGroup||s.customerData?.linkGroup||'-';
-                const bp=s.buyerPhone||s.customerData?.buyerPhone||'-';
-                const sd=formatDate(s.createdAt||s.startDate||s.timestamp);
-                const ed=formatDate(s.expiredAt);
-                let countdownText='Menghitung...',statusClass='status-active',timerClass='';
+                const expiredAt = s.expiredAt;
+                let pn = 'Sewa Bot', pp = 0, dur = 7;
+                
+                // Ambil nama produk dari cart atau langsung
+                if(s.cart && s.cart[0]){
+                    pn = s.cart[0].name || 'Sewa Bot';
+                    pp = s.cart[0].price || 0;
+                    if(s.cart[0].duration){
+                        const match = s.cart[0].duration.match(/(\d+)/);
+                        if(match) dur = parseInt(match[1]);
+                    }
+                } else if(s.productName){
+                    pn = s.productName;
+                    pp = s.productPrice || s.total || 0;
+                } else if(s.name){
+                    pn = s.name;
+                }
+                
+                const bn = s.buyerName || s.username || 'Customer';
+                const lg = s.linkGroup || '-';
+                const bp = s.buyerPhone || '-';
+                const sd = formatDate(s.startedAt || s.createdAt);
+                const ed = formatDate(expiredAt);
+                
+                let countdownText = 'Menghitung...', statusClass = 'status-active', timerClass = '';
                 if(expiredAt){
-                    const ms=expiredAt-Date.now();
-                    if(ms<=0){countdownText='EXPIRED';statusClass='status-expired';timerClass='critical';}
-                    else{
-                        const d=Math.floor(ms/(86400000));
-                        if(d<=0){statusClass='status-critical';timerClass='critical';}
-                        else if(d<=3){statusClass='status-warning';timerClass='warning';}
-                        const days=Math.floor(ms/86400000),hours=Math.floor((ms%86400000)/3600000),mins=Math.floor((ms%3600000)/60000),secs=Math.floor((ms%60000)/1000);
-                        if(days>0)countdownText=`${days} hari ${hours} jam ${mins} menit`;
-                        else if(hours>0)countdownText=`${hours} jam ${mins} menit ${secs} detik`;
-                        else if(mins>0)countdownText=`${mins} menit ${secs} detik`;
-                        else countdownText=`${secs} detik`;
+                    const ms = expiredAt - Date.now();
+                    if(ms <= 0){
+                        countdownText = 'EXPIRED';
+                        statusClass = 'status-expired';
+                        timerClass = 'critical';
+                    } else {
+                        const days = Math.floor(ms / (86400000));
+                        if(days <= 0){
+                            statusClass = 'status-critical';
+                            timerClass = 'critical';
+                        } else if(days <= 3){
+                            statusClass = 'status-warning';
+                            timerClass = 'warning';
+                        }
+                        const hours = Math.floor((ms % 86400000) / 3600000);
+                        const mins = Math.floor((ms % 3600000) / 60000);
+                        const secs = Math.floor((ms % 60000) / 1000);
+                        if(days > 0) countdownText = `${days} hari ${hours} jam ${mins} menit`;
+                        else if(hours > 0) countdownText = `${hours} jam ${mins} menit ${secs} detik`;
+                        else if(mins > 0) countdownText = `${mins} menit ${secs} detik`;
+                        else countdownText = `${secs} detik`;
                     }
                 }
-                const sid=(s.orderId||s.id||'').replace(/[^a-zA-Z0-9]/g,'_');
-                return `<div class="sewa-card" data-sewa-id="${escapeHtml(s.orderId||'')}" data-expired-at="${expiredAt||''}">
-                    <div class="sewa-header"><span class="sewa-status ${statusClass}"><i class="fas ${statusClass==='status-active'?'fa-check-circle':statusClass==='status-warning'?'fa-clock':'fa-exclamation-triangle'}"></i> ${statusClass==='status-active'?'AKTIF':statusClass==='status-warning'?'HAMPIR HABIS':statusClass==='status-critical'?'SEGERA EXPIRED':'EXPIRED'}</span><span class="sewa-product">${escapeHtml(pn)}</span></div>
-                    <div class="sewa-body"><div class="info-row"><span class="info-label"><i class="fas fa-user"></i> Pembeli:</span><span class="info-value">${escapeHtml(bn)}</span></div>
-                    <div class="info-row"><span class="info-label"><i class="fab fa-whatsapp"></i> No WA:</span><span class="info-value">${escapeHtml(bp)}</span></div>
-                    <div class="info-row"><span class="info-label"><i class="fas fa-link"></i> Link Grup:</span><span class="info-value">${escapeHtml(lg)}</span></div>
-                    <div class="info-row"><span class="info-label"><i class="fas fa-calendar"></i> Mulai:</span><span class="info-value">${sd}</span></div>
-                    <div class="info-row"><span class="info-label"><i class="fas fa-calendar-times"></i> Berakhir:</span><span class="info-value">${ed}</span></div>
-                    <div class="info-row"><span class="info-label"><i class="fas fa-money-bill"></i> Harga:</span><span class="info-value">Rp ${formatNumber(pp)}</span></div>
-                    <div class="countdown-timer"><div class="timer-value ${timerClass}" id="timer_${sid}">${countdownText}</div><div class="timer-label">Sisa Masa Aktif</div></div></div>
-                    <div class="sewa-footer"><button class="btn-renew-now" onclick="renewFromActive('${escapeHtml(s.orderId||s.id||'')}')"><i class="fas fa-sync-alt"></i> Perpanjang</button>
-                    <a href="https://wa.me/${bp!=='-'?bp.replace(/[^0-9]/g,''):'6285794545996'}?text=Halo%20Admin%2C%20saya%20ingin%20bertanya%20tentang%20sewa%20bot%20${encodeURIComponent(pn)}" class="btn-wa-support" target="_blank"><i class="fab fa-whatsapp"></i> Hubungi Admin</a></div></div>`;
+                
+                const sid = (s.orderId || '').replace(/[^a-zA-Z0-9]/g, '_');
+                const sIdSafe = (s.orderId || s.id || '').replace(/'/g, "\\'");
+                
+                return `<div class="sewa-card" data-sewa-id="${escapeHtml(s.orderId||'')}">
+                    <div class="sewa-header">
+                        <span class="sewa-status ${statusClass}">
+                            <i class="fas ${statusClass==='status-active'?'fa-check-circle':statusClass==='status-warning'?'fa-clock':'fa-exclamation-triangle'}"></i> 
+                            ${statusClass==='status-active'?'AKTIF':statusClass==='status-warning'?'HAMPIR HABIS':statusClass==='status-critical'?'SEGERA EXPIRED':'EXPIRED'}
+                        </span>
+                        <span class="sewa-product">${escapeHtml(pn)}</span>
+                    </div>
+                    <div class="sewa-body">
+                        <div class="info-row"><span class="info-label"><i class="fas fa-user"></i> Pembeli:</span><span class="info-value">${escapeHtml(bn)}</span></div>
+                        <div class="info-row"><span class="info-label"><i class="fab fa-whatsapp"></i> No WA:</span><span class="info-value">${escapeHtml(bp)}</span></div>
+                        <div class="info-row"><span class="info-label"><i class="fas fa-link"></i> Link Grup:</span><span class="info-value">${escapeHtml(lg)}</span></div>
+                        <div class="info-row"><span class="info-label"><i class="fas fa-calendar"></i> Mulai:</span><span class="info-value">${sd}</span></div>
+                        <div class="info-row"><span class="info-label"><i class="fas fa-calendar-times"></i> Berakhir:</span><span class="info-value">${ed}</span></div>
+                        <div class="info-row"><span class="info-label"><i class="fas fa-money-bill"></i> Harga:</span><span class="info-value">Rp ${formatNumber(pp)}</span></div>
+                        <div class="countdown-timer">
+                            <div class="timer-value ${timerClass}" id="timer_${sid}">${countdownText}</div>
+                            <div class="timer-label">Sisa Masa Aktif</div>
+                        </div>
+                    </div>
+                    <div class="sewa-footer">
+                        <button class="btn-renew-now" onclick='renewFromActive("${sIdSafe}")'><i class="fas fa-sync-alt"></i> Perpanjang</button>
+                        <a href="https://wa.me/${bp!=='-'?bp.replace(/[^0-9]/g,''):'6285794545996'}?text=Halo%20Admin%2C%20saya%20ingin%20bertanya%20tentang%20sewa%20bot%20${encodeURIComponent(pn)}" class="btn-wa-support" target="_blank"><i class="fab fa-whatsapp"></i> Hubungi Admin</a>
+                    </div>
+                </div>`;
             }).join('');
         }
         
         function startAllCountdowns(){
-            countdownIntervals.forEach(i=>clearInterval(i));countdownIntervals=[];
-            activeSewas.forEach(s=>{if(s.expiredAt){const i=setInterval(()=>updateCountdownForSewa(s),1000);countdownIntervals.push(i);}});
+            countdownIntervals.forEach(i=>clearInterval(i));
+            countdownIntervals=[];
+            activeSewas.forEach(s=>{
+                if(s.expiredAt){
+                    const interval = setInterval(() => updateCountdownForSewa(s), 1000);
+                    countdownIntervals.push(interval);
+                }
+            });
         }
         
         function updateCountdownForSewa(s){
-            const expiredAt=new Date(s.expiredAt).getTime(),ms=expiredAt-Date.now();
-            const sid=(s.orderId||s.id||'').replace(/[^a-zA-Z0-9]/g,'_');
-            const te=document.getElementById(`timer_${sid}`);if(!te)return;
-            if(ms<=0){te.textContent='EXPIRED';te.classList.add('critical');const card=te.closest('.sewa-card');if(card){const sb=card.querySelector('.sewa-status');if(sb){sb.className='sewa-status status-expired';sb.innerHTML='<i class="fas fa-exclamation-triangle"></i> EXPIRED';}}return;}
-            const days=Math.floor(ms/86400000),hours=Math.floor((ms%86400000)/3600000),mins=Math.floor((ms%3600000)/60000),secs=Math.floor((ms%60000)/1000);
-            let txt='';if(days>0)txt=`${days} hari ${hours} jam ${mins} menit`;else if(hours>0)txt=`${hours} jam ${mins} menit ${secs} detik`;else if(mins>0)txt=`${mins} menit ${secs} detik`;else txt=`${secs} detik`;
-            te.textContent=txt;te.classList.remove('warning','critical');
-            if(days<=0)te.classList.add('critical');else if(days<=3)te.classList.add('warning');
-            const card=te.closest('.sewa-card');if(card){const sb=card.querySelector('.sewa-status');if(sb){if(days<=0){sb.className='sewa-status status-critical';sb.innerHTML='<i class="fas fa-exclamation-triangle"></i> SEGERA EXPIRED';}else if(days<=3){sb.className='sewa-status status-warning';sb.innerHTML='<i class="fas fa-clock"></i> HAMPIR HABIS';}}}
+            const expiredAt = s.expiredAt;
+            const ms = expiredAt - Date.now();
+            const sid = (s.orderId || '').replace(/[^a-zA-Z0-9]/g, '_');
+            const te = document.getElementById(`timer_${sid}`);
+            if(!te) return;
+            
+            if(ms <= 0){
+                te.textContent = 'EXPIRED';
+                te.classList.add('critical');
+                const card = te.closest('.sewa-card');
+                if(card){
+                    const sb = card.querySelector('.sewa-status');
+                    if(sb){
+                        sb.className = 'sewa-status status-expired';
+                        sb.innerHTML = '<i class="fas fa-exclamation-triangle"></i> EXPIRED';
+                    }
+                }
+                return;
+            }
+            
+            const days = Math.floor(ms / 86400000);
+            const hours = Math.floor((ms % 86400000) / 3600000);
+            const mins = Math.floor((ms % 3600000) / 60000);
+            const secs = Math.floor((ms % 60000) / 1000);
+            
+            let txt = '';
+            if(days > 0) txt = `${days} hari ${hours} jam ${mins} menit`;
+            else if(hours > 0) txt = `${hours} jam ${mins} menit ${secs} detik`;
+            else if(mins > 0) txt = `${mins} menit ${secs} detik`;
+            else txt = `${secs} detik`;
+            
+            te.textContent = txt;
+            te.classList.remove('warning','critical');
+            if(days <= 0) te.classList.add('critical');
+            else if(days <= 3) te.classList.add('warning');
+            
+            const card = te.closest('.sewa-card');
+            if(card){
+                const sb = card.querySelector('.sewa-status');
+                if(sb){
+                    if(days <= 0){
+                        sb.className = 'sewa-status status-critical';
+                        sb.innerHTML = '<i class="fas fa-exclamation-triangle"></i> SEGERA EXPIRED';
+                    } else if(days <= 3){
+                        sb.className = 'sewa-status status-warning';
+                        sb.innerHTML = '<i class="fas fa-clock"></i> HAMPIR HABIS';
+                    }
+                }
+            }
         }
         
         async function renewFromActive(sewaId){
-            const s=activeSewas.find(a=>a.orderId===sewaId||a.id===sewaId);if(!s){showToast('Data sewa tidak ditemukan!','error');return;}
-            let bn='',bp='',lg='',op=null;
-            if(s.customerData){bn=s.customerData.buyerName||s.customerData.wajib?.ownerName||'';bp=s.customerData.buyerPhone||s.customerData.wajib?.ownerPhone||'';lg=s.customerData.linkGroup||'';}
-            if(s.buyerName)bn=s.buyerName;if(s.buyerPhone)bp=s.buyerPhone;if(s.linkGroup)lg=s.linkGroup;if(s.username)bn=s.username;
-            if(s.cart&&s.cart[0])op=s.cart[0];
-            if(!op){showToast('Data produk tidak ditemukan!','error');return;}
-            await showRenewModal(op,bn,bp,lg);
+            const s = activeSewas.find(a => a.orderId === sewaId);
+            if(!s){
+                showToast('Data sewa tidak ditemukan!','error');
+                return;
+            }
+            
+            let bn = s.buyerName || s.username || '';
+            let bp = s.buyerPhone || '';
+            let lg = s.linkGroup || '';
+            let product = null;
+            
+            if(s.cart && s.cart[0]){
+                product = s.cart[0];
+            } else if(s.productName){
+                product = { name: s.productName, price: s.productPrice || s.total, duration: s.durasi + ' Hari' };
+            }
+            
+            if(!product){
+                showToast('Data produk tidak ditemukan!','error');
+                return;
+            }
+            
+            // Tampilkan modal perpanjang (sama seperti di history.html)
+            await showRenewModal(product, bn, bp, lg);
         }
         
-        async function showRenewModal(product,buyerName,buyerPhone,linkGroup){
-            const existing=document.getElementById('renewModal');if(existing)existing.remove();
+        async function showRenewModal(product, buyerName, buyerPhone, linkGroup){
+            const existing = document.getElementById('renewModal');
+            if(existing) existing.remove();
+            
             try{
-                const snap=await database.ref('products/sewa').once('value');
-                const sp=[];snap.forEach(c=>{const p=c.val();p.id=c.key;sp.push(p);});
-                if(sp.length===0){showToast('Belum ada produk sewa!','error');return;}
-                let mp=sp;if(product.name){mp=sp.filter(p=>(p.name||'').toLowerCase().includes((product.name||'').toLowerCase())||(product.name||'').toLowerCase().includes((p.name||'').toLowerCase()));}
-                if(mp.length===0)mp=sp;
-                const modal=document.createElement('div');modal.id='renewModal';modal.className='modal-overlay';
-                modal.innerHTML=`<div class="modal-content"><button class="modal-close" onclick="closeRenewModal()">&times;</button><h3><i class="fas fa-sync-alt"></i> Perpanjang Sewa</h3>
+                const snap = await database.ref('products/sewa').once('value');
+                const sp = [];
+                snap.forEach(c => { const p = c.val(); p.id = c.key; sp.push(p); });
+                
+                if(sp.length === 0){
+                    showToast('Belum ada produk sewa!','error');
+                    return;
+                }
+                
+                let mp = sp;
+                if(product.name){
+                    mp = sp.filter(p => (p.name || '').toLowerCase().includes((product.name || '').toLowerCase()) || 
+                                        (product.name || '').toLowerCase().includes((p.name || '').toLowerCase()));
+                }
+                if(mp.length === 0) mp = sp;
+                
+                const modal = document.createElement('div');
+                modal.id = 'renewModal';
+                modal.className = 'modal-overlay';
+                modal.innerHTML = `<div class="modal-content">
+                    <button class="modal-close" onclick="closeRenewModal()">&times;</button>
+                    <h3><i class="fas fa-sync-alt"></i> Perpanjang Sewa</h3>
                     <div class="form-group"><label>Nama Pembeli</label><input type="text" id="renewBuyerName" value="${escapeHtml(buyerName)}" readonly style="background:#f1f5f9"></div>
                     <div class="form-group"><label>Nomor WhatsApp</label><input type="text" id="renewBuyerPhone" value="${escapeHtml(buyerPhone)}" readonly style="background:#f1f5f9"></div>
                     <div class="form-group"><label>Link Grup</label><input type="text" id="renewLinkGroup" value="${escapeHtml(linkGroup)}" readonly style="background:#f1f5f9"></div>
-                    <div class="form-group"><label>Pilih Paket</label><select id="renewProductSelect">${mp.map(p=>`<option value="${p.id}" data-price="${p.price}" data-duration="${p.duration||'7 Hari'}" data-name="${escapeHtml(p.name)}">${escapeHtml(p.name)} - Rp ${formatNumber(p.price)} (${p.duration||'7 Hari'})</option>`).join('')}</select></div>
+                    <div class="form-group"><label>Pilih Paket</label><select id="renewProductSelect">${mp.map(p => `<option value="${p.id}" data-price="${p.price}" data-duration="${p.duration||'7 Hari'}" data-name="${escapeHtml(p.name)}">${escapeHtml(p.name)} - Rp ${formatNumber(p.price)} (${p.duration||'7 Hari'})</option>`).join('')}</select></div>
                     <div class="form-group"><label>Durasi</label><input type="text" id="renewDurationDisplay" readonly style="background:#f1f5f9"></div>
                     <div class="form-group"><label>Harga</label><input type="text" id="renewPriceDisplay" readonly style="background:#f1f5f9"></div>
                     <div class="checkbox-group"><label class="checkbox-label"><input type="checkbox" id="renewAllowVoucher" checked><span>✅ Gunakan Voucher</span></label></div>
-                    <button class="btn-primary" onclick="processRenewActive()"><i class="fas fa-arrow-right"></i> Lanjut ke Pembayaran</button></div>`;
+                    <button class="btn-primary" onclick="processRenew()"><i class="fas fa-arrow-right"></i> Lanjut ke Pembayaran</button>
+                </div>`;
                 document.body.appendChild(modal);
-                const sel=document.getElementById('renewProductSelect'),dd=document.getElementById('renewDurationDisplay'),pd=document.getElementById('renewPriceDisplay');
-                const update=()=>{const o=sel.options[sel.selectedIndex];if(dd)dd.value=o.dataset.duration||'-';if(pd)pd.value=`Rp ${formatNumber(o.dataset.price)}`;};
-                sel.addEventListener('change',update);update();
-            }catch(e){console.error(e);showToast('Gagal memuat produk','error');}
+                
+                const sel = document.getElementById('renewProductSelect');
+                const dd = document.getElementById('renewDurationDisplay');
+                const pd = document.getElementById('renewPriceDisplay');
+                const update = () => {
+                    const o = sel.options[sel.selectedIndex];
+                    if(dd) dd.value = o.dataset.duration || '-';
+                    if(pd) pd.value = `Rp ${formatNumber(o.dataset.price)}`;
+                };
+                sel.addEventListener('change', update);
+                update();
+                
+            } catch(e){
+                console.error(e);
+                showToast('Gagal memuat produk','error');
+            }
         }
         
-        function closeRenewModal(){const m=document.getElementById('renewModal');if(m)m.remove();}
-        
-        async function processRenewActive(){
-            const bn=document.getElementById('renewBuyerName')?.value,bp=document.getElementById('renewBuyerPhone')?.value,lg=document.getElementById('renewLinkGroup')?.value,sel=document.getElementById('renewProductSelect'),av=document.getElementById('renewAllowVoucher')?.checked;
-            if(!bn||!bp||!lg||!sel){showToast('Error: Form tidak lengkap','error');return;}
-            const o=sel.options[sel.selectedIndex],pid=sel.value,pn=o.dataset.name,pp=parseInt(o.dataset.price),dur=o.dataset.duration;
-            const ps=await database.ref(`products/sewa/${pid}`).once('value');const prod=ps.val();
-            if(!prod||prod.stock<=0){showToast('Produk habis stok!','error');return;}
-            const cart=[{id:pid,name:pn,price:pp,quantity:1,type:'sewa',duration:dur,thumbnail:prod.thumbnail||'https://placehold.co/300x200/1a1d24/4facfe?text=Sewa+Bot',allowVoucher:av!==false}];
-            const od={type:'sewa',buyerName:bn,buyerPhone:bp,linkGroup:lg,notes:'Perpanjangan sewa',durasi:parseInt(dur)||7,cart:cart,total:pp,isRenew:true,createdAt:new Date().toISOString()};
-            localStorage.setItem('checkoutCart',JSON.stringify(cart));localStorage.setItem('checkoutTotal',pp);localStorage.setItem('orderData',JSON.stringify(od));localStorage.setItem('buyerName',bn);
-            closeRenewModal();showToast('Mengalihkan ke pembayaran...','success');setTimeout(()=>{window.location.href='pay.html';},1000);
+        function closeRenewModal(){
+            const m = document.getElementById('renewModal');
+            if(m) m.remove();
         }
         
-        // Music Player (simplified)
+        async function processRenew(){
+            const bn = document.getElementById('renewBuyerName')?.value;
+            const bp = document.getElementById('renewBuyerPhone')?.value;
+            const lg = document.getElementById('renewLinkGroup')?.value;
+            const sel = document.getElementById('renewProductSelect');
+            const av = document.getElementById('renewAllowVoucher')?.checked;
+            
+            if(!bn || !bp || !lg || !sel){
+                showToast('Error: Form tidak lengkap','error');
+                return;
+            }
+            
+            const o = sel.options[sel.selectedIndex];
+            const pid = sel.value;
+            const pn = o.dataset.name;
+            const pp = parseInt(o.dataset.price);
+            const dur = o.dataset.duration;
+            
+            try{
+                const ps = await database.ref(`products/sewa/${pid}`).once('value');
+                const prod = ps.val();
+                if(!prod || prod.stock <= 0){
+                    showToast('Produk habis stok!','error');
+                    return;
+                }
+                
+                const cart = [{
+                    id: pid,
+                    name: pn,
+                    price: pp,
+                    quantity: 1,
+                    type: 'sewa',
+                    duration: dur,
+                    thumbnail: prod.thumbnail || 'https://placehold.co/300x200/1a1d24/4facfe?text=Sewa+Bot',
+                    allowVoucher: av !== false
+                }];
+                
+                const od = {
+                    type: 'sewa',
+                    buyerName: bn,
+                    buyerPhone: bp,
+                    linkGroup: lg,
+                    notes: 'Perpanjangan sewa',
+                    durasi: parseInt(dur) || 7,
+                    cart: cart,
+                    total: pp,
+                    isRenew: true,
+                    createdAt: new Date().toISOString()
+                };
+                
+                localStorage.setItem('checkoutCart', JSON.stringify(cart));
+                localStorage.setItem('checkoutTotal', pp);
+                localStorage.setItem('orderData', JSON.stringify(od));
+                localStorage.setItem('buyerName', bn);
+                
+                closeRenewModal();
+                showToast('Mengalihkan ke pembayaran...','success');
+                setTimeout(() => { window.location.href = 'pay.html'; }, 1000);
+                
+            } catch(e){
+                console.error(e);
+                showToast('Gagal memproses','error');
+            }
+        }
+        
+        // ========== MUSIC PLAYER (SEDERHANA) ==========
         function loadMusicHistory(){const s=localStorage.getItem('rayy_music_history');if(s){try{musicPlayer.playHistory=JSON.parse(s);if(musicPlayer.playHistory.length>0){renderMusicHistory();const hs=document.getElementById('musicHistorySection');if(hs)hs.style.display='block';}}catch(e){}}}
         function saveMusicHistory(){localStorage.setItem('rayy_music_history',JSON.stringify(musicPlayer.playHistory));}
         function renderMusicHistory(){const hl=document.getElementById('musicHistoryList');if(!hl)return;if(musicPlayer.playHistory.length===0){const hs=document.getElementById('musicHistorySection');if(hs)hs.style.display='none';return;}
@@ -484,7 +676,14 @@
             document.getElementById('sidebarClose').onclick=closeSidebar;
             updateSidebarProfile();updateCartCount();loadActiveSewa();initMusicEventListeners();initFloatingPlayer();
         });
-        window.closeRenewModal=closeRenewModal;window.renewFromActive=renewFromActive;window.processRenewActive=processRenewActive;window.closeSidebar=closeSidebar;window.openSidebar=openSidebar;window.toggleSidebar=toggleSidebar;window.loadActiveSewa=loadActiveSewa;window.playMusic=playMusic;window.stopMusic=stopMusic;window.togglePlayPause=togglePlayPause;window.playFromHistory=playFromHistory;
+        
+        window.closeRenewModal=closeRenewModal;
+        window.renewFromActive=renewFromActive;
+        window.processRenew=processRenew;
+        window.closeSidebar=closeSidebar;
+        window.openSidebar=openSidebar;
+        window.toggleSidebar=toggleSidebar;
+        window.loadActiveSewa=loadActiveSewa;
     </script>
 </body>
 </html>
