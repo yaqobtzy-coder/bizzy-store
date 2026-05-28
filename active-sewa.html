@@ -84,7 +84,7 @@
         @keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
         @keyframes slideOut{from{transform:translateX(0);opacity:1}to{transform:translateX(100%);opacity:0}}
         .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:2000;display:flex;justify-content:center;align-items:center}
-        .modal-content{background:#fff;border-radius:20px;width:90%;max-width:500px;max-height:85vh;overflow-y:auto;padding:24px;position:relative}
+        .modal-content{background:#fff;border-radius:20px;width:90%;max-width:550px;max-height:85vh;overflow-y:auto;padding:24px;position:relative}
         .modal-close{position:absolute;top:15px;right:20px;background:0;border:none;font-size:24px;color:#94a3b8;cursor:pointer}
         .modal-close:hover{color:#ef4444}
         .modal-content h3{color:#0f172a;margin-bottom:20px;font-size:18px;font-weight:600;border-left:3px solid #3b82f6;padding-left:12px}
@@ -92,6 +92,19 @@
         .form-group label{display:block;color:#334155;margin-bottom:6px;font-size:13px;font-weight:500}
         .form-group input,.form-group select{width:100%;padding:10px 12px;background:#fff;border:1px solid #cbd5e1;border-radius:8px;color:#1e293b;font-size:14px;font-family:inherit}
         .form-group input:focus,.form-group select:focus{outline:0;border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.1)}
+        .voucher-section{background:#fef3c7;border-radius:12px;padding:16px;margin:16px 0;border:1px solid #fde68a}
+        .voucher-section label{color:#92400e;font-weight:600}
+        .voucher-input-group{display:flex;gap:10px;margin-top:8px}
+        .voucher-input-group input{flex:1;padding:10px;border:1px solid #fcd34d;border-radius:8px;background:#fffbeb}
+        .voucher-input-group button{background:#d97706;border:none;padding:10px 16px;border-radius:8px;color:#fff;font-weight:600;cursor:pointer}
+        .voucher-input-group button:hover{background:#b45309}
+        .voucher-info-applied{background:#dcfce7;padding:12px;border-radius:8px;margin-top:10px;display:flex;justify-content:space-between;align-items:center}
+        .voucher-info-applied span{color:#166534;font-weight:600}
+        .voucher-info-applied button{background:0;border:none;color:#dc2626;cursor:pointer;font-size:16px}
+        .total-renew{background:#f1f5f9;border-radius:12px;padding:16px;margin:16px 0;text-align:center}
+        .total-renew .label{font-size:13px;color:#64748b}
+        .total-renew .amount{font-size:24px;font-weight:700;color:#0f172a}
+        .total-renew .discount{color:#16a34a;font-size:14px;margin-top:5px}
         .checkbox-group{margin:16px 0}
         .checkbox-label{display:flex;align-items:center;gap:10px;cursor:pointer;color:#334155;font-size:13px;font-weight:500}
         .checkbox-label input{width:18px;height:18px;cursor:pointer;margin:0}
@@ -207,7 +220,7 @@
     <script src="firebase-config.js"></script>
     <script src="telegram-notif.js"></script>
     <script>
-        // ==================== ACTIVE SEWA PAGE - LENGKAP ====================
+        // ==================== ACTIVE SEWA PAGE - LENGKAP DENGAN VOUCHER & UPDATE DATA ====================
         let activeSewas = [];
         let countdownIntervals = [];
         let currentUserName = '';
@@ -263,7 +276,6 @@
             activeSewas=[];
             
             try {
-                // BACA DARI sewa_orders
                 const sewaOrdersSnapshot = await database.ref('sewa_orders').once('value');
                 console.log('🔍 Memeriksa sewa_orders...');
                 
@@ -351,7 +363,7 @@
                 const sid = (s.orderId || '').replace(/[^a-zA-Z0-9]/g, '_');
                 const sIdSafe = (s.orderId || '').replace(/'/g, "\\'");
                 
-                return `<div class="sewa-card">
+                return `<div class="sewa-card" data-sewa-id="${escapeHtml(s.orderId||'')}">
                     <div class="sewa-header">
                         <span class="sewa-status ${statusClass}">
                             <i class="fas ${statusClass==='status-active'?'fa-check-circle':statusClass==='status-warning'?'fa-clock':'fa-exclamation-triangle'}"></i> 
@@ -372,7 +384,7 @@
                         </div>
                     </div>
                     <div class="sewa-footer">
-                        <button class="btn-renew-now" onclick='renewFromActive("${sIdSafe}")'><i class="fas fa-sync-alt"></i> Perpanjang</button>
+                        <button class="btn-renew-now" onclick="renewFromActive('${sIdSafe}')"><i class="fas fa-sync-alt"></i> Perpanjang</button>
                         <a href="https://wa.me/${bp!=='-'?bp.replace(/[^0-9]/g,''):'6285794545996'}?text=Halo%20Admin%2C%20saya%20ingin%20bertanya%20tentang%20sewa%20bot%20${encodeURIComponent(pn)}" class="btn-wa-support" target="_blank"><i class="fab fa-whatsapp"></i> Hubungi Admin</a>
                     </div>
                 </div>`;
@@ -442,35 +454,49 @@
             }
         }
         
+        // ========== PERPANJANG SEWA - UPDATE DATA LAMA ==========
         async function renewFromActive(sewaId){
-            const s = activeSewas.find(a => a.orderId === sewaId);
-            if(!s){
-                showToast('Data sewa tidak ditemukan!','error');
+            console.log('🔍 renewFromActive dipanggil dengan ID:', sewaId);
+            
+            const sewa = activeSewas.find(s => s.orderId === sewaId);
+            if(!sewa){
+                showToast('Data sewa tidak ditemukan!', 'error');
                 return;
             }
             
-            let bn = s.buyerName || s.username || '';
-            let bp = s.buyerPhone || '';
-            let lg = s.linkGroup || '';
+            // Simpan ID sewa yang akan diperpanjang
+            window.currentRenewSewaId = sewaId;
+            
+            let buyerName = sewa.buyerName || sewa.username || '';
+            let buyerPhone = sewa.buyerPhone || '';
+            let linkGroup = sewa.linkGroup || '';
             let product = null;
             
-            if(s.cart && s.cart[0]){
-                product = s.cart[0];
-            } else if(s.productName){
-                product = { name: s.productName, price: s.productPrice || s.total, duration: (s.durasi || 7) + ' Hari' };
+            if(sewa.cart && sewa.cart[0]){
+                product = sewa.cart[0];
+            } else if(sewa.productName){
+                product = {
+                    name: sewa.productName,
+                    price: sewa.productPrice || sewa.total || 0,
+                    duration: (sewa.durasi || 7) + ' Hari'
+                };
             }
             
             if(!product){
-                showToast('Data produk tidak ditemukan!','error');
+                showToast('Data produk tidak ditemukan!', 'error');
                 return;
             }
             
-            await showRenewModal(product, bn, bp, lg);
+            await showRenewModalWithVoucher(product, buyerName, buyerPhone, linkGroup, sewaId);
         }
         
-        async function showRenewModal(product, buyerName, buyerPhone, linkGroup){
-            const existing = document.getElementById('renewModal');
-            if(existing) existing.remove();
+        let currentProductPrice = 0;
+        let activeVoucher = null;
+        let voucherDiscount = 0;
+        
+        async function showRenewModalWithVoucher(product, buyerName, buyerPhone, linkGroup, sewaId){
+            const existingModal = document.getElementById('renewModal');
+            if(existingModal) existingModal.remove();
             
             try{
                 const snap = await database.ref('products/sewa').once('value');
@@ -478,7 +504,7 @@
                 snap.forEach(c => { const p = c.val(); p.id = c.key; sp.push(p); });
                 
                 if(sp.length === 0){
-                    showToast('Belum ada produk sewa!','error');
+                    showToast('Belum ada produk sewa!', 'error');
                     return;
                 }
                 
@@ -489,30 +515,79 @@
                 }
                 if(mp.length === 0) mp = sp;
                 
+                currentProductPrice = parseInt(mp[0].price);
+                activeVoucher = null;
+                voucherDiscount = 0;
+                
                 const modal = document.createElement('div');
                 modal.id = 'renewModal';
                 modal.className = 'modal-overlay';
-                modal.innerHTML = `<div class="modal-content">
-                    <button class="modal-close" onclick="closeRenewModal()">&times;</button>
-                    <h3><i class="fas fa-sync-alt"></i> Perpanjang Sewa</h3>
-                    <div class="form-group"><label>Nama Pembeli</label><input type="text" id="renewBuyerName" value="${escapeHtml(buyerName)}" readonly style="background:#f1f5f9"></div>
-                    <div class="form-group"><label>Nomor WhatsApp</label><input type="text" id="renewBuyerPhone" value="${escapeHtml(buyerPhone)}" readonly style="background:#f1f5f9"></div>
-                    <div class="form-group"><label>Link Grup</label><input type="text" id="renewLinkGroup" value="${escapeHtml(linkGroup)}" readonly style="background:#f1f5f9"></div>
-                    <div class="form-group"><label>Pilih Paket</label><select id="renewProductSelect">${mp.map(p => `<option value="${p.id}" data-price="${p.price}" data-duration="${p.duration||'7 Hari'}" data-name="${escapeHtml(p.name)}">${escapeHtml(p.name)} - Rp ${formatNumber(p.price)} (${p.duration||'7 Hari'})</option>`).join('')}</select></div>
-                    <div class="form-group"><label>Durasi</label><input type="text" id="renewDurationDisplay" readonly style="background:#f1f5f9"></div>
-                    <div class="form-group"><label>Harga</label><input type="text" id="renewPriceDisplay" readonly style="background:#f1f5f9"></div>
-                    <div class="checkbox-group"><label class="checkbox-label"><input type="checkbox" id="renewAllowVoucher" checked><span>✅ Gunakan Voucher</span></label></div>
-                    <button class="btn-primary" onclick="processRenew()"><i class="fas fa-arrow-right"></i> Lanjut ke Pembayaran</button>
-                </div>`;
+                modal.innerHTML = `
+                    <div class="modal-content">
+                        <button class="modal-close" onclick="closeRenewModal()">&times;</button>
+                        <h3><i class="fas fa-sync-alt"></i> Perpanjang Sewa</h3>
+                        
+                        <div class="form-group">
+                            <label>Nama Pembeli</label>
+                            <input type="text" id="renewBuyerName" value="${escapeHtml(buyerName)}" readonly style="background:#f1f5f9">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Nomor WhatsApp</label>
+                            <input type="text" id="renewBuyerPhone" value="${escapeHtml(buyerPhone)}" readonly style="background:#f1f5f9">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Link Grup</label>
+                            <input type="text" id="renewLinkGroup" value="${escapeHtml(linkGroup)}" readonly style="background:#f1f5f9">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Pilih Paket Perpanjangan</label>
+                            <select id="renewProductSelect">
+                                ${mp.map(p => `<option value="${p.id}" data-price="${p.price}" data-duration="${p.duration||'7 Hari'}" data-name="${escapeHtml(p.name)}">${escapeHtml(p.name)} - Rp ${formatNumber(p.price)} (${p.duration||'7 Hari'})</option>`).join('')}
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Durasi</label>
+                            <input type="text" id="renewDurationDisplay" readonly style="background:#f1f5f9">
+                        </div>
+                        
+                        <div class="voucher-section">
+                            <label><i class="fas fa-ticket-alt"></i> Punya Kode Voucher?</label>
+                            <div class="voucher-input-group">
+                                <input type="text" id="voucherCodeRenew" placeholder="Masukkan kode voucher">
+                                <button onclick="applyVoucherToRenew()">Pakai Voucher</button>
+                            </div>
+                            <div id="voucherAppliedRenew" style="display:none" class="voucher-info-applied">
+                                <span id="voucherAppliedText"></span>
+                                <button onclick="removeVoucherFromRenew()">✕</button>
+                            </div>
+                        </div>
+                        
+                        <div class="total-renew">
+                            <div class="label">Total Pembayaran</div>
+                            <div class="amount" id="renewTotalAmount">Rp 0</div>
+                            <div class="discount" id="renewDiscountText"></div>
+                        </div>
+                        
+                        <button class="btn-primary" onclick="processRenewWithUpdate()">
+                            <i class="fas fa-arrow-right"></i> Lanjut ke Pembayaran
+                        </button>
+                    </div>
+                `;
                 document.body.appendChild(modal);
                 
                 const sel = document.getElementById('renewProductSelect');
                 const dd = document.getElementById('renewDurationDisplay');
-                const pd = document.getElementById('renewPriceDisplay');
+                
                 const update = () => {
                     const o = sel.options[sel.selectedIndex];
+                    const price = parseInt(o.dataset.price);
+                    currentProductPrice = price;
                     if(dd) dd.value = o.dataset.duration || '-';
-                    if(pd) pd.value = `Rp ${formatNumber(o.dataset.price)}`;
+                    updateRenewTotal(price);
                 };
                 sel.addEventListener('change', update);
                 update();
@@ -523,65 +598,162 @@
             }
         }
         
+        function updateRenewTotal(originalPrice){
+            let finalPrice = originalPrice;
+            let discountAmount = 0;
+            if(activeVoucher && voucherDiscount > 0){
+                discountAmount = Math.min(voucherDiscount, originalPrice);
+                finalPrice = originalPrice - discountAmount;
+                if(finalPrice < 0) finalPrice = 0;
+                document.getElementById('voucherAppliedText').innerHTML = `${activeVoucher.code} - Rp ${formatNumber(discountAmount)}`;
+                document.getElementById('voucherAppliedRenew').style.display = 'flex';
+            } else {
+                document.getElementById('voucherAppliedRenew').style.display = 'none';
+            }
+            const totalEl = document.getElementById('renewTotalAmount');
+            const discountEl = document.getElementById('renewDiscountText');
+            if(totalEl){
+                if(finalPrice <= 0){
+                    totalEl.innerHTML = '🎉 GRATIS!';
+                    totalEl.style.color = '#16a34a';
+                } else {
+                    totalEl.innerHTML = `Rp ${formatNumber(finalPrice)}`;
+                    totalEl.style.color = '#0f172a';
+                }
+            }
+            if(discountEl && discountAmount > 0){
+                discountEl.innerHTML = `Diskon: Rp ${formatNumber(discountAmount)}`;
+                discountEl.style.display = 'block';
+            } else if(discountEl){
+                discountEl.style.display = 'none';
+            }
+        }
+        
+        async function applyVoucherToRenew(){
+            const code = document.getElementById('voucherCodeRenew').value.trim().toUpperCase();
+            if(!code){
+                showToast('Masukkan kode voucher!','error');
+                return;
+            }
+            try{
+                const snapshot = await database.ref('vouchers').orderByChild('code').equalTo(code).once('value');
+                if(snapshot.exists()){
+                    let voucher = null;
+                    snapshot.forEach(child => { voucher = { id: child.key, ...child.val() }; });
+                    if(voucher){
+                        const now = new Date();
+                        const expired = new Date(voucher.expiredAt);
+                        if(voucher.used >= voucher.usageLimit){
+                            showToast('Voucher sudah mencapai batas penggunaan!','error');
+                            return;
+                        }
+                        if(expired < now){
+                            showToast('Voucher sudah kadaluarsa!','error');
+                            return;
+                        }
+                        activeVoucher = voucher;
+                        if(voucher.type === 'percentage'){
+                            voucherDiscount = (currentProductPrice * voucher.value) / 100;
+                        } else {
+                            voucherDiscount = Math.min(voucher.value, currentProductPrice);
+                        }
+                        updateRenewTotal(currentProductPrice);
+                        showToast(`✅ Voucher ${voucher.code} berhasil dipakai!`,'success');
+                    }
+                } else {
+                    showToast('Kode voucher tidak valid!','error');
+                }
+            } catch(e){
+                console.error(e);
+                showToast('Gagal memeriksa voucher','error');
+            }
+        }
+        
+        function removeVoucherFromRenew(){
+            activeVoucher = null;
+            voucherDiscount = 0;
+            document.getElementById('voucherCodeRenew').value = '';
+            updateRenewTotal(currentProductPrice);
+            showToast('Voucher dihapus','success');
+        }
+        
         function closeRenewModal(){
             const m = document.getElementById('renewModal');
             if(m) m.remove();
         }
         
-        async function processRenew(){
-            const bn = document.getElementById('renewBuyerName')?.value;
-            const bp = document.getElementById('renewBuyerPhone')?.value;
-            const lg = document.getElementById('renewLinkGroup')?.value;
-            const sel = document.getElementById('renewProductSelect');
-            const av = document.getElementById('renewAllowVoucher')?.checked;
+        // PROSES PERPANJANGAN - UPDATE DATA LAMA (BUKAN BUAT BARU)
+        async function processRenewWithUpdate(){
+            const buyerName = document.getElementById('renewBuyerName')?.value;
+            const buyerPhone = document.getElementById('renewBuyerPhone')?.value;
+            const linkGroup = document.getElementById('renewLinkGroup')?.value;
+            const productSelect = document.getElementById('renewProductSelect');
             
-            if(!bn || !bp || !lg || !sel){
-                showToast('Error: Form tidak lengkap','error');
+            if(!buyerName || !buyerPhone || !linkGroup || !productSelect){
+                showToast('Error: Data tidak lengkap', 'error');
                 return;
             }
             
-            const o = sel.options[sel.selectedIndex];
-            const pid = sel.value;
-            const pn = o.dataset.name;
-            const pp = parseInt(o.dataset.price);
-            const dur = o.dataset.duration;
+            const selected = productSelect.options[productSelect.selectedIndex];
+            const productId = productSelect.value;
+            const productName = selected.dataset.name;
+            const productPrice = parseInt(selected.dataset.price);
+            const durationDays = parseInt(selected.dataset.duration) || 7;
+            
+            let finalPrice = productPrice;
+            if(activeVoucher && voucherDiscount > 0){
+                finalPrice = productPrice - Math.min(voucherDiscount, productPrice);
+                if(finalPrice < 0) finalPrice = 0;
+            }
             
             try{
-                const ps = await database.ref(`products/sewa/${pid}`).once('value');
-                const prod = ps.val();
-                if(!prod || prod.stock <= 0){
+                // Cek stok produk
+                const productSnapshot = await database.ref(`products/sewa/${productId}`).once('value');
+                const product = productSnapshot.val();
+                if(!product || product.stock <= 0){
                     showToast('Produk habis stok!','error');
                     return;
                 }
                 
+                // BUAT CART UNTUK PEMBAYARAN
                 const cart = [{
-                    id: pid,
-                    name: pn,
-                    price: pp,
+                    id: productId,
+                    name: productName,
+                    price: productPrice,
                     quantity: 1,
                     type: 'sewa',
-                    duration: dur,
-                    thumbnail: prod.thumbnail || 'https://placehold.co/300x200/1a1d24/4facfe?text=Sewa+Bot',
-                    allowVoucher: av !== false
+                    duration: durationDays + ' Hari',
+                    thumbnail: product.thumbnail || 'https://placehold.co/300x200/1a1d24/4facfe?text=Sewa+Bot',
+                    allowVoucher: true
                 }];
                 
-                const od = {
+                // Simpan data order dengan isRenew = true
+                const orderData = {
                     type: 'sewa',
-                    buyerName: bn,
-                    buyerPhone: bp,
-                    linkGroup: lg,
+                    buyerName: buyerName,
+                    buyerPhone: buyerPhone,
+                    linkGroup: linkGroup,
                     notes: 'Perpanjangan sewa',
-                    durasi: parseInt(dur) || 7,
+                    durasi: durationDays,
                     cart: cart,
-                    total: pp,
+                    total: finalPrice,
                     isRenew: true,
+                    originalSewaId: window.currentRenewSewaId, // SIMPAN ID SEWA LAMA
+                    additionalDays: durationDays,
                     createdAt: new Date().toISOString()
                 };
                 
+                if(activeVoucher){
+                    orderData.voucherUsed = {code: activeVoucher.code, discount: voucherDiscount, type: activeVoucher.type};
+                }
+                
                 localStorage.setItem('checkoutCart', JSON.stringify(cart));
-                localStorage.setItem('checkoutTotal', pp);
-                localStorage.setItem('orderData', JSON.stringify(od));
-                localStorage.setItem('buyerName', bn);
+                localStorage.setItem('checkoutTotal', finalPrice);
+                localStorage.setItem('orderData', JSON.stringify(orderData));
+                localStorage.setItem('buyerName', buyerName);
+                if(activeVoucher){
+                    localStorage.setItem('activeVoucher', JSON.stringify({code: activeVoucher.code, discount: voucherDiscount, type: activeVoucher.type}));
+                }
                 
                 closeRenewModal();
                 showToast('Mengalihkan ke pembayaran...','success');
@@ -589,7 +761,7 @@
                 
             } catch(e){
                 console.error(e);
-                showToast('Gagal memproses','error');
+                showToast('Gagal memproses perpanjangan','error');
             }
         }
         
@@ -665,13 +837,16 @@
             updateSidebarProfile();updateCartCount();loadActiveSewa();initMusicEventListeners();initFloatingPlayer();
         });
         
-        window.closeRenewModal=closeRenewModal;
-        window.renewFromActive=renewFromActive;
-        window.processRenew=processRenew;
-        window.closeSidebar=closeSidebar;
-        window.openSidebar=openSidebar;
-        window.toggleSidebar=toggleSidebar;
-        window.loadActiveSewa=loadActiveSewa;
+        // Global functions
+        window.closeRenewModal = closeRenewModal;
+        window.renewFromActive = renewFromActive;
+        window.processRenewWithUpdate = processRenewWithUpdate;
+        window.applyVoucherToRenew = applyVoucherToRenew;
+        window.removeVoucherFromRenew = removeVoucherFromRenew;
+        window.closeSidebar = closeSidebar;
+        window.openSidebar = openSidebar;
+        window.toggleSidebar = toggleSidebar;
+        window.loadActiveSewa = loadActiveSewa;
     </script>
 </body>
 </html>
