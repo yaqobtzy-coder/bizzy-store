@@ -11,8 +11,6 @@ body {
     min-height: 100vh;
 }
 
-/* Dark mode tidak digunakan, warna netral */
-
 /* Header */
 .news-header {
     background: #ffffff;
@@ -260,6 +258,11 @@ body {
 
 .timeline-item:hover {
     background: #fafcfd;
+}
+
+.timeline-item.highlight {
+    background: linear-gradient(135deg, #eef2ff, #ffffff);
+    border-left: 4px solid #3b82f6;
 }
 
 .timeline-date {

@@ -226,6 +226,9 @@
         let currentUserName = '';
         let musicPlayer = {audio:null,currentTrack:null,isPlaying:false,volume:70,playHistory:[],updateInterval:null};
 
+        // NOMOR ADMIN (FIXED)
+        const ADMIN_WA = "6285794545996";
+
         // Sidebar functions
         function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('overlay').classList.add('active');}
         function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('active');}
@@ -363,6 +366,7 @@
                 const sid = (s.orderId || '').replace(/[^a-zA-Z0-9]/g, '_');
                 const sIdSafe = (s.orderId || '').replace(/'/g, "\\'");
                 
+                // 🔥 PERBAIKAN: Tombol WA menggunakan NOMOR ADMIN (bukan nomor pembeli)
                 return `<div class="sewa-card" data-sewa-id="${escapeHtml(s.orderId||'')}">
                     <div class="sewa-header">
                         <span class="sewa-status ${statusClass}">
@@ -385,7 +389,7 @@
                     </div>
                     <div class="sewa-footer">
                         <button class="btn-renew-now" onclick="renewFromActive('${sIdSafe}')"><i class="fas fa-sync-alt"></i> Perpanjang</button>
-                        <a href="https://wa.me/${bp!=='-'?bp.replace(/[^0-9]/g,''):'6285794545996'}?text=Halo%20Admin%2C%20saya%20ingin%20bertanya%20tentang%20sewa%20bot%20${encodeURIComponent(pn)}" class="btn-wa-support" target="_blank"><i class="fab fa-whatsapp"></i> Hubungi Admin</a>
+                        <a href="https://wa.me/${ADMIN_WA}?text=Halo%20Admin%2C%20saya%20ingin%20bertanya%20tentang%20sewa%20bot%20${encodeURIComponent(pn)}" class="btn-wa-support" target="_blank"><i class="fab fa-whatsapp"></i> Hubungi Admin</a>
                     </div>
                 </div>`;
             }).join('');
@@ -738,7 +742,7 @@
                     cart: cart,
                     total: finalPrice,
                     isRenew: true,
-                    originalSewaId: window.currentRenewSewaId, // SIMPAN ID SEWA LAMA
+                    originalSewaId: window.currentRenewSewaId,
                     additionalDays: durationDays,
                     createdAt: new Date().toISOString()
                 };
