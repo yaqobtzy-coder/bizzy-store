@@ -15,12 +15,13 @@
     
     function loadData() {
         const loadingOverlay = document.getElementById('loadingOverlay');
-        loadingOverlay.style.display = 'flex';
+        if (loadingOverlay) loadingOverlay.style.display = 'flex';
         
         const dataStr = localStorage.getItem('doneData');
         
         if (dataStr) {
             doneData = JSON.parse(dataStr);
+            console.log('✅ doneData loaded:', doneData);
         }
         
         if (doneData && doneData.imgbbUrl && doneData.imgbbUrl !== 'null') {
@@ -29,15 +30,15 @@
             imgbbImage.src = doneData.imgbbUrl;
             imgbbImage.onload = () => {
                 drawCanvas();
-                loadingOverlay.style.display = 'none';
+                if (loadingOverlay) loadingOverlay.style.display = 'none';
             };
             imgbbImage.onerror = () => {
                 drawCanvas();
-                loadingOverlay.style.display = 'none';
+                if (loadingOverlay) loadingOverlay.style.display = 'none';
             };
         } else {
             drawCanvas();
-            loadingOverlay.style.display = 'none';
+            if (loadingOverlay) loadingOverlay.style.display = 'none';
         }
     }
     
@@ -58,6 +59,7 @@
                 buyerName: doneData?.buyerName || null,
                 createdAt: new Date().toISOString()
             });
+            console.log('✅ Perintah dikirim ke WA Bot:', command);
             return true;
         } catch (error) {
             console.error('Gagal kirim ke WA bot:', error);
@@ -78,7 +80,9 @@
         const buyerName = doneData?.buyerName || "Nama Pembeli";
         const productName = doneData?.productsText || "Produk Digital";
         const productQty = "1";
-        const productPrice = `Rp ${formatNumber(doneData?.totalAmount || 0)}`;
+        const totalAmount = doneData?.totalAmount || 0;
+        const isGratis = totalAmount === 0;
+        const productPrice = isGratis ? "🎉 GRATIS! 🎉" : `Rp ${formatNumber(totalAmount)}`;
         const tanggalNow = new Date().toLocaleString('id-ID', {
             day: '2-digit',
             month: '2-digit',
@@ -210,7 +214,7 @@
         ctx.fillStyle = '#1F2E2A';
         ctx.fillText(productQty, 70, startY + 55);
         ctx.font = '700 40px "Inter"';
-        ctx.fillStyle = '#D97706';
+        ctx.fillStyle = isGratis ? '#28a745' : '#D97706';
         ctx.fillText(productPrice, 620, startY + 55);
         startY += 130;
         
@@ -271,12 +275,15 @@
         ctx.lineTo(w-100, h-40);
         ctx.stroke();
         
-        saveToAdmin(buyerName, productName, doneData?.totalAmount || 0, tanggalNow);
+        saveToAdmin(buyerName, productName, totalAmount, tanggalNow);
         
-        if (doneData && doneData.isSewaOrder && doneData.linkGroup) {
+        // KIRIM PERINTAH KE WA BOT UNTUK SEWA (BUKAN PERPANJANGAN)
+        if (doneData && doneData.isSewaOrder && doneData.linkGroup && !doneData.isRenew) {
             const durasi = doneData.durasi || 1;
             const orderId = doneData.orderId || 'unknown';
             const buyerNameShort = doneData.buyerName || 'Customer';
+            
+            console.log('🚀 Mengirim perintah addsewagc ke WA Bot:', `.addsewagc ${doneData.linkGroup} ${durasi}`);
             
             sendAddSewaCommand(doneData.linkGroup, durasi, orderId, buyerNameShort)
                 .then(() => console.log('✅ Perintah sewa berhasil dikirim ke WA Bot'))
@@ -297,6 +304,7 @@
         try {
             const canvasId = Date.now().toString();
             await database.ref('doneCanvas/' + canvasId).set(canvasData);
+            console.log('✅ Data tersimpan ke admin');
         } catch (e) {
             console.error('Error saving to admin:', e);
         }
@@ -317,12 +325,13 @@
         const buyerName = doneData?.buyerName || 'Customer';
         const productsText = doneData?.productsText || 'Produk Digital';
         const totalAmount = doneData?.totalAmount || 0;
+        const isGratis = totalAmount === 0;
         
         const message = `*📝 FORMAT ORDER PRODUK RAYY STORE*%0A%0A` +
             `*👤 Nama* : ${buyerName}%0A` +
             `*🛒 Produk* : ${productsText}%0A` +
-            `*💰 Harga* : Rp ${formatNumber(totalAmount)}%0A` +
-            `*💳 Metode Bayar* : QRIS%0A` +
+            `*💰 Harga* : ${isGratis ? 'GRATIS!' : 'Rp ' + formatNumber(totalAmount)}%0A` +
+            `*💳 Metode Bayar* : ${isGratis ? 'GRATIS' : 'QRIS'}%0A` +
             `*📸 Bukti pembayaran*%0A` +
             `${canvasUrl}%0A%0A` +
             `💌 Mohon diproses ya admin 😘`;
@@ -338,58 +347,62 @@
         showNotification('Membuka WhatsApp...', 'success');
     }
     
-    downloadBtn.onclick = () => {
-        const link = document.createElement('a');
-        const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
-        link.download = `KARTU_KONFIRMASI_${timestamp}.png`;
-        link.href = canvas.toDataURL();
-        link.click();
-        showNotification('Kartu berhasil di download!', 'success');
-    };
+    if (downloadBtn) {
+        downloadBtn.onclick = () => {
+            const link = document.createElement('a');
+            const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+            link.download = `KARTU_KONFIRMASI_${timestamp}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+            showNotification('Kartu berhasil di download!', 'success');
+        };
+    }
     
-    uploadBtn.onclick = async () => {
-        uploadBtn.disabled = true;
-        uploadBtn.style.opacity = '0.5';
-        uploadLoading.style.display = 'block';
-        
-        try {
-            const blob = await (await fetch(canvas.toDataURL('image/png'))).blob();
-            const formData = new FormData();
-            formData.append('image', blob, 'canvas-image.png');
+    if (uploadBtn) {
+        uploadBtn.onclick = async () => {
+            uploadBtn.disabled = true;
+            uploadBtn.style.opacity = '0.5';
+            if (uploadLoading) uploadLoading.style.display = 'block';
             
-            const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
-                method: 'POST',
-                body: formData
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                uploadedCanvasUrl = data.data.url;
+            try {
+                const blob = await (await fetch(canvas.toDataURL('image/png'))).blob();
+                const formData = new FormData();
+                formData.append('image', blob, 'canvas-image.png');
                 
-                if (typeof notifyDoneCanvas !== 'undefined') {
-                    const buyerName = doneData?.buyerName || 'Customer';
-                    const productsText = doneData?.productsText || 'Produk Digital';
-                    const totalAmount = doneData?.totalAmount || 0;
-                    await notifyDoneCanvas(buyerName, productsText, totalAmount, uploadedCanvasUrl);
+                const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    uploadedCanvasUrl = data.data.url;
+                    
+                    if (typeof notifyDoneCanvas !== 'undefined') {
+                        const buyerName = doneData?.buyerName || 'Customer';
+                        const productsText = doneData?.productsText || 'Produk Digital';
+                        const totalAmount = doneData?.totalAmount || 0;
+                        await notifyDoneCanvas(buyerName, productsText, totalAmount, uploadedCanvasUrl);
+                    }
+                    
+                    if (uploadLoading) uploadLoading.style.display = 'none';
+                    showNotification('Upload kartu berhasil!', 'success');
+                    
+                    setTimeout(() => {
+                        sendToWhatsApp(uploadedCanvasUrl);
+                    }, 500);
+                } else {
+                    throw new Error('Upload failed');
                 }
-                
-                uploadLoading.style.display = 'none';
-                showNotification('Upload kartu berhasil!', 'success');
-                
-                setTimeout(() => {
-                    sendToWhatsApp(uploadedCanvasUrl);
-                }, 500);
-            } else {
-                throw new Error('Upload failed');
+            } catch (error) {
+                if (uploadLoading) uploadLoading.style.display = 'none';
+                showNotification('Gagal upload, coba lagi!', 'error');
+                uploadBtn.disabled = false;
+                uploadBtn.style.opacity = '1';
             }
-        } catch (error) {
-            uploadLoading.style.display = 'none';
-            showNotification('Gagal upload, coba lagi!', 'error');
-            uploadBtn.disabled = false;
-            uploadBtn.style.opacity = '1';
-        }
-    };
+        };
+    }
     
     loadData();
 })();
