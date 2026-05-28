@@ -71,6 +71,7 @@ async function submitData() {
     const linkGroup = document.getElementById('linkGroup').value.trim();
     const notes = document.getElementById('notes').value.trim();
     
+    // Validasi
     if (!buyerName) {
         alert('Masukkan nama pembeli!');
         return;
@@ -93,6 +94,7 @@ async function submitData() {
     
     showLoading();
     
+    // Ambil durasi dari cart
     let durasi = 1;
     let productName = '';
     let productPrice = 0;
@@ -106,7 +108,7 @@ async function submitData() {
         productPrice = cart[0].price;
     }
     
-    // Buat order dengan status pending_approval (menunggu admin approve lewat Telegram)
+    // Buat order dengan status pending_approval (menunggu admin approve)
     const orderData = {
         type: 'sewa',
         buyerName: buyerName,
@@ -118,7 +120,7 @@ async function submitData() {
         productPrice: productPrice,
         cart: cart,
         total: total,
-        status: 'pending_approval',  // Menunggu persetujuan admin
+        status: 'pending_approval',
         createdAt: new Date().toISOString()
     };
     
@@ -126,9 +128,13 @@ async function submitData() {
     const newOrderRef = database.ref('sewa_orders').push();
     await newOrderRef.set(orderData);
     
+    // Simpan ke localStorage untuk proses selanjutnya
     localStorage.setItem('orderData', JSON.stringify(orderData));
     localStorage.setItem('buyerName', buyerName);
+    localStorage.setItem('checkoutCart', JSON.stringify(cart));
+    localStorage.setItem('checkoutTotal', total);
     
+    // Kirim notifikasi ke Telegram
     if (typeof sendTelegramNotification !== 'undefined') {
         const produkList = cart.map(item => `${item.name} x${item.quantity}`).join(', ');
         const messageTelegram = `🛍️ *PRODUK DIPROSES (CHECKOUT)*\n\n` +
@@ -146,9 +152,13 @@ async function submitData() {
     
     hideLoading();
     
-    // Arahkan ke halaman menunggu persetujuan
-    alert('✅ Pesanan Anda telah dikirim! Admin akan memproses dalam beberapa saat. Anda akan mendapat notifikasi saat sewa aktif.');
-    window.location.href = 'rayy-store.com.html';
+    // 🔥 PERUBAHAN: LANGSUNG KE pay.html (BUKAN KE WEB STORE)
+    // Tampilkan alert bahwa pesanan akan diproses admin
+    alert('✅ Data berhasil disimpan! Silakan lanjutkan ke pembayaran.\n\nAdmin akan memproses pesanan Anda setelah pembayaran dikonfirmasi.');
+    
+    // Redirect ke halaman pembayaran
+    window.location.href = 'pay.html';
 }
 
+// Load cart data saat halaman dimuat
 loadCartData();
