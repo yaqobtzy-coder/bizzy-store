@@ -51,8 +51,9 @@
         .sewa-status{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600}
         .status-active{background:#dcfce7;color:#16a34a}
         .status-warning{background:#fef3c7;color:#d97706}
-        .status-critical{background:#fee2e2;color:#dc2626}
+        .status-critical{background:#fee2e2;color:#dc2626;animation:pulse 1s infinite}
         .status-expired{background:#6c757d;color:#fff}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
         .sewa-product{font-weight:600;font-size:14px;color:#1e293b}
         .sewa-body{padding:20px}
         .info-row{display:flex;margin-bottom:12px;font-size:13px;flex-wrap:wrap}
@@ -62,7 +63,6 @@
         .timer-value{font-size:32px;font-weight:700;font-family:'Courier New',monospace;color:#3b82f6}
         .timer-value.warning{color:#d97706}
         .timer-value.critical{color:#dc2626;animation:pulse 1s infinite}
-        @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
         .timer-label{font-size:11px;color:#64748b;margin-top:5px}
         .sewa-footer{display:flex;gap:12px;padding:16px 20px;background:#fafcfd;border-top:1px solid #e2e8f0}
         .btn-renew-now{flex:1;background:linear-gradient(135deg,#f59e0b,#e67e22);border:none;padding:10px;border-radius:12px;color:#fff;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
@@ -207,7 +207,7 @@
     <script src="firebase-config.js"></script>
     <script src="telegram-notif.js"></script>
     <script>
-        // ==================== ACTIVE SEWA PAGE - BACA DARI sewa_orders ====================
+        // ==================== ACTIVE SEWA PAGE - LENGKAP ====================
         let activeSewas = [];
         let countdownIntervals = [];
         let currentUserName = '';
@@ -249,82 +249,71 @@
             const c=document.getElementById('sewaList');if(!c)return;
             c.innerHTML='<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>Memuat data sewa aktif...</p></div>';
             
-            const un=localStorage.getItem('userName');
-            if(!un||un==='Customer'||un==='null'){
-                c.innerHTML=`<div class="empty-state"><i class="fas fa-user-slash"></i><p>Anda belum login.</p><a href="profile.html" class="btn-primary">Login Sekarang</a></div>`;
+            let userName = localStorage.getItem('userName');
+            if(!userName || userName==='Customer' || userName==='null'){
+                userName = localStorage.getItem('buyerName');
+            }
+            if(!userName || userName==='Customer' || userName==='null'){
+                c.innerHTML = `<div class="empty-state"><i class="fas fa-user-slash"></i><p>Anda belum login.</p><a href="profile.html" class="btn-primary">Login Sekarang</a></div>`;
                 return;
             }
             
-            // Hentikan semua interval lama
             countdownIntervals.forEach(i=>clearInterval(i));
             countdownIntervals=[];
             activeSewas=[];
             
             try {
-                // ========== BACA DARI sewa_orders (data dari form sewa) ==========
+                // BACA DARI sewa_orders
                 const sewaOrdersSnapshot = await database.ref('sewa_orders').once('value');
+                console.log('🔍 Memeriksa sewa_orders...');
                 
                 if(sewaOrdersSnapshot.exists()){
                     sewaOrdersSnapshot.forEach(child => {
                         const order = child.val();
                         order.orderId = child.key;
                         
-                        // Cek apakah milik user ini
-                        const isUserOrder = (order.buyerName === un || order.username === un);
-                        
-                        // Cek apakah status ACTIVE dan memiliki expiredAt
-                        const isActive = (order.status === 'active' || order.status === 'success');
+                        const isUserOrder = (order.buyerName === userName || order.username === userName);
+                        const isActive = (order.status === 'active' || order.status === 'success' || order.status === 'approved');
                         const hasExpiredAt = order.expiredAt && order.expiredAt > Date.now();
                         
-                        console.log(`Order ditemukan: ${order.orderId}, Status: ${order.status}, isUser: ${isUserOrder}, isActive: ${isActive}`);
+                        console.log(`📦 Order: ${order.orderId}, Status: ${order.status}, isUser: ${isUserOrder}, isActive: ${isActive}`);
                         
-                        if(isUserOrder && isActive && order.expiredAt){
-                            // Pastikan expiredAt masih berlaku
-                            if(order.expiredAt > Date.now()){
-                                activeSewas.push(order);
-                                console.log(`✅ Sewa aktif ditambahkan: ${order.orderId}`);
-                            }
+                        if(isUserOrder && isActive && order.expiredAt && hasExpiredAt){
+                            activeSewas.push(order);
+                            console.log(`✅ Sewa aktif ditambahkan: ${order.orderId}`);
                         }
                     });
                 }
                 
                 console.log(`Total active sewa ditemukan: ${activeSewas.length}`);
-                
-                // Sort by expiredAt (paling cepat habis di atas)
                 activeSewas.sort((a,b) => a.expiredAt - b.expiredAt);
-                
                 renderActiveSewas();
                 startAllCountdowns();
                 
+                if(activeSewas.length === 0){
+                    c.innerHTML = `<div class="empty-state"><i class="fas fa-calendar-times"></i><p>Anda belum memiliki sewa bot aktif.</p><a href="rayy-store.com.html" class="btn-primary">Sewa Bot Sekarang</a></div>`;
+                }
+                
             } catch(e){
-                console.error('Error loading active sewa:', e);
-                c.innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Gagal memuat data: ${e.message}</p><button onclick="loadActiveSewa()" class="btn-primary">Coba Lagi</button></div>`;
+                console.error('Error:', e);
+                c.innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Gagal memuat data.</p><button onclick="loadActiveSewa()" class="btn-primary">Coba Lagi</button></div>`;
             }
         }
         
         function renderActiveSewas(){
             const c=document.getElementById('sewaList');if(!c)return;
-            if(activeSewas.length===0){
-                c.innerHTML=`<div class="empty-state"><i class="fas fa-calendar-times"></i><p>Anda belum memiliki sewa bot aktif.</p><a href="rayy-store.com.html" class="btn-primary">Sewa Bot Sekarang</a></div>`;
-                return;
-            }
+            if(activeSewas.length===0) return;
+            
             c.innerHTML=activeSewas.map(s=>{
                 const expiredAt = s.expiredAt;
-                let pn = 'Sewa Bot', pp = 0, dur = 7;
+                let pn = 'Sewa Bot', pp = 0;
                 
-                // Ambil nama produk dari cart atau langsung
                 if(s.cart && s.cart[0]){
                     pn = s.cart[0].name || 'Sewa Bot';
                     pp = s.cart[0].price || 0;
-                    if(s.cart[0].duration){
-                        const match = s.cart[0].duration.match(/(\d+)/);
-                        if(match) dur = parseInt(match[1]);
-                    }
                 } else if(s.productName){
                     pn = s.productName;
                     pp = s.productPrice || s.total || 0;
-                } else if(s.name){
-                    pn = s.name;
                 }
                 
                 const bn = s.buyerName || s.username || 'Customer';
@@ -341,7 +330,7 @@
                         statusClass = 'status-expired';
                         timerClass = 'critical';
                     } else {
-                        const days = Math.floor(ms / (86400000));
+                        const days = Math.floor(ms / 86400000);
                         if(days <= 0){
                             statusClass = 'status-critical';
                             timerClass = 'critical';
@@ -360,9 +349,9 @@
                 }
                 
                 const sid = (s.orderId || '').replace(/[^a-zA-Z0-9]/g, '_');
-                const sIdSafe = (s.orderId || s.id || '').replace(/'/g, "\\'");
+                const sIdSafe = (s.orderId || '').replace(/'/g, "\\'");
                 
-                return `<div class="sewa-card" data-sewa-id="${escapeHtml(s.orderId||'')}">
+                return `<div class="sewa-card">
                     <div class="sewa-header">
                         <span class="sewa-status ${statusClass}">
                             <i class="fas ${statusClass==='status-active'?'fa-check-circle':statusClass==='status-warning'?'fa-clock':'fa-exclamation-triangle'}"></i> 
@@ -468,7 +457,7 @@
             if(s.cart && s.cart[0]){
                 product = s.cart[0];
             } else if(s.productName){
-                product = { name: s.productName, price: s.productPrice || s.total, duration: s.durasi + ' Hari' };
+                product = { name: s.productName, price: s.productPrice || s.total, duration: (s.durasi || 7) + ' Hari' };
             }
             
             if(!product){
@@ -476,7 +465,6 @@
                 return;
             }
             
-            // Tampilkan modal perpanjang (sama seperti di history.html)
             await showRenewModal(product, bn, bp, lg);
         }
         
@@ -605,7 +593,7 @@
             }
         }
         
-        // ========== MUSIC PLAYER (SEDERHANA) ==========
+        // ========== MUSIC PLAYER SEDERHANA ==========
         function loadMusicHistory(){const s=localStorage.getItem('rayy_music_history');if(s){try{musicPlayer.playHistory=JSON.parse(s);if(musicPlayer.playHistory.length>0){renderMusicHistory();const hs=document.getElementById('musicHistorySection');if(hs)hs.style.display='block';}}catch(e){}}}
         function saveMusicHistory(){localStorage.setItem('rayy_music_history',JSON.stringify(musicPlayer.playHistory));}
         function renderMusicHistory(){const hl=document.getElementById('musicHistoryList');if(!hl)return;if(musicPlayer.playHistory.length===0){const hs=document.getElementById('musicHistorySection');if(hs)hs.style.display='none';return;}
