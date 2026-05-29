@@ -5,6 +5,14 @@ function loadCartData() {
     cart = JSON.parse(localStorage.getItem('checkoutCart')) || [];
     total = parseInt(localStorage.getItem('checkoutTotal')) || 0;
     
+    // CEK APAKAH USER SUDAH PUNYA NAMA
+    const userName = localStorage.getItem('userName');
+    if (!userName || userName === 'Customer' || userName === 'null' || userName === 'Guest') {
+        alert('⚠️ Silakan isi nama terlebih dahulu di halaman Profil!');
+        window.location.href = 'profile.html';
+        return;
+    }
+    
     if (cart.length === 0) {
         window.location.href = 'rayy-store.com.html';
         return;
@@ -54,6 +62,15 @@ function hideLoading() {
 }
 
 async function submitData() {
+    // Ambil nama dari PROFILE
+    let buyerName = localStorage.getItem('userName');
+    
+    if (!buyerName || buyerName === 'Customer' || buyerName === 'null' || buyerName === 'Guest') {
+        alert('⚠️ Silakan isi nama terlebih dahulu di halaman Profil!');
+        window.location.href = 'profile.html';
+        return;
+    }
+    
     const requiredFields = {
         ownerName: 'Nama Owner',
         ownerPhone: 'Nomor Owner',
@@ -78,6 +95,7 @@ async function submitData() {
     
     const scriptData = {
         type: 'script',
+        buyerName: buyerName,
         wajib: {
             ownerName: document.getElementById('ownerName').value.trim(),
             ownerPhone: document.getElementById('ownerPhone').value.trim(),
@@ -100,7 +118,7 @@ async function submitData() {
     };
     
     localStorage.setItem('orderData', JSON.stringify(scriptData));
-    localStorage.setItem('buyerName', scriptData.wajib.ownerName);
+    localStorage.setItem('buyerName', buyerName);
     
     if (typeof notifyOrderProcessing !== 'undefined') {
         const processingData = {

@@ -5,6 +5,14 @@ async function loadPanelProducts() {
     const container = document.getElementById('productGrid');
     container.innerHTML = '<div class="loading-spinner" style="text-align:center; padding:40px; color:#888;"><i class="fas fa-spinner fa-spin"></i> Memuat produk...</div>';
     
+    // CEK APAKAH USER SUDAH PUNYA NAMA
+    const userName = localStorage.getItem('userName');
+    if (!userName || userName === 'Customer' || userName === 'null' || userName === 'Guest') {
+        alert('⚠️ Silakan isi nama terlebih dahulu di halaman Profil!');
+        window.location.href = 'profile.html';
+        return;
+    }
+    
     try {
         const snapshot = await database.ref('products/panel').once('value');
         const products = snapshot.val();
@@ -71,6 +79,14 @@ function selectProduct(productId) {
 }
 
 document.getElementById('submitBtn').addEventListener('click', async () => {
+    // CEK NAMA
+    const userName = localStorage.getItem('userName');
+    if (!userName || userName === 'Customer' || userName === 'null' || userName === 'Guest') {
+        alert('⚠️ Silakan isi nama terlebih dahulu di halaman Profil!');
+        window.location.href = 'profile.html';
+        return;
+    }
+    
     if (!selectedProduct) {
         alert('Pilih produk panel terlebih dahulu!');
         return;
@@ -100,6 +116,7 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
     
     const orderData = {
         type: 'panel',
+        buyerName: userName,
         productId: selectedProduct.id,
         productName: selectedProduct.name,
         productPrice: selectedProduct.price,
@@ -131,7 +148,7 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
     localStorage.setItem('checkoutCart', JSON.stringify(cart));
     localStorage.setItem('checkoutTotal', selectedProduct.price);
     localStorage.setItem('orderData', JSON.stringify(orderData));
-    localStorage.setItem('buyerName', panelUsername);
+    localStorage.setItem('buyerName', userName);
 
     if (typeof notifyOrderProcessing !== 'undefined') {
         const processingData = {

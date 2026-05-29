@@ -5,12 +5,21 @@ function loadCartData() {
     cart = JSON.parse(localStorage.getItem('checkoutCart')) || [];
     total = parseInt(localStorage.getItem('checkoutTotal')) || 0;
     
+    // CEK APAKAH USER SUDAH PUNYA NAMA
+    const userName = localStorage.getItem('userName');
+    if (!userName || userName === 'Customer' || userName === 'null' || userName === 'Guest') {
+        alert('⚠️ Silakan isi nama terlebih dahulu di halaman Profil!');
+        window.location.href = 'profile.html';
+        return;
+    }
+    
     if (cart.length === 0) {
         window.location.href = 'rayy-store.com.html';
         return;
     }
     
     displayOrderSummary();
+    loadProfileName();
 }
 
 function displayOrderSummary() {
@@ -43,6 +52,24 @@ function displayOrderSummary() {
     `;
 }
 
+function loadProfileName() {
+    // Ambil nama dari PROFILE (WAJIB)
+    let profileName = localStorage.getItem('userName');
+    const buyerNameInput = document.getElementById('buyerName');
+    
+    if (profileName && profileName !== 'Customer' && profileName !== 'null' && profileName !== 'Guest') {
+        // Sudah ada nama profile, tampilkan dan disable input
+        buyerNameInput.value = profileName;
+        buyerNameInput.readOnly = true;
+        buyerNameInput.style.backgroundColor = '#f1f5f9';
+        buyerNameInput.style.color = '#1e293b';
+    } else {
+        // Belum ada nama, redirect ke profile
+        alert('⚠️ Silakan isi nama terlebih dahulu di halaman Profil!');
+        window.location.href = 'profile.html';
+    }
+}
+
 function escapeHtml(text) {
     if (!text) return '';
     const div = document.createElement('div');
@@ -66,14 +93,16 @@ function hideLoading() {
 }
 
 async function submitData() {
-    const buyerName = document.getElementById('buyerName').value.trim();
+    // Ambil nama dari PROFILE (WAJIB)
+    let buyerName = localStorage.getItem('userName');
     const buyerPhone = document.getElementById('buyerPhone').value.trim();
     const linkGroup = document.getElementById('linkGroup').value.trim();
     const notes = document.getElementById('notes').value.trim();
     
-    // Validasi
-    if (!buyerName) {
-        alert('Masukkan nama pembeli!');
+    // Validasi nama dari profile
+    if (!buyerName || buyerName === 'Customer' || buyerName === 'null' || buyerName === 'Guest') {
+        alert('⚠️ Silakan isi nama terlebih dahulu di halaman Profil!');
+        window.location.href = 'profile.html';
         return;
     }
     
@@ -94,7 +123,6 @@ async function submitData() {
     
     showLoading();
     
-    // Ambil durasi dari cart
     let durasi = 1;
     let productName = '';
     let productPrice = 0;
@@ -108,7 +136,6 @@ async function submitData() {
         productPrice = cart[0].price;
     }
     
-    // Buat order dengan status pending_approval (menunggu admin approve)
     const orderData = {
         type: 'sewa',
         buyerName: buyerName,
@@ -121,28 +148,29 @@ async function submitData() {
         cart: cart,
         total: total,
         status: 'pending_approval',
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        username: buyerName
     };
     
-    // Simpan ke Firebase sewa_orders
+    console.log('📦 Menyimpan order:', { buyerName, buyerPhone, linkGroup });
+    
     const newOrderRef = database.ref('sewa_orders').push();
     await newOrderRef.set(orderData);
     
-    // Simpan ke localStorage untuk proses selanjutnya
     localStorage.setItem('orderData', JSON.stringify(orderData));
     localStorage.setItem('buyerName', buyerName);
     localStorage.setItem('checkoutCart', JSON.stringify(cart));
     localStorage.setItem('checkoutTotal', total);
+    localStorage.setItem('userName', buyerName);
     
-    // Kirim notifikasi ke Telegram
     if (typeof sendTelegramNotification !== 'undefined') {
         const produkList = cart.map(item => `${item.name} x${item.quantity}`).join(', ');
-        const messageTelegram = `🛍️ *PRODUK DIPROSES (CHECKOUT)*\n\n` +
+        const messageTelegram = `🛍️ PRODUK DIPROSES (CHECKOUT)\n\n` +
             `👤 User: ${buyerName}\n` +
             `📱 No WA: ${buyerPhone}\n` +
             `🔗 Link Grup: ${linkGroup}\n` +
             `📦 Produk: ${produkList}\n` +
-            `💰 Total Harga: Rp ${formatNumber(total)}\n` +
+            `💰 Total: Rp ${formatNumber(total)}\n` +
             `📅 Durasi: ${durasi} hari\n` +
             `📂 Kategori: SEWA BOT\n` +
             `⏰ Waktu: ${new Date().toLocaleString('id-ID')}`;
@@ -152,13 +180,9 @@ async function submitData() {
     
     hideLoading();
     
-    // 🔥 PERUBAHAN: LANGSUNG KE pay.html (BUKAN KE WEB STORE)
-    // Tampilkan alert bahwa pesanan akan diproses admin
     alert('✅ Data berhasil disimpan! Silakan lanjutkan ke pembayaran.\n\nAdmin akan memproses pesanan Anda setelah pembayaran dikonfirmasi.');
     
-    // Redirect ke halaman pembayaran
     window.location.href = 'pay.html';
 }
 
-// Load cart data saat halaman dimuat
 loadCartData();

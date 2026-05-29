@@ -40,6 +40,8 @@ function loadOrderInfo() {
     }
     
     const container = document.getElementById('orderInfo');
+    if (!container) return;
+    
     let productsHtml = '';
     let total = 0;
     
@@ -50,11 +52,14 @@ function loadOrderInfo() {
         });
     }
     
+    const isGratis = (total === 0 || orderData?.total === 0);
+    
     container.innerHTML = `
         <p><strong>Order ID:</strong> ${orderId || 'N/A'}</p>
         ${productsHtml}
-        <p><strong style="color:#00f2fe;">Total: Rp ${formatNumber(total)}</strong></p>
+        <p><strong style="color:${isGratis ? '#28a745' : '#00f2fe'};">Total: ${isGratis ? '🎉 GRATIS!' : 'Rp ' + formatNumber(total)}</strong></p>
         <p><strong>Pembeli:</strong> ${escapeHtml(buyerName)}</p>
+        ${orderData && orderData.isRenew ? '<p><strong style="color:#f59e0b;">🔄 Perpanjangan Sewa</strong></p>' : ''}
     `;
 }
 
@@ -66,6 +71,7 @@ function escapeHtml(text) {
 }
 
 function formatNumber(num) {
+    if (!num) return '0';
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 }
 
@@ -81,153 +87,177 @@ function showNotification(msg, type) {
 }
 
 // Upload area click
-document.getElementById('uploadArea').onclick = () => {
-    document.getElementById('fileInput').click();
-};
+const uploadArea = document.getElementById('uploadArea');
+if (uploadArea) {
+    uploadArea.onclick = () => {
+        document.getElementById('fileInput').click();
+    };
+}
 
 // File input change
-document.getElementById('fileInput').onchange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-        if (file.size > 5 * 1024 * 1024) {
-            showNotification('File terlalu besar! Maksimal 5MB', 'error');
-            return;
+const fileInput = document.getElementById('fileInput');
+if (fileInput) {
+    fileInput.onchange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            if (file.size > 5 * 1024 * 1024) {
+                showNotification('File terlalu besar! Maksimal 5MB', 'error');
+                return;
+            }
+            
+            selectedFile = file;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const preview = document.getElementById('previewImage');
+                if (preview) preview.src = e.target.result;
+                const previewContainer = document.getElementById('previewContainer');
+                if (previewContainer) previewContainer.style.display = 'block';
+                if (uploadArea) uploadArea.style.display = 'none';
+                const submitBtn = document.getElementById('submitBtn');
+                if (submitBtn) submitBtn.disabled = false;
+            };
+            reader.readAsDataURL(file);
         }
-        
-        selectedFile = file;
-        
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const preview = document.getElementById('previewImage');
-            preview.src = e.target.result;
-            document.getElementById('previewContainer').style.display = 'block';
-            document.getElementById('uploadArea').style.display = 'none';
-            document.getElementById('submitBtn').disabled = false;
-        };
-        reader.readAsDataURL(file);
-    }
-};
+    };
+}
 
 function removeImage() {
     selectedFile = null;
-    document.getElementById('previewContainer').style.display = 'none';
-    document.getElementById('uploadArea').style.display = 'block';
-    document.getElementById('fileInput').value = '';
-    document.getElementById('submitBtn').disabled = true;
+    const previewContainer = document.getElementById('previewContainer');
+    if (previewContainer) previewContainer.style.display = 'none';
+    if (uploadArea) uploadArea.style.display = 'block';
+    if (fileInput) fileInput.value = '';
+    const submitBtn = document.getElementById('submitBtn');
+    if (submitBtn) submitBtn.disabled = true;
 }
 
 // Submit button
-document.getElementById('submitBtn').onclick = async () => {
-    if (!selectedFile) return;
-    
-    const submitBtn = document.getElementById('submitBtn');
-    const loadingOverlay = document.getElementById('loadingOverlay');
-    
-    submitBtn.disabled = true;
-    loadingOverlay.style.display = 'flex';
-    
-    const formData = new FormData();
-    formData.append('image', selectedFile);
-    
-    try {
-        const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
-            method: 'POST',
-            body: formData
-        });
+const submitBtn = document.getElementById('submitBtn');
+if (submitBtn) {
+    submitBtn.onclick = async () => {
+        if (!selectedFile) return;
         
-        const data = await response.json();
+        const submitBtnEl = document.getElementById('submitBtn');
+        const loadingOverlay = document.getElementById('loadingOverlay');
         
-        if (data.success) {
-            const imageUrl = data.data.url;
-            
-            if (orderId) {
-                await database.ref('orders/' + orderId).update({
-                    paymentProof: imageUrl,
-                    paymentProofUploadedAt: new Date().toISOString(),
-                    status: 'completed'
-                });
-            }
-            
-            const paymentId = Date.now().toString();
-            await database.ref('payments/' + paymentId).set({
-                orderId: orderId,
-                imageUrl: imageUrl,
-                buyerName: buyerName,
-                uploadedAt: new Date().toISOString(),
-                status: 'pending_verification'
+        submitBtnEl.disabled = true;
+        if (loadingOverlay) loadingOverlay.style.display = 'flex';
+        
+        const formData = new FormData();
+        formData.append('image', selectedFile);
+        
+        try {
+            const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+                method: 'POST',
+                body: formData
             });
             
-            if (typeof notifyUploadBukti !== 'undefined') {
-                const total = orderData?.total || 0;
-                await notifyUploadBukti(orderId, buyerName, total, imageUrl);
-            }
+            const data = await response.json();
             
-            let productsText = '';
-            let totalAmount = 0;
-            let isSewaOrder = false;
-            let linkGroup = '';
-            let durasi = 1;
-            
-            if (orderData && orderData.cart) {
-                const productNames = orderData.cart.map(item => `${item.name} x${item.quantity}`).join(', ');
-                productsText = productNames;
-                totalAmount = orderData.total || 0;
+            if (data.success) {
+                const imageUrl = data.data.url;
                 
-                // CEK JIKA INI PESANAN SEWA
-                if (orderData.type === 'sewa') {
-                    isSewaOrder = true;
-                    linkGroup = orderData.linkGroup || '';
-                    durasi = orderData.durasi || 1;
-                    if (orderData.cart && orderData.cart[0] && orderData.cart[0].duration) {
-                        const durationMatch = orderData.cart[0].duration.match(/(\d+)/);
-                        if (durationMatch) durasi = parseInt(durationMatch[1]);
+                if (orderId) {
+                    await database.ref('orders/' + orderId).update({
+                        paymentProof: imageUrl,
+                        paymentProofUploadedAt: new Date().toISOString(),
+                        status: 'completed'
+                    });
+                }
+                
+                const paymentId = Date.now().toString();
+                await database.ref('payments/' + paymentId).set({
+                    orderId: orderId,
+                    imageUrl: imageUrl,
+                    buyerName: buyerName,
+                    uploadedAt: new Date().toISOString(),
+                    status: 'pending_verification'
+                });
+                
+                if (typeof notifyUploadBukti !== 'undefined') {
+                    const total = orderData?.total || 0;
+                    await notifyUploadBukti(orderId, buyerName, total, imageUrl);
+                }
+                
+                let productsText = '';
+                let totalAmount = 0;
+                let isSewaOrder = false;
+                let linkGroup = '';
+                let durasi = 1;
+                let isRenew = false;
+                
+                if (orderData && orderData.cart) {
+                    const productNames = orderData.cart.map(item => `${item.name} x${item.quantity}`).join(', ');
+                    productsText = productNames;
+                    totalAmount = orderData.total || 0;
+                    
+                    // CEK JIKA INI PESANAN SEWA
+                    if (orderData.type === 'sewa') {
+                        isSewaOrder = true;
+                        linkGroup = orderData.linkGroup || '';
+                        durasi = orderData.durasi || 1;
+                        isRenew = orderData.isRenew || false;
+                        if (orderData.cart && orderData.cart[0] && orderData.cart[0].duration) {
+                            const durationMatch = orderData.cart[0].duration.match(/(\d+)/);
+                            if (durationMatch) durasi = parseInt(durationMatch[1]);
+                        }
                     }
                 }
+                
+                // JIKA PESANAN SEWA (BUKAN PERPANJANGAN), KIRIM PERINTAH KE WA BOT
+                // UNTUK PERPANJANGAN, TIDAK PERLU KIRIM PERINTAH LAGI
+                if (isSewaOrder && linkGroup && !isRenew) {
+                    await sendAddSewaCommand(linkGroup, durasi);
+                    showNotification(`✅ Perintah sewa ${durasi} hari telah dikirim ke bot!`, 'success');
+                } else if (isSewaOrder && isRenew) {
+                    showNotification(`✅ Perpanjangan sewa ${durasi} hari berhasil! Bot tetap aktif.`, 'success');
+                }
+                
+                const doneData = {
+                    imgbbUrl: imageUrl,
+                    buyerName: buyerName,
+                    productsText: productsText,
+                    totalAmount: totalAmount,
+                    orderId: orderId,
+                    orderData: orderData,
+                    isSewaOrder: isSewaOrder,
+                    linkGroup: linkGroup,
+                    durasi: durasi,
+                    isRenew: isRenew
+                };
+                
+                localStorage.setItem('doneData', JSON.stringify(doneData));
+                console.log('Data saved to localStorage:', doneData);
+                
+                if (loadingOverlay) {
+                    loadingOverlay.innerHTML = `
+                        <div class="loading-content">
+                            <i class="fas fa-check-circle" style="color: #28a745;"></i>
+                            <p>Upload berhasil! Mengalihkan...</p>
+                        </div>
+                    `;
+                }
+                
+                setTimeout(() => {
+                    window.location.href = 'done2.html';
+                }, 1500);
+                
+            } else {
+                if (loadingOverlay) loadingOverlay.style.display = 'none';
+                showNotification('Gagal upload: ' + (data.error?.message || 'Unknown error'), 'error');
+                submitBtnEl.disabled = false;
             }
-            
-            // JIKA PESANAN SEWA, KIRIM PERINTAH KE WA BOT
-            if (isSewaOrder && linkGroup) {
-                await sendAddSewaCommand(linkGroup, durasi);
-                showNotification(`✅ Perintah sewa ${durasi} hari telah dikirim ke bot!`, 'success');
-            }
-            
-            const doneData = {
-                imgbbUrl: imageUrl,
-                buyerName: buyerName,
-                productsText: productsText,
-                totalAmount: totalAmount,
-                orderId: orderId,
-                orderData: orderData,
-                isSewaOrder: isSewaOrder,
-                linkGroup: linkGroup,
-                durasi: durasi
-            };
-            
-            localStorage.setItem('doneData', JSON.stringify(doneData));
-            console.log('Data saved to localStorage:', doneData);
-            
-            loadingOverlay.innerHTML = `
-                <div class="loading-content">
-                    <i class="fas fa-check-circle" style="color: #28a745;"></i>
-                    <p>Upload berhasil! Mengalihkan...</p>
-                </div>
-            `;
-            
-            setTimeout(() => {
-                window.location.href = 'done2.html';
-            }, 1500);
-            
-        } else {
-            loadingOverlay.style.display = 'none';
-            showNotification('Gagal upload: ' + (data.error?.message || 'Unknown error'), 'error');
-            submitBtn.disabled = false;
+        } catch (error) {
+            console.error('Error:', error);
+            if (loadingOverlay) loadingOverlay.style.display = 'none';
+            showNotification('Gagal terhubung ke server', 'error');
+            submitBtnEl.disabled = false;
         }
-    } catch (error) {
-        console.error('Error:', error);
-        loadingOverlay.style.display = 'none';
-        showNotification('Gagal terhubung ke server', 'error');
-        submitBtn.disabled = false;
-    }
-};
+    };
+}
 
 loadOrderInfo();
+
+// Global function untuk remove image
+window.removeImage = removeImage;

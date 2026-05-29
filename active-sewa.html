@@ -220,16 +220,16 @@
     <script src="firebase-config.js"></script>
     <script src="telegram-notif.js"></script>
     <script>
-        // ==================== ACTIVE SEWA PAGE - LENGKAP DENGAN VOUCHER & UPDATE DATA ====================
+        // ==================== ACTIVE SEWA PAGE ====================
         let activeSewas = [];
         let countdownIntervals = [];
         let currentUserName = '';
         let musicPlayer = {audio:null,currentTrack:null,isPlaying:false,volume:70,playHistory:[],updateInterval:null};
-
-        // NOMOR ADMIN (FIXED)
+        let currentProductPrice = 0;
+        let activeVoucher = null;
+        let voucherDiscount = 0;
         const ADMIN_WA = "6285794545996";
 
-        // Sidebar functions
         function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('overlay').classList.add('active');}
         function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('active');}
         function toggleSidebar(){const s=document.getElementById('sidebar');if(s.classList.contains('open'))closeSidebar();else openSidebar();}
@@ -260,7 +260,7 @@
             setTimeout(()=>{if(n){n.style.animation='slideOut .3s ease';setTimeout(()=>{if(n&&n.remove)n.remove();},300);}},3000);
         }
         
-        // ========== LOAD ACTIVE SEWA - BACA DARI sewa_orders ==========
+        // ========== LOAD ACTIVE SEWA ==========
         async function loadActiveSewa(){
             const c=document.getElementById('sewaList');if(!c)return;
             c.innerHTML='<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>Memuat data sewa aktif...</p></div>';
@@ -273,6 +273,8 @@
                 c.innerHTML = `<div class="empty-state"><i class="fas fa-user-slash"></i><p>Anda belum login.</p><a href="profile.html" class="btn-primary">Login Sekarang</a></div>`;
                 return;
             }
+            
+            console.log('🔍 Mencari sewa untuk user:', userName);
             
             countdownIntervals.forEach(i=>clearInterval(i));
             countdownIntervals=[];
@@ -291,7 +293,7 @@
                         const isActive = (order.status === 'active' || order.status === 'success' || order.status === 'approved');
                         const hasExpiredAt = order.expiredAt && order.expiredAt > Date.now();
                         
-                        console.log(`📦 Order: ${order.orderId}, Status: ${order.status}, isUser: ${isUserOrder}, isActive: ${isActive}`);
+                        console.log(`📦 Order: ${order.orderId}, Status: ${order.status}, buyerName: ${order.buyerName}, isUser: ${isUserOrder}`);
                         
                         if(isUserOrder && isActive && order.expiredAt && hasExpiredAt){
                             activeSewas.push(order);
@@ -366,8 +368,7 @@
                 const sid = (s.orderId || '').replace(/[^a-zA-Z0-9]/g, '_');
                 const sIdSafe = (s.orderId || '').replace(/'/g, "\\'");
                 
-                // 🔥 PERBAIKAN: Tombol WA menggunakan NOMOR ADMIN (bukan nomor pembeli)
-                return `<div class="sewa-card" data-sewa-id="${escapeHtml(s.orderId||'')}">
+                return `<div class="sewa-card">
                     <div class="sewa-header">
                         <span class="sewa-status ${statusClass}">
                             <i class="fas ${statusClass==='status-active'?'fa-check-circle':statusClass==='status-warning'?'fa-clock':'fa-exclamation-triangle'}"></i> 
@@ -458,49 +459,35 @@
             }
         }
         
-        // ========== PERPANJANG SEWA - UPDATE DATA LAMA ==========
         async function renewFromActive(sewaId){
-            console.log('🔍 renewFromActive dipanggil dengan ID:', sewaId);
-            
-            const sewa = activeSewas.find(s => s.orderId === sewaId);
-            if(!sewa){
-                showToast('Data sewa tidak ditemukan!', 'error');
+            const s = activeSewas.find(a => a.orderId === sewaId);
+            if(!s){
+                showToast('Data sewa tidak ditemukan!','error');
                 return;
             }
             
-            // Simpan ID sewa yang akan diperpanjang
-            window.currentRenewSewaId = sewaId;
-            
-            let buyerName = sewa.buyerName || sewa.username || '';
-            let buyerPhone = sewa.buyerPhone || '';
-            let linkGroup = sewa.linkGroup || '';
+            let bn = s.buyerName || s.username || '';
+            let bp = s.buyerPhone || '';
+            let lg = s.linkGroup || '';
             let product = null;
             
-            if(sewa.cart && sewa.cart[0]){
-                product = sewa.cart[0];
-            } else if(sewa.productName){
-                product = {
-                    name: sewa.productName,
-                    price: sewa.productPrice || sewa.total || 0,
-                    duration: (sewa.durasi || 7) + ' Hari'
-                };
+            if(s.cart && s.cart[0]){
+                product = s.cart[0];
+            } else if(s.productName){
+                product = { name: s.productName, price: s.productPrice || s.total, duration: (s.durasi || 7) + ' Hari' };
             }
             
             if(!product){
-                showToast('Data produk tidak ditemukan!', 'error');
+                showToast('Data produk tidak ditemukan!','error');
                 return;
             }
             
-            await showRenewModalWithVoucher(product, buyerName, buyerPhone, linkGroup, sewaId);
+            await showRenewModal(product, bn, bp, lg);
         }
         
-        let currentProductPrice = 0;
-        let activeVoucher = null;
-        let voucherDiscount = 0;
-        
-        async function showRenewModalWithVoucher(product, buyerName, buyerPhone, linkGroup, sewaId){
-            const existingModal = document.getElementById('renewModal');
-            if(existingModal) existingModal.remove();
+        async function showRenewModal(product, buyerName, buyerPhone, linkGroup){
+            const existing = document.getElementById('renewModal');
+            if(existing) existing.remove();
             
             try{
                 const snap = await database.ref('products/sewa').once('value');
@@ -508,7 +495,7 @@
                 snap.forEach(c => { const p = c.val(); p.id = c.key; sp.push(p); });
                 
                 if(sp.length === 0){
-                    showToast('Belum ada produk sewa!', 'error');
+                    showToast('Belum ada produk sewa!','error');
                     return;
                 }
                 
@@ -526,66 +513,22 @@
                 const modal = document.createElement('div');
                 modal.id = 'renewModal';
                 modal.className = 'modal-overlay';
-                modal.innerHTML = `
-                    <div class="modal-content">
-                        <button class="modal-close" onclick="closeRenewModal()">&times;</button>
-                        <h3><i class="fas fa-sync-alt"></i> Perpanjang Sewa</h3>
-                        
-                        <div class="form-group">
-                            <label>Nama Pembeli</label>
-                            <input type="text" id="renewBuyerName" value="${escapeHtml(buyerName)}" readonly style="background:#f1f5f9">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>Nomor WhatsApp</label>
-                            <input type="text" id="renewBuyerPhone" value="${escapeHtml(buyerPhone)}" readonly style="background:#f1f5f9">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>Link Grup</label>
-                            <input type="text" id="renewLinkGroup" value="${escapeHtml(linkGroup)}" readonly style="background:#f1f5f9">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>Pilih Paket Perpanjangan</label>
-                            <select id="renewProductSelect">
-                                ${mp.map(p => `<option value="${p.id}" data-price="${p.price}" data-duration="${p.duration||'7 Hari'}" data-name="${escapeHtml(p.name)}">${escapeHtml(p.name)} - Rp ${formatNumber(p.price)} (${p.duration||'7 Hari'})</option>`).join('')}
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>Durasi</label>
-                            <input type="text" id="renewDurationDisplay" readonly style="background:#f1f5f9">
-                        </div>
-                        
-                        <div class="voucher-section">
-                            <label><i class="fas fa-ticket-alt"></i> Punya Kode Voucher?</label>
-                            <div class="voucher-input-group">
-                                <input type="text" id="voucherCodeRenew" placeholder="Masukkan kode voucher">
-                                <button onclick="applyVoucherToRenew()">Pakai Voucher</button>
-                            </div>
-                            <div id="voucherAppliedRenew" style="display:none" class="voucher-info-applied">
-                                <span id="voucherAppliedText"></span>
-                                <button onclick="removeVoucherFromRenew()">✕</button>
-                            </div>
-                        </div>
-                        
-                        <div class="total-renew">
-                            <div class="label">Total Pembayaran</div>
-                            <div class="amount" id="renewTotalAmount">Rp 0</div>
-                            <div class="discount" id="renewDiscountText"></div>
-                        </div>
-                        
-                        <button class="btn-primary" onclick="processRenewWithUpdate()">
-                            <i class="fas fa-arrow-right"></i> Lanjut ke Pembayaran
-                        </button>
-                    </div>
-                `;
+                modal.innerHTML = `<div class="modal-content">
+                    <button class="modal-close" onclick="closeRenewModal()">&times;</button>
+                    <h3><i class="fas fa-sync-alt"></i> Perpanjang Sewa</h3>
+                    <div class="form-group"><label>Nama Pembeli</label><input type="text" id="renewBuyerName" value="${escapeHtml(buyerName)}" readonly style="background:#f1f5f9"></div>
+                    <div class="form-group"><label>Nomor WhatsApp</label><input type="text" id="renewBuyerPhone" value="${escapeHtml(buyerPhone)}" readonly style="background:#f1f5f9"></div>
+                    <div class="form-group"><label>Link Grup</label><input type="text" id="renewLinkGroup" value="${escapeHtml(linkGroup)}" readonly style="background:#f1f5f9"></div>
+                    <div class="form-group"><label>Pilih Paket</label><select id="renewProductSelect">${mp.map(p => `<option value="${p.id}" data-price="${p.price}" data-duration="${p.duration||'7 Hari'}" data-name="${escapeHtml(p.name)}">${escapeHtml(p.name)} - Rp ${formatNumber(p.price)} (${p.duration||'7 Hari'})</option>`).join('')}</select></div>
+                    <div class="form-group"><label>Durasi</label><input type="text" id="renewDurationDisplay" readonly style="background:#f1f5f9"></div>
+                    <div class="voucher-section"><label><i class="fas fa-ticket-alt"></i> Punya Kode Voucher?</label><div class="voucher-input-group"><input type="text" id="voucherCodeRenew" placeholder="Masukkan kode voucher"><button onclick="applyVoucherToRenew()">Pakai Voucher</button></div><div id="voucherAppliedRenew" style="display:none" class="voucher-info-applied"><span id="voucherAppliedText"></span><button onclick="removeVoucherFromRenew()">✕</button></div></div>
+                    <div class="total-renew"><div class="label">Total Pembayaran</div><div class="amount" id="renewTotalAmount">Rp 0</div><div class="discount" id="renewDiscountText"></div></div>
+                    <button class="btn-primary" onclick="processRenew()"><i class="fas fa-arrow-right"></i> Lanjut ke Pembayaran</button>
+                </div>`;
                 document.body.appendChild(modal);
                 
                 const sel = document.getElementById('renewProductSelect');
                 const dd = document.getElementById('renewDurationDisplay');
-                
                 const update = () => {
                     const o = sel.options[sel.selectedIndex];
                     const price = parseInt(o.dataset.price);
@@ -686,78 +629,69 @@
             if(m) m.remove();
         }
         
-        // PROSES PERPANJANGAN - UPDATE DATA LAMA (BUKAN BUAT BARU)
-        async function processRenewWithUpdate(){
-            const buyerName = document.getElementById('renewBuyerName')?.value;
-            const buyerPhone = document.getElementById('renewBuyerPhone')?.value;
-            const linkGroup = document.getElementById('renewLinkGroup')?.value;
-            const productSelect = document.getElementById('renewProductSelect');
+        async function processRenew(){
+            const bn = document.getElementById('renewBuyerName')?.value;
+            const bp = document.getElementById('renewBuyerPhone')?.value;
+            const lg = document.getElementById('renewLinkGroup')?.value;
+            const sel = document.getElementById('renewProductSelect');
             
-            if(!buyerName || !buyerPhone || !linkGroup || !productSelect){
-                showToast('Error: Data tidak lengkap', 'error');
+            if(!bn || !bp || !lg || !sel){
+                showToast('Error: Data tidak lengkap','error');
                 return;
             }
             
-            const selected = productSelect.options[productSelect.selectedIndex];
-            const productId = productSelect.value;
-            const productName = selected.dataset.name;
-            const productPrice = parseInt(selected.dataset.price);
-            const durationDays = parseInt(selected.dataset.duration) || 7;
+            const o = sel.options[sel.selectedIndex];
+            const pid = sel.value;
+            const pn = o.dataset.name;
+            const pp = parseInt(o.dataset.price);
+            const dur = o.dataset.duration;
             
-            let finalPrice = productPrice;
+            let finalPrice = pp;
             if(activeVoucher && voucherDiscount > 0){
-                finalPrice = productPrice - Math.min(voucherDiscount, productPrice);
+                finalPrice = pp - Math.min(voucherDiscount, pp);
                 if(finalPrice < 0) finalPrice = 0;
             }
             
             try{
-                // Cek stok produk
-                const productSnapshot = await database.ref(`products/sewa/${productId}`).once('value');
-                const product = productSnapshot.val();
-                if(!product || product.stock <= 0){
+                const ps = await database.ref(`products/sewa/${pid}`).once('value');
+                const prod = ps.val();
+                if(!prod || prod.stock <= 0){
                     showToast('Produk habis stok!','error');
                     return;
                 }
                 
-                // BUAT CART UNTUK PEMBAYARAN
                 const cart = [{
-                    id: productId,
-                    name: productName,
-                    price: productPrice,
+                    id: pid,
+                    name: pn,
+                    price: pp,
                     quantity: 1,
                     type: 'sewa',
-                    duration: durationDays + ' Hari',
-                    thumbnail: product.thumbnail || 'https://placehold.co/300x200/1a1d24/4facfe?text=Sewa+Bot',
+                    duration: dur,
+                    thumbnail: prod.thumbnail || 'https://placehold.co/300x200/1a1d24/4facfe?text=Sewa+Bot',
                     allowVoucher: true
                 }];
                 
-                // Simpan data order dengan isRenew = true
-                const orderData = {
+                const od = {
                     type: 'sewa',
-                    buyerName: buyerName,
-                    buyerPhone: buyerPhone,
-                    linkGroup: linkGroup,
+                    buyerName: bn,
+                    buyerPhone: bp,
+                    linkGroup: lg,
                     notes: 'Perpanjangan sewa',
-                    durasi: durationDays,
+                    durasi: parseInt(dur) || 7,
                     cart: cart,
                     total: finalPrice,
                     isRenew: true,
-                    originalSewaId: window.currentRenewSewaId,
-                    additionalDays: durationDays,
                     createdAt: new Date().toISOString()
                 };
                 
                 if(activeVoucher){
-                    orderData.voucherUsed = {code: activeVoucher.code, discount: voucherDiscount, type: activeVoucher.type};
+                    od.voucherUsed = {code: activeVoucher.code, discount: voucherDiscount, type: activeVoucher.type};
                 }
                 
                 localStorage.setItem('checkoutCart', JSON.stringify(cart));
                 localStorage.setItem('checkoutTotal', finalPrice);
-                localStorage.setItem('orderData', JSON.stringify(orderData));
-                localStorage.setItem('buyerName', buyerName);
-                if(activeVoucher){
-                    localStorage.setItem('activeVoucher', JSON.stringify({code: activeVoucher.code, discount: voucherDiscount, type: activeVoucher.type}));
-                }
+                localStorage.setItem('orderData', JSON.stringify(od));
+                localStorage.setItem('buyerName', bn);
                 
                 closeRenewModal();
                 showToast('Mengalihkan ke pembayaran...','success');
@@ -769,7 +703,7 @@
             }
         }
         
-        // ========== MUSIC PLAYER SEDERHANA ==========
+        // ========== MUSIC PLAYER ==========
         function loadMusicHistory(){const s=localStorage.getItem('rayy_music_history');if(s){try{musicPlayer.playHistory=JSON.parse(s);if(musicPlayer.playHistory.length>0){renderMusicHistory();const hs=document.getElementById('musicHistorySection');if(hs)hs.style.display='block';}}catch(e){}}}
         function saveMusicHistory(){localStorage.setItem('rayy_music_history',JSON.stringify(musicPlayer.playHistory));}
         function renderMusicHistory(){const hl=document.getElementById('musicHistoryList');if(!hl)return;if(musicPlayer.playHistory.length===0){const hs=document.getElementById('musicHistorySection');if(hs)hs.style.display='none';return;}
@@ -841,16 +775,15 @@
             updateSidebarProfile();updateCartCount();loadActiveSewa();initMusicEventListeners();initFloatingPlayer();
         });
         
-        // Global functions
-        window.closeRenewModal = closeRenewModal;
-        window.renewFromActive = renewFromActive;
-        window.processRenewWithUpdate = processRenewWithUpdate;
-        window.applyVoucherToRenew = applyVoucherToRenew;
-        window.removeVoucherFromRenew = removeVoucherFromRenew;
-        window.closeSidebar = closeSidebar;
-        window.openSidebar = openSidebar;
-        window.toggleSidebar = toggleSidebar;
-        window.loadActiveSewa = loadActiveSewa;
+        window.closeRenewModal=closeRenewModal;
+        window.renewFromActive=renewFromActive;
+        window.processRenew=processRenew;
+        window.applyVoucherToRenew=applyVoucherToRenew;
+        window.removeVoucherFromRenew=removeVoucherFromRenew;
+        window.closeSidebar=closeSidebar;
+        window.openSidebar=openSidebar;
+        window.toggleSidebar=toggleSidebar;
+        window.loadActiveSewa=loadActiveSewa;
     </script>
 </body>
 </html>

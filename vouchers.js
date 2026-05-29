@@ -2,6 +2,25 @@
 // VOUCHER CENTER - Rayy Store
 // ========================================
 
+// CEK NAMA USER
+function checkUserName() {
+    const userName = localStorage.getItem('userName');
+    if (!userName || userName === 'Customer' || userName === 'null' || userName === 'Guest') {
+        const voucherGrid = document.getElementById('voucherGrid');
+        if (voucherGrid) {
+            voucherGrid.innerHTML = `
+                <div class="empty-state" style="grid-column:1/-1; text-align:center; padding:60px;">
+                    <i class="fas fa-user-slash"></i>
+                    <p style="margin-top:16px;">⚠️ Silakan isi nama terlebih dahulu di halaman Profil untuk melihat voucher.</p>
+                    <a href="profile.html" class="btn-primary" style="display:inline-block; margin-top:20px;">Ke Halaman Profil</a>
+                </div>
+            `;
+        }
+        return false;
+    }
+    return true;
+}
+
 const dateBadge = document.getElementById('dateBadge');
 if (dateBadge) {
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
@@ -77,6 +96,9 @@ function loadVoucherInfoSettings() {
 
 // Load vouchers
 function loadVouchers() {
+    // CEK NAMA DULU
+    if (!checkUserName()) return;
+    
     const activeGrid = document.getElementById('voucherGrid');
     const expiredGrid = document.getElementById('expiredVoucherGrid');
     

@@ -21,6 +21,35 @@ let musicPlayer = {
 };
 
 // ========================================
+// CEK NAMA USER (WAJIB ISI NAMA DULU)
+// ========================================
+function requireName() {
+    const userName = localStorage.getItem('userName');
+    const hasSetName = localStorage.getItem('hasSetName') === 'true';
+    
+    if (!userName || userName === '' || userName === 'Customer' || userName === 'null' || userName === 'Guest') {
+        alert('⚠️ Silakan isi nama terlebih dahulu di halaman Profil!');
+        window.location.href = 'profile.html';
+        return false;
+    }
+    
+    if (!hasSetName) {
+        localStorage.setItem('isNameSet', 'true');
+    }
+    
+    return true;
+}
+
+function checkUserIdentity() {
+    const userName = localStorage.getItem('userName');
+    if (!userName || userName === '' || userName === 'Customer' || userName === 'null' || userName === 'Guest') {
+        window.location.href = 'profile.html';
+        return false;
+    }
+    return true;
+}
+
+// ========================================
 // SIDEBAR FUNCTIONS
 // ========================================
 function openSidebar() {
@@ -40,18 +69,6 @@ function toggleSidebar() {
     } else {
         openSidebar();
     }
-}
-
-// ========================================
-// CEK USER LOGIN
-// ========================================
-function checkUserIdentity() {
-    const userName = localStorage.getItem('userName');
-    if (!userName || userName === '' || userName === 'Customer' || userName === 'null') {
-        window.location.href = 'profile.html';
-        return false;
-    }
-    return true;
 }
 
 function updateSidebarProfile() {
@@ -325,9 +342,11 @@ function showNotification(msg, type) {
 }
 
 // ========================================
-// CART FUNCTIONS
+// CART FUNCTIONS (dengan cek nama)
 // ========================================
 function addToCart(productId, productType) {
+    if (!requireName()) return;
+    
     let product = productType === 'sewa' ? sewaProducts.find(p => p.id === productId) : scriptProducts.find(p => p.id === productId);
     if (!product || product.stock <= 0) return;
     
@@ -450,12 +469,12 @@ function removeFromCart(id) {
 }
 
 function toggleCart() {
+    if (!requireName()) return;
     const sidebar = document.getElementById('cartSidebar');
     if (sidebar) sidebar.classList.toggle('open');
     if (sidebar && sidebar.classList.contains('open')) renderCartItems();
 }
 
-// Close cart when clicking outside
 document.getElementById('overlay')?.addEventListener('click', () => {
     closeSidebar();
     const cartSidebar = document.getElementById('cartSidebar');
@@ -463,6 +482,8 @@ document.getElementById('overlay')?.addEventListener('click', () => {
 });
 
 function checkout() {
+    if (!requireName()) return;
+    
     if (cart.length === 0) {
         showNotification('Keranjang kosong!', 'error');
         return;

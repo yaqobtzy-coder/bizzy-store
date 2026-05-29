@@ -11,16 +11,6 @@ let currentEditType = null;
 // WA Bot Config
 const WA_BOT_GROUP_ID = "120363425398406088@g.us";
 
-// RAM Price Mapping
-const RAM_PRICES = {
-    '1gb': 25000, '2gb': 45000, '3gb': 65000, '4gb': 85000,
-    '5gb': 105000, '6gb': 125000, '7gb': 145000, '8gb': 165000,
-    '9gb': 185000, '10gb': 205000, '11gb': 225000, '12gb': 245000,
-    '13gb': 265000, '14gb': 285000, '15gb': 305000, '16gb': 325000,
-    '17gb': 345000, '18gb': 365000, '19gb': 385000, '20gb': 405000,
-    'unli': 600000
-};
-
 // ========================================
 // LOAD PRODUCT TYPES
 // ========================================
@@ -163,38 +153,12 @@ function showNotification(msg, type) {
 }
 
 // ========================================
-// AUTO PRICE FOR PANEL
+// SHOW/HIDE PANEL FIELDS
 // ========================================
-function updateAutoPrice() {
-    const ramSelect = document.getElementById('productRam');
-    const autoPriceInput = document.getElementById('autoPrice');
-    const priceInput = document.getElementById('productPrice');
-    
-    if (ramSelect && autoPriceInput) {
-        const selectedRam = ramSelect.value;
-        const autoPrice = RAM_PRICES[selectedRam] || 25000;
-        autoPriceInput.value = `Rp ${autoPrice.toLocaleString()}`;
-        if (priceInput && !priceInput.value) {
-            priceInput.value = autoPrice;
-        }
-    }
-}
-
-document.getElementById('productRam')?.addEventListener('change', function() {
-    updateAutoPrice();
-    const selectedText = this.options[this.selectedIndex].text;
-    const productName = document.getElementById('productName');
-    if (productName && !productName.value) {
-        productName.value = `Panel ${selectedText}`;
-    }
-    updateAutoPrice();
-});
-
 document.getElementById('productType')?.addEventListener('change', function() {
     const panelFields = document.getElementById('panelSpecFields');
     if (this.value === 'panel') {
         panelFields.style.display = 'block';
-        updateAutoPrice();
     } else {
         panelFields.style.display = 'none';
     }
@@ -227,10 +191,12 @@ function updateCategorySelect() {
 function renderCategories() {
     const container = document.getElementById('categoriesList');
     if (!container) return;
+    
     if (categories.length === 0) {
         container.innerHTML = '<p style="color: #888;">Belum ada kategori</p>';
         return;
     }
+    
     container.innerHTML = categories.map(cat => `
         <span class="category-item">
             ${escapeHtml(cat.name)}
@@ -265,7 +231,7 @@ function addProduct() {
     const name = document.getElementById('productName').value.trim();
     const category = document.getElementById('productCategory').value;
     const duration = document.getElementById('productDuration').value.trim();
-    let price = parseInt(document.getElementById('productPrice').value);
+    const price = parseInt(document.getElementById('productPrice').value);
     const stock = parseInt(document.getElementById('productStock').value);
     const rating = parseFloat(document.getElementById('productRating').value) || 0;
     const reviewCount = parseInt(document.getElementById('productReviewCount').value) || 0;
@@ -294,19 +260,14 @@ function addProduct() {
     }
     
     if (type === 'panel') {
-        const ram = document.getElementById('productRam').value;
-        const cpu = document.getElementById('productCpu').value;
-        const disk = document.getElementById('productDisk').value;
-        product.ram = ram;
-        product.cpu = cpu;
-        product.disk = disk;
-        if (!price || price === 0) {
-            product.price = RAM_PRICES[ram] || 25000;
-        }
+        product.ram = document.getElementById('productRam').value.trim() || '1gb';
+        product.cpu = document.getElementById('productCpu').value.trim() || '30';
+        product.disk = document.getElementById('productDisk').value.trim() || '2048';
     }
 
     database.ref(`products/${type}`).push(product);
     
+    // Reset form
     document.getElementById('productName').value = '';
     document.getElementById('productPrice').value = '';
     document.getElementById('productStock').value = '';
@@ -316,8 +277,9 @@ function addProduct() {
     document.getElementById('productDuration').value = '';
     document.getElementById('productReviews').value = '';
     document.getElementById('productAllowVoucher').checked = true;
+    
     if (type === 'panel') {
-        document.getElementById('productRam').value = '1gb';
+        document.getElementById('productRam').value = '';
         document.getElementById('productCpu').value = '30';
         document.getElementById('productDisk').value = '2048';
     }
@@ -430,17 +392,17 @@ function loadProducts() {
             if (sewaProducts.length === 0) {
                 sewaContainer.innerHTML = '<p style="color: #888;">Belum ada produk sewa</p>';
             } else {
-                let html = '<div class="table-wrapper"><table><thead><tr><th>Thumb</th><th>Nama</th><th>Kategori</th><th>Durasi</th><th>Harga</th><th>Stok</th><th>Voucher</th><th>Aksi</th></tr></thead><tbody>';
+                let html = '<div class="table-wrapper"><table><thead><tr><th>Thumb</th><th>Nama</th><th>Kategori</th><th>Durasi</th><th>Harga</th><th>Stok</th><th>Voucher</th><th>Aksi</th></table></thead><tbody>';
                 sewaProducts.forEach(p => {
                     const voucherBadge = p.allowVoucher !== false ? '<span class="voucher-badge-active">✅ Bisa</span>' : '<span class="voucher-badge-inactive">❌ Tidak</span>';
                     html += `<tr>
                         <td><img class="product-thumb" src="${p.thumbnail}" onerror="this.src='https://placehold.co/40x40'"></td>
-                        <td>${escapeHtml(p.name)}</td>
-                        <td>${escapeHtml(p.category)}</td>
-                        <td>${p.duration || '-'}</td>
-                        <td>Rp ${formatNumber(p.price)}</td>
-                        <td><input type="number" id="stock_${p.id}" value="${p.stock}" style="width:70px;"><button onclick="updateStock('${p.type}', '${p.id}')" class="btn-warning btn-sm">Update</button></td>
-                        <td>${voucherBadge}<button onclick="toggleAllowVoucher('${p.type}', '${p.id}', ${p.allowVoucher !== false})" class="btn-toggle-voucher btn-sm">Toggle</button></td>
+                        <td>${escapeHtml(p.name)}</td></td>
+                        <td>${escapeHtml(p.category)}</td></td>
+                        <td>${p.duration || '-'}</td></td>
+                        <td>Rp ${formatNumber(p.price)}</td></td>
+                        <td><input type="number" id="stock_${p.id}" value="${p.stock}" style="width:70px;"><button onclick="updateStock('${p.type}', '${p.id}')" class="btn-warning btn-sm">Update</button></td></td>
+                        <td>${voucherBadge}<button onclick="toggleAllowVoucher('${p.type}', '${p.id}', ${p.allowVoucher !== false})" class="btn-toggle-voucher btn-sm">Toggle</button></td></td>
                         <td><button onclick='editProduct("${p.type}", "${p.id}", ${JSON.stringify(p).replace(/'/g, "&#39;")})' class="btn-warning btn-sm">✏️ Edit</button><button onclick="deleteProduct('${p.type}', '${p.id}')" class="btn-danger btn-sm">🗑️ Hapus</button></td>
                     </tr>`;
                 });
@@ -458,11 +420,11 @@ function loadProducts() {
                     const voucherBadge = p.allowVoucher !== false ? '<span class="voucher-badge-active">✅ Bisa</span>' : '<span class="voucher-badge-inactive">❌ Tidak</span>';
                     html += `<tr>
                         <td><img class="product-thumb" src="${p.thumbnail}" onerror="this.src='https://placehold.co/40x40'"></td>
-                        <td>${escapeHtml(p.name)}</td>
-                        <td>${escapeHtml(p.category)}</td>
-                        <td>Rp ${formatNumber(p.price)}</td>
-                        <td><input type="number" id="stock_${p.id}" value="${p.stock}" style="width:70px;"><button onclick="updateStock('${p.type}', '${p.id}')" class="btn-warning btn-sm">Update</button></td>
-                        <td>${voucherBadge}<button onclick="toggleAllowVoucher('${p.type}', '${p.id}', ${p.allowVoucher !== false})" class="btn-toggle-voucher btn-sm">Toggle</button></td>
+                        <td>${escapeHtml(p.name)}</td></td>
+                        <td>${escapeHtml(p.category)}</td></td>
+                        <td>Rp ${formatNumber(p.price)}</td></td>
+                        <td><input type="number" id="stock_${p.id}" value="${p.stock}" style="width:70px;"><button onclick="updateStock('${p.type}', '${p.id}')" class="btn-warning btn-sm">Update</button></td></td>
+                        <td>${voucherBadge}<button onclick="toggleAllowVoucher('${p.type}', '${p.id}', ${p.allowVoucher !== false})" class="btn-toggle-voucher btn-sm">Toggle</button></td></td>
                         <td><button onclick='editProduct("${p.type}", "${p.id}", ${JSON.stringify(p).replace(/'/g, "&#39;")})' class="btn-warning btn-sm">✏️ Edit</button><button onclick="deleteProduct('${p.type}', '${p.id}')" class="btn-danger btn-sm">🗑️ Hapus</button></td>
                     </tr>`;
                 });
@@ -478,13 +440,13 @@ function loadProducts() {
                 let html = '<div class="table-wrapper"><table><thead><tr><th>Thumb</th><th>Nama</th><th>RAM</th><th>CPU</th><th>Disk</th><th>Harga</th><th>Stok</th><th>Aksi</th></tr></thead><tbody>';
                 panelProductsList.forEach(p => {
                     html += `<tr>
-                        <td><img class="product-thumb" src="${p.thumbnail}" onerror="this.src='https://placehold.co/40x40'"></td>
-                        <td>${escapeHtml(p.name)}</td>
-                        <td>${p.ram || '1gb'}</td>
-                        <td>${p.cpu || '30'}%</td>
-                        <td>${p.disk ? Math.floor(p.disk / 1024) + ' GB' : '2 GB'}</td>
-                        <td>Rp ${formatNumber(p.price)}</td>
-                        <td><input type="number" id="stock_${p.id}" value="${p.stock}" style="width:70px;"><button onclick="updateStock('${p.type}', '${p.id}')" class="btn-warning btn-sm">Update</button></td>
+                        <td><img class="product-thumb" src="${p.thumbnail}" onerror="this.src='https://placehold.co/40x40'"></td></td>
+                        <td>${escapeHtml(p.name)}</td></td>
+                        <td>${p.ram || '1gb'}</td></td>
+                        <td>${p.cpu || '30'}%</td></td>
+                        <td>${p.disk ? Math.floor(p.disk / 1024) + ' GB' : '2 GB'}</td></td>
+                        <td>Rp ${formatNumber(p.price)}</td></td>
+                        <td><input type="number" id="stock_${p.id}" value="${p.stock}" style="width:70px;"><button onclick="updateStock('${p.type}', '${p.id}')" class="btn-warning btn-sm">Update</button></td></td>
                         <td><button onclick='editProduct("${p.type}", "${p.id}", ${JSON.stringify(p).replace(/'/g, "&#39;")})' class="btn-warning btn-sm">✏️ Edit</button><button onclick="deleteProduct('${p.type}', '${p.id}')" class="btn-danger btn-sm">🗑️ Hapus</button></td>
                     </tr>`;
                 });
@@ -719,11 +681,11 @@ function loadOrders() {
                 else if (order.customerData.wajib?.ownerName) buyerName = order.customerData.wajib.ownerName;
             }
             html += `<tr>
-                <td>${order.id || '-'}</td>
-                <td>${escapeHtml(buyerName)}</td>
-                <td>${productsHtml || '-'}</td>
-                <td>Rp ${formatNumber(order.total || 0)}</td>
-                <td><span class="status-badge ${order.status === 'completed' ? 'status-active' : 'status-inactive'}">${order.status || 'pending'}</span></td>
+                <td>${order.id || '-'}</td></td>
+                <td>${escapeHtml(buyerName)}</td></td>
+                <td>${productsHtml || '-'}</td></td>
+                <td>Rp ${formatNumber(order.total || 0)}</td></td>
+                <td><span class="status-badge ${order.status === 'completed' ? 'status-active' : 'status-inactive'}">${order.status || 'pending'}</span></td></td>
                 <td>${new Date(order.createdAt).toLocaleString()}</td>
             </tr>`;
         });
@@ -743,13 +705,13 @@ function loadPayments() {
             container.innerHTML = '<p style="color: #888;">Belum ada bukti pembayaran</p>';
             return;
         }
-        let html = '<div class="table-wrapper"><tr><thead><tr><th>Bukti</th><th>Pembeli</th><th>Order ID</th><th>Upload</th></tr></thead><tbody>';
+        let html = '<div class="table-wrapper">20果<thead><tr><th>Bukti</th><th>Pembeli</th><th>Order ID</th><th>Upload</th></tr></thead><tbody>';
         snapshot.forEach(child => {
             const payment = child.val();
             html += `<tr>
-                <td><a href="${payment.imageUrl}" target="_blank"><img src="${payment.imageUrl}" style="width:50px;height:50px;object-fit:cover;border-radius:8px;"></a></td>
-                <td>${escapeHtml(payment.buyerName || '-')}</td>
-                <td>${payment.orderId || '-'}</td>
+                <td><a href="${payment.imageUrl}" target="_blank"><img src="${payment.imageUrl}" style="width:50px;height:50px;object-fit:cover;border-radius:8px;"></a></td></td>
+                <td>${escapeHtml(payment.buyerName || '-')}</td></td>
+                <td>${payment.orderId || '-'}</td></td>
                 <td>${new Date(payment.uploadedAt).toLocaleString()}</td>
             </tr>`;
         });
@@ -769,13 +731,13 @@ function loadCanvas() {
             container.innerHTML = '<p style="color: #888;">Belum ada canvas yang digenerate</p>';
             return;
         }
-        let html = '<div class="table-wrapper"></table><thead><tr><th>Pembeli</th><th>Produk</th><th>Total</th><th>Tanggal</th></tr></thead><tbody>';
+        let html = '<div class="table-wrapper">20果<thead><tr><th>Pembeli</th><th>Produk</th><th>Total</th><th>Tanggal</th></tr></thead><tbody>';
         snapshot.forEach(child => {
             const c = child.val();
             html += `<tr>
-                <td>${escapeHtml(c.buyerName || '-')}</td>
-                <td>${escapeHtml(c.productName || '-')}</td>
-                <td>Rp ${formatNumber(c.total || 0)}</td>
+                <td>${escapeHtml(c.buyerName || '-')}</td></td>
+                <td>${escapeHtml(c.productName || '-')}</td></td>
+                <td>Rp ${formatNumber(c.total || 0)}</td></td>
                 <td>${c.tanggal || '-'}</td>
             </tr>`;
         });
@@ -795,24 +757,24 @@ function loadPanelOrders() {
             container.innerHTML = '<p style="color: #888;">Belum ada pesanan panel</p>';
             return;
         }
-        let html = '<div class="table-wrapper"><table><thead><tr><th>Order ID</th><th>Pembeli</th><th>Produk</th><th>Spesifikasi</th><th>Harga</th><th>Status</th><th>Tanggal</th><th>Aksi</th></tr></thead><tbody>';
+        let html = '<div class="table-wrapper">20果<thead><tr><th>Order ID</th><th>Pembeli</th><th>Produk</th><th>Spesifikasi</th><th>Harga</th><th>Status</th><th>Tanggal</th><th>Aksi</th></tr></thead><tbody>';
         snapshot.forEach(child => {
             const order = child.val();
             const spec = order.specData || {};
             const statusClass = order.status === 'done' ? 'status-active' : (order.status === 'paid' ? 'status-pending' : 'status-inactive');
             const statusText = order.status === 'done' ? '✅ Selesai' : (order.status === 'paid' ? '⏳ Menunggu Proses' : '⏳ Pending');
             html += `<tr>
-                <td>${order.transactionId || order.id || child.key.substring(0, 12)}</td>
-                <td>${escapeHtml(order.username || order.buyerName || '-')}</td>
-                <td>${escapeHtml(order.productName)}</td>
-                <td>${spec.spec || order.spec || '1GB'} RAM | ${spec.cpu || '30'}% CPU | ${spec.disk ? Math.floor(spec.disk / 1024) : '2'} GB Disk</td>
-                <td>Rp ${formatNumber(order.productPrice || 0)}</td>
-                <td><span class="status-badge ${statusClass}">${statusText}</span></td>
-                <td>${new Date(order.createdAt || order.timestamp).toLocaleString()}</td>
+                <td>${order.transactionId || order.id || child.key.substring(0, 12)}</td></td>
+                <td>${escapeHtml(order.username || order.buyerName || '-')}</td></td>
+                <td>${escapeHtml(order.productName)}</td></td>
+                <td>${spec.spec || order.spec || '1GB'} RAM | ${spec.cpu || '30'}% CPU | ${spec.disk ? Math.floor(spec.disk / 1024) : '2'} GB Disk</td></td>
+                <td>Rp ${formatNumber(order.productPrice || 0)}</td></td>
+                <td><span class="status-badge ${statusClass}">${statusText}</span></td></td>
+                <td>${new Date(order.createdAt || order.timestamp).toLocaleString()}</td></td>
                 <td>${order.status === 'paid' ? `<button onclick="processPanelOrder('${child.key}')" class="btn-success btn-sm">✅ Proses</button>` : ''}${order.status === 'done' && order.panelInfo ? `<button onclick="viewPanelInfo('${child.key}')" class="btn-info btn-sm">👁️ Lihat</button>` : ''}</td>
             </tr>`;
         });
-        html += '</tbody><table></div>';
+        html += '</tbody></table></div>';
         container.innerHTML = html;
     });
 }
@@ -857,13 +819,13 @@ function loadWABotCommands() {
             const statusClass = cmd.status === 'sent' ? 'status-active' : (cmd.status === 'pending' ? 'status-pending' : 'status-inactive');
             const statusText = cmd.status === 'sent' ? '✅ Terkirim' : (cmd.status === 'pending' ? '⏳ Pending' : '❌ Gagal');
             html += `<tr>
-                <td>${cmd.orderId ? cmd.orderId.substring(0, 12) + '...' : '-'}</td>
-                <td><code style="font-size:11px; background:#1a1a2e; padding:4px 8px; border-radius:6px;">${escapeHtml(cmd.command)}</code></td>
-                <td><a href="${cmd.linkGroup}" target="_blank" style="color:#4facfe;">${cmd.linkGroup ? cmd.linkGroup.substring(0, 30) + '...' : '-'}</a></td>
-                <td>${cmd.durasi || '-'} hari</td>
-                <td>${escapeHtml(cmd.buyerName || '-')}</td>
-                <td><span class="status-badge ${statusClass}">${statusText}</span></td>
-                <td>${new Date(cmd.createdAt).toLocaleString()}</td>
+                <td>${cmd.orderId ? cmd.orderId.substring(0, 12) + '...' : '-'}</td></td>
+                <td><code style="font-size:11px; background:#1a1a2e; padding:4px 8px; border-radius:6px;">${escapeHtml(cmd.command)}</code></td></td>
+                <td><a href="${cmd.linkGroup}" target="_blank" style="color:#4facfe;">${cmd.linkGroup ? cmd.linkGroup.substring(0, 30) + '...' : '-'}</a></td></td>
+                <td>${cmd.durasi || '-'} hari</td></td>
+                <td>${escapeHtml(cmd.buyerName || '-')}</td></td>
+                <td><span class="status-badge ${statusClass}">${statusText}</span></td></td>
+                <td>${new Date(cmd.createdAt).toLocaleString()}</td></td>
                 <td>${cmd.status === 'pending' ? `<button onclick="resendWABotCommand('${id}')" class="btn-sm btn-warning">Kirim Ulang</button>` : ''}</td>
             </tr>`;
         });
@@ -935,14 +897,14 @@ async function loadTransferHistory() {
             if (data.data.riwayat && data.data.riwayat.length > 0) {
                 data.data.riwayat.forEach(transfer => {
                     html += `<tr>
-                        <td>${transfer.id_transfer || '-'}</td>
-                        <td>Rp ${formatNumber(transfer.amount || 0)}</td>
-                        <td>${transfer.type === 'terima' ? '📥 Diterima' : '📤 Dikirim'}</td>
+                        <td>${transfer.id_transfer || '-'}</td></td>
+                        <td>Rp ${formatNumber(transfer.amount || 0)}</td></td>
+                        <td>${transfer.type === 'terima' ? '📥 Diterima' : '📤 Dikirim'}</td></td>
                         <td>${new Date(transfer.timestamp).toLocaleString()}</td>
                     </tr>`;
                 });
             } else { html += '<tr><td colspan="4" style="text-align:center">Belum ada riwayat transfer</td></tr>'; }
-            html += '</tbody><table></div>';
+            html += '</tbody></table></div>';
             container.innerHTML = html;
         } else { container.innerHTML = '<p style="color: #888;">Belum ada riwayat transfer</p>'; }
     } catch (err) { container.innerHTML = '<p style="color: #ff6b6b;">Gagal mengambil riwayat transfer</p>'; }
