@@ -1,5 +1,5 @@
 // ========================================
-// RAYY STORE - MAIN JAVASCRIPT (FIXED VOUCHER & 1 USER 1 VOUCHER)
+// RAYY STORE - MAIN JAVASCRIPT
 // ========================================
 
 let sewaProducts = [];
@@ -9,7 +9,6 @@ let swiperInstance = null;
 let activeVoucher = null;
 let voucherDiscount = 0;
 let voucherUsed = false;
-let usedVoucherIds = JSON.parse(localStorage.getItem('usedVouchers')) || []; // 🔥 TRACK VOUCHER YANG SUDAH DIPAKAI USER
 
 // Music Player
 let musicPlayer = { 
@@ -22,58 +21,15 @@ let musicPlayer = {
 };
 
 // ========================================
-// CEK NAMA USER (WAJIB ISI NAMA DULU)
+// CEK USER LOGIN
 // ========================================
-function requireName() {
-    const userName = localStorage.getItem('userName');
-    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-    
-    if (!isLoggedIn || !userName || userName === '' || userName === 'Customer' || userName === 'null' || userName === 'Guest') {
-        alert('⚠️ Silakan login terlebih dahulu di halaman Profil!');
-        window.location.href = 'profile.html';
-        return false;
-    }
-    return true;
-}
-
 function checkUserIdentity() {
-    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
     const userName = localStorage.getItem('userName');
-    
-    if (!isLoggedIn || !userName || userName === '' || userName === 'Customer' || userName === 'null' || userName === 'Guest') {
+    if (!userName || userName === '' || userName === 'Customer' || userName === 'null') {
         window.location.href = 'profile.html';
         return false;
     }
     return true;
-}
-
-// ========================================
-// SIDEBAR FUNCTIONS
-// ========================================
-function openSidebar() {
-    document.getElementById('sidebar').classList.add('open');
-    document.getElementById('overlay').classList.add('active');
-}
-
-function closeSidebar() {
-    document.getElementById('sidebar').classList.remove('open');
-    document.getElementById('overlay').classList.remove('active');
-}
-
-function toggleSidebar() {
-    const sidebar = document.getElementById('sidebar');
-    if (sidebar.classList.contains('open')) {
-        closeSidebar();
-    } else {
-        openSidebar();
-    }
-}
-
-function updateSidebarProfile() {
-    const userName = localStorage.getItem('userName') || 'Customer';
-    const userEmail = localStorage.getItem('userEmail') || 'customer@rayystore.com';
-    document.getElementById('sidebarName').innerText = userName;
-    document.getElementById('sidebarEmail').innerText = userEmail;
 }
 
 // ========================================
@@ -280,7 +236,7 @@ function renderSewaProducts() {
                 <div class="product-category"><i class="fas fa-calendar-alt"></i> Sewa ${product.duration || '7 Hari'}</div>
                 <div class="product-price">Rp ${formatNumber(product.price || 0)}</div>
                 <div class="product-stock">${getStockBadge(product.stock || 0)}</div>
-                ${product.allowVoucher !== false ? '<div class="voucher-badge"><i class="fas fa-ticket-alt"></i> Bisa Pakai Voucher</div>' : '<div class="voucher-badge disabled" style="background:#fee2e2; color:#dc2626;"><i class="fas fa-ban"></i> Tidak Bisa Voucher</div>'}
+                ${product.allowVoucher !== false ? '<div class="voucher-badge"><i class="fas fa-ticket-alt"></i> Bisa Pakai Voucher</div>' : '<div class="voucher-badge disabled"><i class="fas fa-ban"></i> Tidak Bisa Voucher</div>'}
                 <button class="add-to-cart" ${(product.stock || 0) <= 0 ? 'disabled' : ''} onclick="addToCart('${product.id}', 'sewa')">${(product.stock || 0) <= 0 ? 'Stok Habis' : 'Sewa Sekarang'}</button>
             </div>
         </div>
@@ -303,7 +259,7 @@ function renderScriptProducts() {
                 <div class="product-category"><i class="fas fa-code"></i> ${product.category || 'Script'}</div>
                 <div class="product-price">Rp ${formatNumber(product.price || 0)}</div>
                 <div class="product-stock">${getStockBadge(product.stock || 0)}</div>
-                ${product.allowVoucher !== false ? '<div class="voucher-badge"><i class="fas fa-ticket-alt"></i> Bisa Pakai Voucher</div>' : '<div class="voucher-badge disabled" style="background:#fee2e2; color:#dc2626;"><i class="fas fa-ban"></i> Tidak Bisa Voucher</div>'}
+                ${product.allowVoucher !== false ? '<div class="voucher-badge"><i class="fas fa-ticket-alt"></i> Bisa Pakai Voucher</div>' : '<div class="voucher-badge disabled"><i class="fas fa-ban"></i> Tidak Bisa Voucher</div>'}
                 <button class="add-to-cart" ${(product.stock || 0) <= 0 ? 'disabled' : ''} onclick="addToCart('${product.id}', 'script')">${(product.stock || 0) <= 0 ? 'Stok Habis' : 'Beli Sekarang'}</button>
             </div>
         </div>
@@ -343,8 +299,6 @@ function showNotification(msg, type) {
 // CART FUNCTIONS
 // ========================================
 function addToCart(productId, productType) {
-    if (!requireName()) return;
-    
     let product = productType === 'sewa' ? sewaProducts.find(p => p.id === productId) : scriptProducts.find(p => p.id === productId);
     if (!product || product.stock <= 0) return;
     
@@ -375,46 +329,12 @@ function addToCart(productId, productType) {
     localStorage.setItem('cart', JSON.stringify(cart));
     updateCartCount();
     renderCartItems();
-    
-    // 🔥 CEK ULANG: Jika setelah add produk non-voucher, hapus voucher!
-    if (hasNonVoucherProductInCart() && activeVoucher) {
-        clearActiveVoucher();
-        showNotification('⚠️ Voucher dihapus karena ada produk yang tidak support voucher!', 'error');
-    }
 }
 
 function updateCartCount() {
     const total = cart.reduce((sum, item) => sum + item.quantity, 0);
     const cartCount = document.getElementById('cartCount');
-    const topCartCount = document.getElementById('topCartCount');
-    const sidebarCartCount = document.getElementById('sidebarCartCount');
     if (cartCount) cartCount.textContent = total;
-    if (topCartCount) topCartCount.textContent = total;
-    if (sidebarCartCount) sidebarCartCount.textContent = total;
-}
-
-// 🔥 HELPER: Cek apakah ada produk non-voucher di cart
-function hasNonVoucherProductInCart() {
-    return cart.some(item => item.allowVoucher === false);
-}
-
-// 🔥 CLEAR VOUCHER FUNCTION
-function clearActiveVoucher() {
-    activeVoucher = null;
-    voucherDiscount = 0;
-    voucherUsed = false;
-    localStorage.removeItem('activeVoucher');
-    
-    const voucherInfo = document.getElementById('voucherInfo');
-    const discountRow = document.getElementById('discountRow');
-    if (voucherInfo) voucherInfo.style.display = 'none';
-    if (discountRow) discountRow.style.display = 'none';
-    
-    const voucherMessage = document.getElementById('voucherMessageCart');
-    if (voucherMessage) {
-        voucherMessage.textContent = '';
-        voucherMessage.className = 'voucher-message-cart';
-    }
 }
 
 function renderCartItems() {
@@ -425,8 +345,6 @@ function renderCartItems() {
         container.innerHTML = `<div class="empty-cart"><i class="fas fa-shopping-bag"></i><p>Keranjang belanja kosong</p></div>`;
         document.getElementById('subtotalAmount').innerHTML = 'Rp 0';
         document.getElementById('cartTotal').innerHTML = 'Rp 0';
-        // Hapus voucher jika cart kosong
-        if (activeVoucher) clearActiveVoucher();
         return;
     }
     
@@ -452,17 +370,10 @@ function renderCartItems() {
         `;
     }).join('');
     
-    // 🔥 CEK: Jika ada produk non-voucher, HAPUS voucher apapun yang aktif
-    if (hasNonVoucherProductInCart() && activeVoucher) {
-        clearActiveVoucher();
-        showNotification('⚠️ Voucher otomatis dihapus karena ada produk yang tidak support voucher!', 'error');
-    }
-    
     let finalTotal = subtotal;
     let discountAmount = 0;
     
-    // 🔥 Hanya apply voucher jika TIDAK ada produk non-voucher
-    if (activeVoucher && voucherDiscount > 0 && !voucherUsed && !hasNonVoucherProductInCart()) {
+    if (activeVoucher && voucherDiscount > 0 && !voucherUsed) {
         discountAmount = Math.min(voucherDiscount, subtotal);
         finalTotal = subtotal - discountAmount;
         if (finalTotal <= 0) finalTotal = 0;
@@ -496,12 +407,6 @@ function updateQuantity(id, change) {
         if (newQty <= 0) cart = cart.filter(i => i.id !== id);
         else item.quantity = newQty;
         renderCartItems();
-        
-        // 🔥 CEK ULANG setelah update quantity
-        if (hasNonVoucherProductInCart() && activeVoucher) {
-            clearActiveVoucher();
-            showNotification('⚠️ Voucher dihapus karena ada produk yang tidak support voucher!', 'error');
-        }
     }
 }
 
@@ -509,41 +414,47 @@ function removeFromCart(id) {
     cart = cart.filter(i => i.id !== id);
     renderCartItems();
     showNotification('Item dihapus', 'success');
-    
-    // 🔥 CEK ULANG setelah remove item
-    if (hasNonVoucherProductInCart() && activeVoucher) {
-        clearActiveVoucher();
-        showNotification('⚠️ Voucher dihapus karena ada produk yang tidak support voucher!', 'error');
-    }
 }
 
 function toggleCart() {
-    if (!requireName()) return;
     const sidebar = document.getElementById('cartSidebar');
+    const overlay = document.getElementById('overlay');
     if (sidebar) sidebar.classList.toggle('open');
+    if (overlay) overlay.classList.toggle('active');
     if (sidebar && sidebar.classList.contains('open')) renderCartItems();
 }
 
-document.getElementById('overlay')?.addEventListener('click', () => {
-    closeSidebar();
-    const cartSidebar = document.getElementById('cartSidebar');
-    if (cartSidebar) cartSidebar.classList.remove('open');
-});
+function checkout() {
+    if (cart.length === 0) {
+        showNotification('Keranjang kosong!', 'error');
+        return;
+    }
+    
+    const firstItem = cart[0];
+    let total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    let isGratis = false;
+    
+    if (activeVoucher && voucherDiscount > 0 && !voucherUsed) {
+        total = total - Math.min(voucherDiscount, total);
+        if (total <= 0) isGratis = true;
+        voucherUsed = true;
+    }
+    
+    localStorage.setItem('checkoutCart', JSON.stringify(cart));
+    localStorage.setItem('checkoutTotal', total);
+    
+    if (isGratis) showNotification('🎉 Selamat! Pesanan Anda GRATIS!', 'success');
+    
+    window.location.href = firstItem.type === 'sewa' ? 'data-sewa.html' : 'data-script.html';
+}
 
 // ========================================
-// VOUCHER FUNCTIONS - FULLY FIXED
+// VOUCHER FUNCTIONS
 // ========================================
-
 function applyVoucherFromCart() {
     const code = document.getElementById('voucherCodeCart').value.trim().toUpperCase();
     if (!code) {
         showVoucherMessageCart('Masukkan kode voucher!', 'error');
-        return;
-    }
-    
-    // 🔥 CEK PRODUK YANG TIDAK BISA VOUCHER
-    if (hasNonVoucherProductInCart()) {
-        showVoucherMessageCart('❌ GAGAL! Ada produk yang TIDAK support voucher. Hapus produk tersebut terlebih dahulu.', 'error');
         return;
     }
     
@@ -558,12 +469,6 @@ function applyVoucherFromCart() {
                 const now = new Date();
                 const expired = new Date(voucher.expiredAt);
                 
-                // 🔥 CEK APAKAH VOUCHER SUDAH PERNAH DIPAKAI USER INI
-                if (usedVoucherIds.includes(voucher.id)) {
-                    showVoucherMessageCart('❌ Voucher sudah pernah Anda gunakan! (1 user 1 voucher)', 'error');
-                    return;
-                }
-                
                 if (voucher.used >= voucher.usageLimit) {
                     showVoucherMessageCart('Voucher sudah mencapai batas penggunaan!', 'error');
                     return;
@@ -573,13 +478,12 @@ function applyVoucherFromCart() {
                     return;
                 }
                 
-                // 🔥 DOUBLE CEK lagi sebelum apply
-                if (hasNonVoucherProductInCart()) {
-                    showVoucherMessageCart('❌ GAGAL! Ada produk yang tidak support voucher!', 'error');
+                const hasNonVoucherProduct = cart.some(item => item.allowVoucher === false);
+                if (hasNonVoucherProduct) {
+                    showVoucherMessageCart('Ada produk yang tidak mendukung voucher!', 'error');
                     return;
                 }
                 
-                // Simpan voucher
                 activeVoucher = voucher;
                 const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
                 if (voucher.type === 'percentage') {
@@ -587,16 +491,6 @@ function applyVoucherFromCart() {
                 } else {
                     voucherDiscount = Math.min(voucher.value, subtotal);
                 }
-                voucherUsed = false;
-                
-                // Simpan ke localStorage
-                localStorage.setItem('activeVoucher', JSON.stringify({
-                    code: voucher.code,
-                    id: voucher.id,
-                    type: voucher.type,
-                    value: voucher.value,
-                    discount: voucherDiscount
-                }));
                 
                 showVoucherMessageCart(`✅ Voucher ${voucher.code} berhasil dipakai!`, 'success');
                 document.getElementById('voucherCodeCart').value = '';
@@ -609,21 +503,20 @@ function applyVoucherFromCart() {
 }
 
 function removeVoucherFromCart() {
-    clearActiveVoucher();
+    activeVoucher = null;
+    voucherDiscount = 0;
+    localStorage.removeItem('activeVoucher');
     showVoucherMessageCart('Voucher dihapus', 'success');
     renderCartItems();
 }
 
 function showVoucherMessageCart(msg, type) {
     const msgDiv = document.getElementById('voucherMessageCart');
-    if (!msgDiv) return;
     msgDiv.textContent = msg;
     msgDiv.className = `voucher-message-cart ${type}`;
     setTimeout(() => {
-        if (msgDiv) {
-            msgDiv.textContent = '';
-            msgDiv.className = 'voucher-message-cart';
-        }
+        msgDiv.textContent = '';
+        msgDiv.className = 'voucher-message-cart';
     }, 3000);
 }
 
@@ -632,76 +525,10 @@ function loadSavedVoucher() {
     if (saved) {
         try {
             const voucher = JSON.parse(saved);
-            // 🔥 JANGAN LOAD VOUCHER JIKA ADA PRODUK NON-VOUCHER ATAU VOUCHER SUDAH PERNAH DIPAKAI
-            if (!hasNonVoucherProductInCart() && !usedVoucherIds.includes(voucher.id)) {
-                activeVoucher = { code: voucher.code, id: voucher.id, type: voucher.type, value: voucher.value };
-                voucherDiscount = voucher.discount;
-                voucherUsed = false;
-            } else {
-                // Hapus voucher yang tidak valid
-                localStorage.removeItem('activeVoucher');
-            }
-        } catch(e) {
-            localStorage.removeItem('activeVoucher');
-        }
+            activeVoucher = { code: voucher.code, id: voucher.id, type: voucher.type, value: voucher.value };
+            voucherDiscount = voucher.discount;
+        } catch(e) {}
     }
-}
-
-// ========================================
-// CHECKOUT FUNCTION - DENGAN MARK VOUCHER TERPAKAI
-// ========================================
-function checkout() {
-    if (!requireName()) return;
-    
-    if (cart.length === 0) {
-        showNotification('Keranjang kosong!', 'error');
-        return;
-    }
-    
-    // 🔥 CEK: Jika ada voucher aktif tapi ada produk yang TIDAK BOLEH VOUCHER
-    if (activeVoucher && voucherDiscount > 0) {
-        if (hasNonVoucherProductInCart()) {
-            showNotification('❌ GAGAL CHECKOUT! Ada produk yang tidak support voucher. Hapus voucher atau hapus produk tersebut.', 'error');
-            return;
-        }
-    }
-    
-    const firstItem = cart[0];
-    let total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    let isGratis = false;
-    
-    if (activeVoucher && voucherDiscount > 0 && !voucherUsed && !hasNonVoucherProductInCart()) {
-        total = total - Math.min(voucherDiscount, total);
-        if (total <= 0) isGratis = true;
-        voucherUsed = true;
-        
-        // 🔥 MARK VOUCHER SUDAH DIPAKAI USER INI (1 USER 1 VOUCHER)
-        if (activeVoucher && activeVoucher.id) {
-            if (!usedVoucherIds.includes(activeVoucher.id)) {
-                usedVoucherIds.push(activeVoucher.id);
-                localStorage.setItem('usedVouchers', JSON.stringify(usedVoucherIds));
-                
-                // 🔥 UPDATE JUMLAH PENGGUNAAN VOUCHER DI DATABASE
-                const voucherRef = database.ref('vouchers/' + activeVoucher.id);
-                voucherRef.transaction((currentData) => {
-                    if (currentData) {
-                        return { ...currentData, used: (currentData.used || 0) + 1 };
-                    }
-                    return currentData;
-                });
-            }
-        }
-        
-        // Hapus voucher dari localStorage setelah dipakai
-        clearActiveVoucher();
-    }
-    
-    localStorage.setItem('checkoutCart', JSON.stringify(cart));
-    localStorage.setItem('checkoutTotal', total);
-    
-    if (isGratis) showNotification('🎉 Selamat! Pesanan Anda GRATIS!', 'success');
-    
-    window.location.href = firstItem.type === 'sewa' ? 'data-sewa.html' : 'data-script.html';
 }
 
 // ========================================
@@ -719,7 +546,7 @@ setTimeout(() => {
 }, 2000);
 
 // ========================================
-// MUSIC PLAYER (SAMA SEPERTI SEBELUMNYA)
+// MUSIC PLAYER
 // ========================================
 function loadMusicHistory() {
     const saved = localStorage.getItem('rayy_music_history');
@@ -936,22 +763,10 @@ function closeMusicModal() {
 }
 
 function initMusicEventListeners() {
-    const musicBtn = document.getElementById('musicBtn');
-    const sidebarMusicBtn = document.getElementById('sidebarMusicBtn');
-    
-    if (musicBtn) {
-        musicBtn.onclick = (e) => { 
-            e.preventDefault(); 
-            openMusicModal(); 
-        };
-    }
-    if (sidebarMusicBtn) {
-        sidebarMusicBtn.onclick = (e) => { 
-            e.preventDefault(); 
-            openMusicModal(); 
-        };
-    }
-    
+    document.getElementById('musicBtn').onclick = (e) => { 
+        e.preventDefault(); 
+        openMusicModal(); 
+    };
     document.getElementById('closeMusicModal').onclick = closeMusicModal;
     document.getElementById('musicPlayPauseBtn').onclick = togglePlayPause;
     document.getElementById('musicStopBtn').onclick = stopMusic;
@@ -1073,13 +888,9 @@ function updateFloatingPlayer(track) {
 // ========================================
 // INITIALIZE
 // ========================================
-document.getElementById('menuToggle').onclick = toggleSidebar;
-document.getElementById('sidebarClose').onclick = closeSidebar;
-
 if (!checkUserIdentity()) {
     // Redirect to profile
 } else {
-    updateSidebarProfile();
     loadSlider();
     loadMarqueeText();
     loadProducts();
@@ -1101,5 +912,3 @@ window.playFromHistory = playFromHistory;
 window.applyVoucherFromCart = applyVoucherFromCart;
 window.removeVoucherFromCart = removeVoucherFromCart;
 window.copyVoucherCode = copyVoucherCode;
-window.closeSidebar = closeSidebar;
-window.openSidebar = openSidebar;
