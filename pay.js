@@ -27,7 +27,6 @@ function loadCheckoutData() {
     
     console.log('📦 Loaded cart:', cart);
     console.log('💰 Total:', total);
-    console.log('📝 Order Data:', orderData);
     
     if (cart.length === 0) {
         window.location.href = 'rayy-store.com.html';
@@ -175,7 +174,7 @@ function loadExistingDeposit() {
             console.log('✅ Menggunakan deposit yang sudah ada:', depositId);
             return true;
         } else {
-            console.log('⚠️ Deposit sudah kadaluarsa');
+            console.log('⚠️ Deposit sudah kadaluarsa, membuat baru...');
             clearExistingDeposit();
             return false;
         }
@@ -254,22 +253,17 @@ function showNotification(msg, type) {
     }, 2000);
 }
 
-async function sendProcessingNotification() {
-    if (processingNotifSent) return;
-    processingNotifSent = true;
-    
-    const processingData = {
-        id: Date.now().toString(),
-        type: orderData.type || 'unknown',
-        cart: cart,
-        total: total,
-        customerData: orderData,
-        status: 'processing',
-        createdAt: new Date().toISOString()
-    };
-    
-    if (typeof notifyOrderProcessing !== 'undefined') {
-        await notifyOrderProcessing(processingData);
+async function sendPaymentNotification(type, data) {
+    try {
+        const notifRef = database.ref(`${type}_notifications`);
+        await notifRef.push({
+            type: type,
+            data: data,
+            timestamp: Date.now()
+        });
+        console.log(`✅ Notifikasi ${type} terkirim ke Firebase`);
+    } catch (error) {
+        console.error(`❌ Gagal kirim notifikasi ${type}:`, error);
     }
 }
 
@@ -479,6 +473,11 @@ function startCountdown(expiredAt) {
         if (distance <= 0) {
             clearInterval(window.countdownInterval);
             countdownEl.innerHTML = '⏰ QRIS Kadaluarsa, silakan refresh halaman';
+            sendPaymentNotification('payment_expired', {
+                userName: orderData.buyerName || localStorage.getItem('userName'),
+                orderId: depositId,
+                total: total
+            });
         } else {
             const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((distance % (1000 * 60)) / 1000);
@@ -487,7 +486,6 @@ function startCountdown(expiredAt) {
     }, 1000);
 }
 
-// ========== PAYMENT SUCCESS - SIMPAN KE sewa_orders ==========
 async function paymentSuccess() {
     if (statusInterval) clearInterval(statusInterval);
     if (window.countdownInterval) clearInterval(window.countdownInterval);
@@ -502,7 +500,6 @@ async function paymentSuccess() {
     const productName = cart[0]?.name || 'Sewa Bot';
     const productPrice = cart[0]?.price || total;
     
-    // 🔥 DATA UNTUK sewa_orders (HARUS DISIMPAN)
     const sewaOrderData = {
         orderId: orderId,
         buyerName: buyerName,
@@ -522,7 +519,6 @@ async function paymentSuccess() {
         createdAt: new Date().toISOString()
     };
     
-    // 🔥 DATA UNTUK orders (backup)
     const orderDataBackup = {
         id: orderId,
         type: 'sewa',
@@ -536,35 +532,21 @@ async function paymentSuccess() {
     };
     
     try {
-        // SIMPAN KE sewa_orders (UTAMA) - PASTIKAN TERSIMPAN
         const sewaOrderRef = database.ref('sewa_orders').push();
         await sewaOrderRef.set(sewaOrderData);
         console.log('✅ Data disimpan ke sewa_orders dengan ID:', sewaOrderRef.key);
-        console.log('📦 Data sewa:', sewaOrderData);
         
-        // SIMPAN KE orders (BACKUP)
         await database.ref('orders/' + orderId).set(orderDataBackup);
-        console.log('✅ Data disimpan ke orders dengan ID:', orderId);
         
-        // KIRIM NOTIFIKASI TELEGRAM
-        if (typeof sendTelegramNotification !== 'undefined') {
-            const produkList = cart.map(item => `${item.name} x${item.quantity}`).join(', ');
-            const messageTelegram = `✅ *PEMBAYARAN BERHASIL - SEWA BOT* ✅\n\n` +
-                `👤 Pembeli: ${buyerName}\n` +
-                `📱 No WA: ${buyerPhone}\n` +
-                `🔗 Link Grup: ${linkGroup}\n` +
-                `📦 Produk: ${produkList}\n` +
-                `💰 Total: Rp ${formatNumberPay(total)}\n` +
-                `💳 Gateway: ${currentGateway}\n` +
-                `🆔 ID: ${sewaOrderRef.key}\n` +
-                `⏰ Waktu: ${new Date().toLocaleString('id-ID')}\n\n` +
-                `⚠️ *MENUNGGU PERSETUJUAN ADMIN* ⚠️\n` +
-                `Klik tombol di bawah untuk menyetujui sewa dan memulai hitung mundur.`;
-            
-            await sendTelegramNotification(messageTelegram);
-        }
+        await sendPaymentNotification('payment_success', {
+            userName: buyerName,
+            orderId: sewaOrderRef.key,
+            products: productName,
+            total: total,
+            gateway: currentGateway,
+            paidAt: Date.now()
+        });
         
-        // UPDATE STOK PRODUK
         for (const item of cart) {
             const productRef = database.ref(`products/${item.type}/${item.id}`);
             const snapshot = await productRef.once('value');
@@ -590,7 +572,6 @@ async function paymentSuccess() {
     }
 }
 
-// ========== PAYMENT SUCCESS GRATIS ==========
 async function paymentSuccessGratis() {
     const orderId = Date.now().toString();
     const buyerName = orderData.buyerName || localStorage.getItem('buyerName') || 'Customer';
@@ -633,24 +614,17 @@ async function paymentSuccessGratis() {
     try {
         const sewaOrderRef = database.ref('sewa_orders').push();
         await sewaOrderRef.set(sewaOrderData);
-        console.log('✅ Data gratis disimpan ke sewa_orders:', sewaOrderRef.key);
         
         await database.ref('orders/' + orderId).set(orderDataBackup);
         
-        if (typeof sendTelegramNotification !== 'undefined') {
-            const produkList = cart.map(item => `${item.name} x${item.quantity}`).join(', ');
-            const messageTelegram = `🎉 *PEMBAYARAN GRATIS - SEWA BOT* 🎉\n\n` +
-                `👤 Pembeli: ${buyerName}\n` +
-                `📱 No WA: ${buyerPhone}\n` +
-                `🔗 Link Grup: ${linkGroup}\n` +
-                `📦 Produk: ${produkList}\n` +
-                `💰 Total: GRATIS!\n` +
-                `🆔 ID: ${sewaOrderRef.key}\n` +
-                `⏰ Waktu: ${new Date().toLocaleString('id-ID')}\n\n` +
-                `⚠️ *MENUNGGU PERSETUJUAN ADMIN* ⚠️`;
-            
-            await sendTelegramNotification(messageTelegram);
-        }
+        await sendPaymentNotification('payment_success', {
+            userName: buyerName,
+            orderId: sewaOrderRef.key,
+            products: productName,
+            total: 0,
+            gateway: 'gratis',
+            paidAt: Date.now()
+        });
         
         for (const item of cart) {
             const productRef = database.ref(`products/${item.type}/${item.id}`);
@@ -693,4 +667,3 @@ function showError(message) {
 }
 
 loadCheckoutData();
-sendProcessingNotification();

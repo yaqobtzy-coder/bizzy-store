@@ -1,0 +1,27 @@
+/* Tambahan style khusus untuk live chat jika diperlukan */
+.chat-messages {
+    scroll-behavior: smooth;
+}
+
+.message-bubble {
+    transition: all 0.2s;
+}
+
+.message-bubble:hover {
+    transform: scale(1.01);
+}
+
+.typing-indicator {
+    padding: 8px 20px;
+    border-top: 1px solid #e2e8f0;
+    background: #f8fafc;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.message {
+    animation: fadeIn 0.3s ease;
+}

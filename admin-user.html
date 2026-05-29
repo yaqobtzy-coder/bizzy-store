@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Admin - Manajemen User | Rayy Store</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{background:#f8fafc;font-family:'Inter',sans-serif;overflow-x:hidden;color:#1e293b}
+        
+        /* SIDEBAR ADMIN */
+        .sidebar{position:fixed;top:0;left:-280px;width:280px;height:100%;background:#fff;z-index:1002;transition:left .3s;display:flex;flex-direction:column;box-shadow:2px 0 10px rgba(0,0,0,.1);border-right:1px solid #e2e8f0}
+        .sidebar.open{left:0}
+        .sidebar-header{display:flex;justify-content:space-between;align-items:center;padding:20px;border-bottom:1px solid #e2e8f0}
+        .sidebar-logo{font-size:20px;font-weight:700;color:#0f172a}
+        .sidebar-logo span{color:#3b82f6}
+        .sidebar-close{background:0;border:none;font-size:24px;color:#94a3b8;cursor:pointer}
+        .sidebar-close:hover{color:#ef4444}
+        .sidebar-profile{padding:20px;text-align:center;border-bottom:1px solid #e2e8f0}
+        .sidebar-avatar i{font-size:60px;color:#3b82f6}
+        .sidebar-name{font-weight:600;color:#0f172a;margin-top:8px}
+        .sidebar-email{font-size:11px;color:#94a3b8;margin-top:4px}
+        .sidebar-nav{flex:1;padding:20px 0}
+        .sidebar-link{display:flex;align-items:center;gap:12px;padding:12px 20px;color:#475569;text-decoration:none;font-size:14px;font-weight:500}
+        .sidebar-link:hover{background:#f1f5f9;color:#3b82f6}
+        .sidebar-link.active{background:#eef2ff;color:#3b82f6;border-right:3px solid #3b82f6}
+        .sidebar-footer{padding:20px;border-top:1px solid #e2e8f0}
+        .btn-logout{width:100%;padding:10px;background:#fee2e2;border:none;border-radius:12px;color:#dc2626;cursor:pointer;font-weight:600}
+        .btn-logout:hover{background:#fecaca}
+        .overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:1001;display:none}
+        .overlay.active{display:block}
+        
+        /* TOP NAVBAR */
+        .top-navbar{background:#fff;padding:12px 20px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;border-bottom:1px solid #e2e8f0}
+        .menu-toggle{background:0;border:none;font-size:22px;color:#475569;cursor:pointer}
+        .logo-small{font-size:18px;font-weight:700;color:#0f172a}
+        .logo-small span{color:#3b82f6}
+        
+        /* MAIN */
+        .main-content{min-height:100vh}
+        .container{max-width:1200px;margin:0 auto;padding:30px 20px}
+        .page-header{text-align:center;margin-bottom:30px}
+        .page-header h1{font-size:28px;font-weight:700;color:#0f172a;margin-bottom:8px}
+        .page-header h1 i{color:#3b82f6}
+        .page-header p{color:#64748b;font-size:14px}
+        
+        /* STATS */
+        .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;margin-bottom:30px}
+        .stat-card{background:#fff;border-radius:16px;padding:20px;border:1px solid #e2e8f0;text-align:center}
+        .stat-card i{font-size:40px;color:#3b82f6;margin-bottom:10px}
+        .stat-card h3{font-size:28px;font-weight:700;color:#0f172a}
+        .stat-card p{color:#64748b;font-size:13px}
+        
+        /* SEARCH */
+        .search-bar{display:flex;gap:12px;margin-bottom:25px;flex-wrap:wrap}
+        .search-bar input{flex:1;padding:12px 16px;border:1px solid #e2e8f0;border-radius:12px;font-size:14px}
+        .search-bar input:focus{outline:0;border-color:#3b82f6}
+        .search-bar button{background:#3b82f6;border:none;padding:12px 24px;border-radius:12px;color:#fff;font-weight:600;cursor:pointer}
+        .search-bar button:hover{background:#2563eb}
+        .search-bar .btn-refresh{background:#64748b}
+        .search-bar .btn-refresh:hover{background:#475569}
+        
+        /* TABLE */
+        .table-wrapper{overflow-x:auto;background:#fff;border-radius:16px;border:1px solid #e2e8f0}
+        table{width:100%;border-collapse:collapse}
+        th,td{padding:14px 16px;text-align:left;border-bottom:1px solid #e2e8f0}
+        th{background:#f8fafc;font-weight:600;color:#475569}
+        tr:hover{background:#f8fafc}
+        
+        /* BADGES */
+        .badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600}
+        .badge-can-rename{background:#dcfce7;color:#16a34a}
+        .badge-cannot-rename{background:#fee2e2;color:#dc2626}
+        
+        /* BUTTONS */
+        .btn-icon{background:0;border:none;cursor:pointer;font-size:16px;padding:6px;border-radius:6px;transition:all .2s}
+        .btn-edit{color:#3b82f6}
+        .btn-edit:hover{background:#eef2ff}
+        .btn-delete{color:#ef4444}
+        .btn-delete:hover{background:#fee2e2}
+        .btn-toggle{color:#f59e0b}
+        .btn-toggle:hover{background:#fef3c7}
+        
+        /* MODAL */
+        .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:2000;display:flex;justify-content:center;align-items:center}
+        .modal-content{background:#fff;border-radius:20px;width:90%;max-width:450px;padding:24px;position:relative}
+        .modal-close{position:absolute;top:15px;right:20px;background:0;border:none;font-size:24px;color:#94a3b8;cursor:pointer}
+        .modal-close:hover{color:#ef4444}
+        .modal-content h3{color:#0f172a;margin-bottom:20px;font-size:18px;font-weight:600;border-left:3px solid #3b82f6;padding-left:12px}
+        .form-group{margin-bottom:16px}
+        .form-group label{display:block;color:#334155;margin-bottom:6px;font-size:13px;font-weight:500}
+        .form-group input{width:100%;padding:10px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px}
+        .form-group input:focus{outline:0;border-color:#3b82f6}
+        .btn-primary{width:100%;background:#3b82f6;border:none;padding:12px;border-radius:8px;color:#fff;font-weight:600;cursor:pointer;margin-top:10px}
+        .btn-primary:hover{background:#2563eb}
+        .btn-danger{background:#ef4444}
+        .btn-danger:hover{background:#dc2626}
+        
+        /* TOAST */
+        .toast-notification{position:fixed;bottom:20px;right:20px;padding:12px 20px;border-radius:40px;color:#fff;font-weight:500;z-index:1002;animation:slideIn .3s ease;font-size:13px}
+        .toast-notification.success{background:#22c55e}
+        .toast-notification.error{background:#ef4444}
+        .toast-notification.warning{background:#f59e0b}
+        @keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+        .loading-spinner{text-align:center;padding:60px;color:#94a3b8}
+        .loading-spinner i{font-size:40px;color:#3b82f6;animation:spin 1s linear infinite}
+        @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+        .empty-state{text-align:center;padding:60px 20px;color:#94a3b8}
+        .empty-state i{font-size:60px;margin-bottom:16px}
+        
+        @media (max-width:768px){
+            .page-header h1{font-size:22px}
+            th,td{padding:10px 12px;font-size:13px}
+            .sidebar{width:260px;left:-260px}
+            .stats-grid{grid-template-columns:repeat(2,1fr)}
+        }
+        @media (min-width:769px){.menu-toggle{display:none}}
+    </style>
+</head>
+<body>
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">Rayy<span>Store</span></div>
+            <button class="sidebar-close" id="sidebarClose">&times;</button>
+        </div>
+        <div class="sidebar-profile">
+            <div class="sidebar-avatar"><i class="fas fa-user-circle"></i></div>
+            <div class="sidebar-name" id="sidebarName">Admin</div>
+            <div class="sidebar-email" id="sidebarEmail">admin@rayystore.com</div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="admin-users.html" class="sidebar-link active"><i class="fas fa-users"></i> Manajemen User</a>
+            <a href="admin2.html" class="sidebar-link"><i class="fas fa-box"></i> Manajemen Produk</a>
+            <a href="rayy-store.com.html" class="sidebar-link"><i class="fas fa-home"></i> Kembali ke Toko</a>
+        </nav>
+        <div class="sidebar-footer">
+            <button class="btn-logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        </div>
+    </div>
+    <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+    <div class="main-content">
+        <nav class="top-navbar">
+            <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+            <div class="logo-small">Rayy<span>Store Admin</span></div>
+            <div></div>
+        </nav>
+
+        <div class="container">
+            <div class="page-header">
+                <h1><i class="fas fa-users"></i> Manajemen User</h1>
+                <p>Kelola semua pengguna Rayy Store</p>
+            </div>
+
+            <div class="stats-grid" id="statsGrid">
+                <div class="stat-card"><i class="fas fa-users"></i><h3 id="totalUsers">0</h3><p>Total User</p></div>
+                <div class="stat-card"><i class="fas fa-check-circle"></i><h3 id="canRenameCount">0</h3><p>Bisa Ganti Nama</p></div>
+                <div class="stat-card"><i class="fas fa-ban"></i><h3 id="cannotRenameCount">0</h3><p>Tidak Bisa Ganti Nama</p></div>
+            </div>
+
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="Cari username...">
+                <button onclick="searchUsers()"><i class="fas fa-search"></i> Cari</button>
+                <button class="btn-refresh" onclick="loadAllUsers()"><i class="fas fa-sync-alt"></i> Refresh</button>
+            </div>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr><th>No</th><th>Username</th><th>Email</th><th>Status Ganti Nama</th><th>Terdaftar</th><th>Aksi</th</tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                        <tr><td colspan="6"><div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>Memuat data...</p></div></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script>
+        // ==================== ADMIN USER MANAGEMENT ====================
+        let allUsers = [];
+        let currentSearchTerm = '';
+
+        function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('overlay').classList.add('active');}
+        function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('active');}
+        function toggleSidebar(){const s=document.getElementById('sidebar');if(s.classList.contains('open'))closeSidebar();else openSidebar();}
+        
+        function updateSidebarProfile(){
+            const adminName = localStorage.getItem('adminName') || 'Admin';
+            document.getElementById('sidebarName').innerText = adminName;
+        }
+        
+        function showToast(msg,type){
+            const old=document.querySelector('.toast-notification');if(old)old.remove();
+            const n=document.createElement('div');n.className=`toast-notification ${type}`;
+            n.innerHTML=`<i class="fas ${type==='success'?'fa-check-circle':type==='warning'?'fa-exclamation-triangle':'fa-exclamation-circle'}"></i> ${msg}`;
+            document.body.appendChild(n);
+            setTimeout(()=>{if(n)n.remove();},3000);
+        }
+        
+        function logout(){
+            if(confirm('Logout dari admin panel?')){
+                localStorage.removeItem('adminLoggedIn');
+                window.location.href = 'rayy-store.com.html';
+            }
+        }
+        
+        function checkAdminAuth(){
+            const isAdmin = localStorage.getItem('adminLoggedIn') === 'true';
+            if(!isAdmin){
+                const password = prompt('🔐 Masukkan password admin:');
+                if(password === 'admin123' || password === 'raay123'){
+                    localStorage.setItem('adminLoggedIn', 'true');
+                    localStorage.setItem('adminName', 'Admin');
+                    showToast('✅ Login berhasil!','success');
+                } else {
+                    alert('Password salah!');
+                    window.location.href = 'rayy-store.com.html';
+                    return false;
+                }
+            }
+            updateSidebarProfile();
+            return true;
+        }
+        
+        // Load semua user
+        async function loadAllUsers(){
+            const tbody = document.getElementById('usersTableBody');
+            tbody.innerHTML = '<table><td colspan="6"><div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>Memuat data...</p></div></td></tr>';
+            
+            const usersMap = new Map();
+            
+            try {
+                // Ambil dari sewa_orders
+                const sewaSnapshot = await database.ref('sewa_orders').once('value');
+                if(sewaSnapshot.exists()){
+                    sewaSnapshot.forEach(child => {
+                        const order = child.val();
+                        if(order.buyerName && order.buyerName !== 'Customer'){
+                            if(!usersMap.has(order.buyerName)){
+                                usersMap.set(order.buyerName, {
+                                    username: order.buyerName,
+                                    email: '',
+                                    canRename: false,
+                                    registeredAt: order.createdAt || new Date().toISOString()
+                                });
+                            }
+                        }
+                        if(order.username && order.username !== 'Customer' && !usersMap.has(order.username)){
+                            usersMap.set(order.username, {
+                                username: order.username,
+                                email: '',
+                                canRename: false,
+                                registeredAt: order.createdAt || new Date().toISOString()
+                            });
+                        }
+                    });
+                }
+                
+                // Ambil dari user_permissions
+                const permSnapshot = await database.ref('user_permissions').once('value');
+                if(permSnapshot.exists()){
+                    permSnapshot.forEach(child => {
+                        const perm = child.val();
+                        if(!usersMap.has(child.key)){
+                            usersMap.set(child.key, {
+                                username: child.key,
+                                email: '',
+                                canRename: perm.canRename === true,
+                                registeredAt: perm.createdAt || new Date().toISOString()
+                            });
+                        } else {
+                            const user = usersMap.get(child.key);
+                            user.canRename = perm.canRename === true;
+                        }
+                    });
+                }
+                
+                allUsers = Array.from(usersMap.values());
+                allUsers.sort((a,b) => new Date(b.registeredAt) - new Date(a.registeredAt));
+                
+                updateStats();
+                renderUsersTable();
+                
+            } catch(e){
+                console.error('Error loading users:', e);
+                tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Gagal memuat data</p></div></td></tr>';
+            }
+        }
+        
+        function updateStats(){
+            const total = allUsers.length;
+            const canRename = allUsers.filter(u => u.canRename === true).length;
+            const cannotRename = total - canRename;
+            document.getElementById('totalUsers').innerText = total;
+            document.getElementById('canRenameCount').innerText = canRename;
+            document.getElementById('cannotRenameCount').innerText = cannotRename;
+        }
+        
+        function searchUsers(){
+            currentSearchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+            renderUsersTable();
+        }
+        
+        function renderUsersTable(){
+            const tbody = document.getElementById('usersTableBody');
+            let filteredUsers = allUsers;
+            if(currentSearchTerm){
+                filteredUsers = allUsers.filter(u => u.username.toLowerCase().includes(currentSearchTerm));
+            }
+            if(filteredUsers.length === 0){
+                tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><i class="fas fa-inbox"></i><p>Tidak ada user ditemukan</p></div></td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = filteredUsers.map((user, index) => {
+                const registeredDate = new Date(user.registeredAt).toLocaleDateString('id-ID');
+                const canRenameBadge = user.canRename 
+                    ? '<span class="badge badge-can-rename"><i class="fas fa-check-circle"></i> Bisa Ganti Nama</span>'
+                    : '<span class="badge badge-cannot-rename"><i class="fas fa-ban"></i> Tidak Bisa Ganti Nama</span>';
+                
+                return `<tr>
+                    <td>${index + 1}</td>
+                    <td><strong>${escapeHtml(user.username)}</strong></td>
+                    <td>${escapeHtml(user.email || '-')}</td>
+                    <td>${canRenameBadge}</td>
+                    <td>${registeredDate}</td>
+                    <td>
+                        <button class="btn-icon btn-edit" onclick="openEditModal('${escapeHtml(user.username)}')" title="Edit Nama"><i class="fas fa-edit"></i></button>
+                        <button class="btn-icon btn-toggle" onclick="toggleCanRename('${escapeHtml(user.username)}', ${user.canRename})" title="Toggle Ganti Nama"><i class="fas fa-key"></i></button>
+                        <button class="btn-icon btn-delete" onclick="deleteUser('${escapeHtml(user.username)}')" title="Hapus User"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+        
+        function escapeHtml(text){
+            if(!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Toggle akses ganti nama (SIMPLE & PASTI JALAN)
+        async function toggleCanRename(username, currentStatus){
+            const newStatus = !currentStatus;
+            
+            try {
+                // Simpan ke Firebase
+                await database.ref(`user_permissions/${username}`).set({
+                    canRename: newStatus,
+                    updatedBy: 'admin',
+                    updatedAt: Date.now()
+                });
+                
+                // Update di array
+                const user = allUsers.find(u => u.username === username);
+                if(user) user.canRename = newStatus;
+                
+                updateStats();
+                renderUsersTable();
+                showToast(`✅ Akses ganti nama untuk ${username} ${newStatus ? 'DIAKTIFKAN' : 'DINONAKTIFKAN'}`, 'success');
+            } catch(e){
+                console.error(e);
+                showToast(`❌ Gagal mengupdate akses untuk ${username}`, 'error');
+            }
+        }
+        
+        // Open modal edit nama
+        function openEditModal(username){
+            const existingModal = document.getElementById('editModal');
+            if(existingModal) existingModal.remove();
+            
+            const modal = document.createElement('div');
+            modal.id = 'editModal';
+            modal.className = 'modal-overlay';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <button class="modal-close" onclick="closeEditModal()">&times;</button>
+                    <h3><i class="fas fa-edit"></i> Edit Nama User</h3>
+                    <div class="form-group">
+                        <label>Username Lama</label>
+                        <input type="text" id="oldUsername" value="${escapeHtml(username)}" readonly style="background:#f1f5f9">
+                    </div>
+                    <div class="form-group">
+                        <label>Username Baru</label>
+                        <input type="text" id="newUsername" placeholder="Masukkan nama baru">
+                        <small>⚠️ Perubahan ini akan mempengaruhi semua data pesanan user ini</small>
+                    </div>
+                    <button class="btn-primary" onclick="updateUsername()">Simpan Perubahan</button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+        
+        function closeEditModal(){
+            const modal = document.getElementById('editModal');
+            if(modal) modal.remove();
+        }
+        
+        // Update username
+        async function updateUsername(){
+            const oldUsername = document.getElementById('oldUsername').value;
+            const newUsername = document.getElementById('newUsername').value.trim();
+            
+            if(!newUsername){
+                showToast('Masukkan nama baru!','error');
+                return;
+            }
+            
+            if(oldUsername === newUsername){
+                showToast('Nama baru sama dengan nama lama','warning');
+                return;
+            }
+            
+            if(confirm(`Ubah nama "${oldUsername}" menjadi "${newUsername}"?\n\n⚠️ Perubahan akan mempengaruhi semua data pesanan user ini.`)){
+                showToast('Memproses perubahan...','warning');
+                
+                try {
+                    // 1. Update di sewa_orders
+                    const sewaSnapshot = await database.ref('sewa_orders').once('value');
+                    if(sewaSnapshot.exists()){
+                        const updates = [];
+                        sewaSnapshot.forEach(child => {
+                            const order = child.val();
+                            if(order.buyerName === oldUsername || order.username === oldUsername){
+                                updates.push(database.ref(`sewa_orders/${child.key}`).update({
+                                    buyerName: newUsername,
+                                    username: newUsername
+                                }));
+                            }
+                        });
+                        await Promise.all(updates);
+                    }
+                    
+                    // 2. Update permission
+                    const permSnapshot = await database.ref(`user_permissions/${oldUsername}`).once('value');
+                    const permData = permSnapshot.val();
+                    if(permData){
+                        await database.ref(`user_permissions/${newUsername}`).set({
+                            ...permData,
+                            canRename: permData.canRename || false,
+                            renamedFrom: oldUsername,
+                            renamedAt: Date.now()
+                        });
+                        await database.ref(`user_permissions/${oldUsername}`).remove();
+                    }
+                    
+                    await loadAllUsers();
+                    closeEditModal();
+                    showToast(`✅ Nama berhasil diubah dari "${oldUsername}" menjadi "${newUsername}"`, 'success');
+                    
+                } catch(e){
+                    console.error(e);
+                    showToast('Gagal mengubah nama','error');
+                }
+            }
+        }
+        
+        // Hapus user
+        async function deleteUser(username){
+            if(confirm(`⚠️ HAPUS USER "${username}"?\n\nSemua data pesanan user ini juga akan dihapus!\n\nTindakan ini TIDAK DAPAT DIBATALKAN!`)){
+                showToast('Menghapus data user...','warning');
+                
+                try {
+                    // 1. Hapus dari sewa_orders
+                    const sewaSnapshot = await database.ref('sewa_orders').once('value');
+                    if(sewaSnapshot.exists()){
+                        const deletes = [];
+                        sewaSnapshot.forEach(child => {
+                            const order = child.val();
+                            if(order.buyerName === username || order.username === username){
+                                deletes.push(database.ref(`sewa_orders/${child.key}`).remove());
+                            }
+                        });
+                        await Promise.all(deletes);
+                    }
+                    
+                    // 2. Hapus permission
+                    await database.ref(`user_permissions/${username}`).remove();
+                    
+                    await loadAllUsers();
+                    showToast(`✅ User "${username}" berhasil dihapus`, 'success');
+                    
+                } catch(e){
+                    console.error(e);
+                    showToast('Gagal menghapus user','error');
+                }
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', function(){
+            if(!checkAdminAuth()) return;
+            document.getElementById('menuToggle').onclick = toggleSidebar;
+            document.getElementById('sidebarClose').onclick = closeSidebar;
+            loadAllUsers();
+        });
+        
+        window.closeEditModal = closeEditModal;
+        window.openEditModal = openEditModal;
+        window.toggleCanRename = toggleCanRename;
+        window.updateUsername = updateUsername;
+        window.deleteUser = deleteUser;
+        window.searchUsers = searchUsers;
+        window.loadAllUsers = loadAllUsers;
+        window.logout = logout;
+    </script>
+</body>
+</html>

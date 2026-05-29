@@ -78,6 +78,27 @@ function selectProduct(productId) {
     });
 }
 
+// ============ NOTIFIKASI CHECKOUT PANEL ============
+async function sendPanelCheckoutNotification(userName, phone, productName, price, spec) {
+    try {
+        await database.ref('checkout_notifications').push({
+            type: 'checkout',
+            data: {
+                userName: userName,
+                phone: phone,
+                products: `${productName} (${spec})`,
+                total: price,
+                category: 'PANEL',
+                timestamp: Date.now()
+            },
+            timestamp: Date.now()
+        });
+        console.log('✅ Notifikasi checkout panel terkirim');
+    } catch (error) {
+        console.error('❌ Gagal kirim notifikasi:', error);
+    }
+}
+
 document.getElementById('submitBtn').addEventListener('click', async () => {
     // CEK NAMA
     const userName = localStorage.getItem('userName');
@@ -149,6 +170,9 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
     localStorage.setItem('checkoutTotal', selectedProduct.price);
     localStorage.setItem('orderData', JSON.stringify(orderData));
     localStorage.setItem('buyerName', userName);
+    
+    // Kirim notifikasi checkout panel
+    await sendPanelCheckoutNotification(userName, waNumber, selectedProduct.name, selectedProduct.price, ramLabel);
 
     if (typeof notifyOrderProcessing !== 'undefined') {
         const processingData = {

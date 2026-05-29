@@ -61,6 +61,27 @@ function hideLoading() {
     document.getElementById('loadingOverlay').style.display = 'none';
 }
 
+// ============ NOTIFIKASI CHECKOUT SCRIPT ============
+async function sendCheckoutNotification(userName, phone, products, total, category) {
+    try {
+        await database.ref('checkout_notifications').push({
+            type: 'checkout',
+            data: {
+                userName: userName,
+                phone: phone,
+                products: products,
+                total: total,
+                category: category,
+                timestamp: Date.now()
+            },
+            timestamp: Date.now()
+        });
+        console.log('✅ Notifikasi checkout script terkirim');
+    } catch (error) {
+        console.error('❌ Gagal kirim notifikasi:', error);
+    }
+}
+
 async function submitData() {
     // Ambil nama dari PROFILE
     let buyerName = localStorage.getItem('userName');
@@ -119,6 +140,10 @@ async function submitData() {
     
     localStorage.setItem('orderData', JSON.stringify(scriptData));
     localStorage.setItem('buyerName', buyerName);
+    
+    // Kirim notifikasi checkout
+    const produkList = cart.map(item => `${item.name} x${item.quantity}`).join(', ');
+    await sendCheckoutNotification(buyerName, scriptData.wajib.ownerPhone, produkList, total, 'SCRIPT');
     
     if (typeof notifyOrderProcessing !== 'undefined') {
         const processingData = {

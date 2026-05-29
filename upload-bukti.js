@@ -192,7 +192,6 @@ if (submitBtn) {
                     productsText = productNames;
                     totalAmount = orderData.total || 0;
                     
-                    // CEK JIKA INI PESANAN SEWA
                     if (orderData.type === 'sewa') {
                         isSewaOrder = true;
                         linkGroup = orderData.linkGroup || '';
@@ -205,8 +204,6 @@ if (submitBtn) {
                     }
                 }
                 
-                // JIKA PESANAN SEWA (BUKAN PERPANJANGAN), KIRIM PERINTAH KE WA BOT
-                // UNTUK PERPANJANGAN, TIDAK PERLU KIRIM PERINTAH LAGI
                 if (isSewaOrder && linkGroup && !isRenew) {
                     await sendAddSewaCommand(linkGroup, durasi);
                     showNotification(`✅ Perintah sewa ${durasi} hari telah dikirim ke bot!`, 'success');
@@ -259,5 +256,4 @@ if (submitBtn) {
 
 loadOrderInfo();
 
-// Global function untuk remove image
 window.removeImage = removeImage;

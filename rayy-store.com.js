@@ -1,5 +1,5 @@
 // ========================================
-// RAYY STORE - MAIN JAVASCRIPT
+// RAYY STORE - MAIN JAVASCRIPT (FULL UPDATE)
 // ========================================
 
 let sewaProducts = [];
@@ -21,6 +21,57 @@ let musicPlayer = {
     updateInterval: null 
 };
 
+// ============ NOTIFIKASI KE TELEGRAM VIA FIREBASE ============
+async function sendAddToCartNotification(productName, price, quantity, userName) {
+    try {
+        await database.ref('cart_notifications').push({
+            type: 'add_to_cart',
+            data: {
+                userName: userName,
+                productName: productName,
+                price: price,
+                quantity: quantity,
+                timestamp: Date.now()
+            },
+            timestamp: Date.now()
+        });
+        console.log('✅ Notifikasi tambah ke keranjang terkirim');
+    } catch (error) {
+        console.error('❌ Gagal kirim notifikasi:', error);
+    }
+}
+
+// ========================================
+// SIDEBAR FUNCTIONS
+// ========================================
+function openSidebar() {
+    document.getElementById('sidebar').classList.add('open');
+    document.getElementById('overlay').classList.add('active');
+}
+
+function closeSidebar() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('overlay').classList.remove('active');
+}
+
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar.classList.contains('open')) {
+        closeSidebar();
+    } else {
+        openSidebar();
+    }
+}
+
+function updateSidebarProfile() {
+    const userName = localStorage.getItem('userName') || 'Customer';
+    const userEmail = localStorage.getItem('userEmail') || 'customer@rayystore.com';
+    const sidebarName = document.getElementById('sidebarName');
+    const sidebarEmail = document.getElementById('sidebarEmail');
+    if (sidebarName) sidebarName.innerText = userName;
+    if (sidebarEmail) sidebarEmail.innerText = userEmail;
+}
+
 // ========================================
 // CEK USER LOGIN
 // ========================================
@@ -30,6 +81,7 @@ function checkUserIdentity() {
         window.location.href = 'profile.html';
         return false;
     }
+    updateSidebarProfile();
     return true;
 }
 
@@ -237,7 +289,7 @@ function renderSewaProducts() {
                 <div class="product-category"><i class="fas fa-calendar-alt"></i> Sewa ${product.duration || '7 Hari'}</div>
                 <div class="product-price">Rp ${formatNumber(product.price || 0)}</div>
                 <div class="product-stock">${getStockBadge(product.stock || 0)}</div>
-                ${product.allowVoucher !== false ? '<div class="voucher-badge"><i class="fas fa-ticket-alt"></i> Bisa Pakai Voucher</div>' : '<div class="voucher-badge disabled"><i class="fas fa-ban"></i> Tidak Bisa Voucher</div>'}
+                ${product.allowVoucher !== false ? '<div class="voucher-badge"><i class="fas fa-ticket-alt"></i> Bisa Pakai Voucher</div>' : '<div class="voucher-badge disabled" style="background:#fee2e2; color:#dc2626;"><i class="fas fa-ban"></i> Tidak Bisa Voucher</div>'}
                 <button class="add-to-cart" ${(product.stock || 0) <= 0 ? 'disabled' : ''} onclick="addToCart('${product.id}', 'sewa')">${(product.stock || 0) <= 0 ? 'Stok Habis' : 'Sewa Sekarang'}</button>
             </div>
         </div>
@@ -260,7 +312,7 @@ function renderScriptProducts() {
                 <div class="product-category"><i class="fas fa-code"></i> ${product.category || 'Script'}</div>
                 <div class="product-price">Rp ${formatNumber(product.price || 0)}</div>
                 <div class="product-stock">${getStockBadge(product.stock || 0)}</div>
-                ${product.allowVoucher !== false ? '<div class="voucher-badge"><i class="fas fa-ticket-alt"></i> Bisa Pakai Voucher</div>' : '<div class="voucher-badge disabled"><i class="fas fa-ban"></i> Tidak Bisa Voucher</div>'}
+                ${product.allowVoucher !== false ? '<div class="voucher-badge"><i class="fas fa-ticket-alt"></i> Bisa Pakai Voucher</div>' : '<div class="voucher-badge disabled" style="background:#fee2e2; color:#dc2626;"><i class="fas fa-ban"></i> Tidak Bisa Voucher</div>'}
                 <button class="add-to-cart" ${(product.stock || 0) <= 0 ? 'disabled' : ''} onclick="addToCart('${product.id}', 'script')">${(product.stock || 0) <= 0 ? 'Stok Habis' : 'Beli Sekarang'}</button>
             </div>
         </div>
@@ -324,7 +376,7 @@ function clearActiveVoucher() {
 // ========================================
 // CART FUNCTIONS
 // ========================================
-function addToCart(productId, productType) {
+async function addToCart(productId, productType) {
     let product = productType === 'sewa' ? sewaProducts.find(p => p.id === productId) : scriptProducts.find(p => p.id === productId);
     if (!product || product.stock <= 0) return;
     
@@ -360,12 +412,20 @@ function addToCart(productId, productType) {
     localStorage.setItem('cart', JSON.stringify(cart));
     updateCartCount();
     renderCartItems();
+    
+    // 🔥 KIRIM NOTIFIKASI TAMBAH KE KERANJANG
+    const currentUser = localStorage.getItem('userName') || 'Customer';
+    await sendAddToCartNotification(product.name, product.price, 1, currentUser);
 }
 
 function updateCartCount() {
     const total = cart.reduce((sum, item) => sum + item.quantity, 0);
     const cartCount = document.getElementById('cartCount');
+    const topCartCount = document.getElementById('topCartCount');
+    const sidebarCartCount = document.getElementById('sidebarCartCount');
     if (cartCount) cartCount.textContent = total;
+    if (topCartCount) topCartCount.textContent = total;
+    if (sidebarCartCount) sidebarCartCount.textContent = total;
 }
 
 function renderCartItems() {
@@ -461,8 +521,14 @@ function toggleCart() {
     if (sidebar && sidebar.classList.contains('open')) renderCartItems();
 }
 
+document.getElementById('overlay')?.addEventListener('click', () => {
+    closeSidebar();
+    const cartSidebar = document.getElementById('cartSidebar');
+    if (cartSidebar) cartSidebar.classList.remove('open');
+});
+
 // ========================================
-// VOUCHER FUNCTIONS - DENGAN 1 USER 1 VOUCHER
+// VOUCHER FUNCTIONS - TIDAK DIUBAH
 // ========================================
 function applyVoucherFromCart() {
     const code = document.getElementById('voucherCodeCart').value.trim().toUpperCase();
@@ -541,11 +607,14 @@ function removeVoucherFromCart() {
 
 function showVoucherMessageCart(msg, type) {
     const msgDiv = document.getElementById('voucherMessageCart');
+    if (!msgDiv) return;
     msgDiv.textContent = msg;
     msgDiv.className = `voucher-message-cart ${type}`;
     setTimeout(() => {
-        msgDiv.textContent = '';
-        msgDiv.className = 'voucher-message-cart';
+        if (msgDiv) {
+            msgDiv.textContent = '';
+            msgDiv.className = 'voucher-message-cart';
+        }
     }, 3000);
 }
 
@@ -567,6 +636,9 @@ function loadSavedVoucher() {
     }
 }
 
+// ========================================
+// CHECKOUT FUNCTION
+// ========================================
 function checkout() {
     if (cart.length === 0) {
         showNotification('Keranjang kosong!', 'error');
@@ -598,7 +670,7 @@ function checkout() {
                         return { ...currentData, used: (currentData.used || 0) + 1 };
                     }
                     return currentData;
-                });
+                }).catch(err => console.error('Error updating voucher usage:', err));
             }
         }
         
@@ -706,26 +778,39 @@ async function searchMusic(query) {
     resultsList.innerHTML = '<div class="loading-indicator"><i class="fas fa-spinner fa-pulse"></i> Mencari lagu...</div>';
     try {
         const response = await fetch(`https://api-faa.my.id/faa/ytplay?query=${encodeURIComponent(query)}`);
-        if (!response.ok) throw new Error('API error');
         const data = await response.json();
-        if (data.status && data.result) {
+        
+        if (data.status === true && data.result) {
             const r = data.result;
-            resultsList.innerHTML = `<div class="result-item" data-title="${escapeHtml(r.title)}" data-url="${r.mp3}" data-thumb="${r.thumbnail}" data-artist="${escapeHtml(r.author)}">
-                <img src="${r.thumbnail}" onerror="this.src='https://via.placeholder.com/45x45?text=🎵'">
-                <div class="result-info">
-                    <div class="result-title">${escapeHtml(r.title)}</div>
-                    <div class="result-artist">${escapeHtml(r.author)}</div>
-                    <div class="result-duration">${r.duration_timestamp || '0:00'}</div>
+            const title = r.title || 'Unknown Title';
+            const url = r.mp3 || r.url;
+            const thumbnail = r.thumbnail || 'https://via.placeholder.com/45x45?text=🎵';
+            const artist = r.author || 'Unknown Artist';
+            const duration = r.duration_timestamp || '0:00';
+            
+            resultsList.innerHTML = `
+                <div class="result-item" data-title="${escapeHtml(title)}" data-url="${url}" data-thumb="${thumbnail}" data-artist="${escapeHtml(artist)}">
+                    <img src="${thumbnail}" onerror="this.src='https://via.placeholder.com/45x45?text=🎵'">
+                    <div class="result-info">
+                        <div class="result-title">${escapeHtml(title)}</div>
+                        <div class="result-artist">${escapeHtml(artist)}</div>
+                        <div class="result-duration">${duration}</div>
+                    </div>
                 </div>
-            </div>`;
-            document.querySelector('#musicResultsList .result-item').addEventListener('click', function() {
-                playMusic(this.dataset.title, this.dataset.url, this.dataset.thumb, this.dataset.artist);
-            });
+            `;
+            
+            const resultItem = document.querySelector('#musicResultsList .result-item');
+            if (resultItem) {
+                resultItem.addEventListener('click', function() {
+                    playMusic(this.dataset.title, this.dataset.url, this.dataset.thumb, this.dataset.artist);
+                });
+            }
         } else {
-            resultsList.innerHTML = '<div class="empty-message">Lagu tidak ditemukan</div>';
+            resultsList.innerHTML = '<div class="empty-message">Lagu tidak ditemukan. Coba kata kunci lain.</div>';
         }
     } catch (error) {
-        resultsList.innerHTML = '<div class="empty-message">Error koneksi, coba lagi</div>';
+        console.error('Error searching music:', error);
+        resultsList.innerHTML = '<div class="empty-message">Error koneksi ke server musik. Silakan coba lagi.</div>';
     }
 }
 
@@ -747,17 +832,21 @@ function playMusic(title, url, thumbnail, artist) {
     audio.play().catch(e => console.log('Play error:', e));
     musicPlayer.isPlaying = true;
     
-    document.getElementById('musicNowPlaying').style.display = 'flex';
-    document.getElementById('musicThumb').src = thumbnail || 'https://via.placeholder.com/60x60?text=🎵';
-    document.getElementById('musicTitle').innerText = title || 'Unknown Title';
-    document.getElementById('musicArtist').innerText = artist || 'Unknown Artist';
-    document.getElementById('musicPlayPauseBtn').innerHTML = '<i class="fas fa-pause"></i>';
+    const nowPlaying = document.getElementById('musicNowPlaying');
+    const musicThumb = document.getElementById('musicThumb');
+    const musicTitle = document.getElementById('musicTitle');
+    const musicArtist = document.getElementById('musicArtist');
+    const playPauseBtn = document.getElementById('musicPlayPauseBtn');
+    
+    if (nowPlaying) nowPlaying.style.display = 'flex';
+    if (musicThumb) musicThumb.src = thumbnail || 'https://via.placeholder.com/60x60?text=🎵';
+    if (musicTitle) musicTitle.innerText = title || 'Unknown Title';
+    if (musicArtist) musicArtist.innerText = artist || 'Unknown Artist';
+    if (playPauseBtn) playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
     
     updateFloatingPlayer({ title, thumbnail, artist });
-    
     addToMusicHistory({ title, url, thumbnail, artist });
     showNotification(`🎵 Memutar: ${title}`, 'success');
-    
     startProgressUpdate();
 }
 
@@ -768,13 +857,17 @@ function stopMusic() {
         musicPlayer.isPlaying = false;
         musicPlayer.currentTrack = null;
         
-        document.getElementById('musicNowPlaying').style.display = 'none';
-        document.getElementById('musicPlayPauseBtn').innerHTML = '<i class="fas fa-play"></i>';
-        document.getElementById('musicProgressFilled').style.width = '0%';
-        document.getElementById('musicCurrentTime').innerText = '0:00';
+        const nowPlaying = document.getElementById('musicNowPlaying');
+        const playPauseBtn = document.getElementById('musicPlayPauseBtn');
+        const progressFilled = document.getElementById('musicProgressFilled');
+        const currentTime = document.getElementById('musicCurrentTime');
+        
+        if (nowPlaying) nowPlaying.style.display = 'none';
+        if (playPauseBtn) playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+        if (progressFilled) progressFilled.style.width = '0%';
+        if (currentTime) currentTime.innerText = '0:00';
         
         updateFloatingPlayer(null);
-        
         if (musicPlayer.updateInterval) clearInterval(musicPlayer.updateInterval);
         showNotification('⏹️ Musik dihentikan', 'success');
     }
@@ -789,13 +882,17 @@ function togglePlayPause() {
     if (musicPlayer.isPlaying) {
         musicPlayer.audio.pause();
         musicPlayer.isPlaying = false;
-        document.getElementById('musicPlayPauseBtn').innerHTML = '<i class="fas fa-play"></i>';
-        document.getElementById('floatingPlayPause').innerHTML = '<i class="fas fa-play"></i>';
+        const playPauseBtn = document.getElementById('musicPlayPauseBtn');
+        const floatingPlayPause = document.getElementById('floatingPlayPause');
+        if (playPauseBtn) playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+        if (floatingPlayPause) floatingPlayPause.innerHTML = '<i class="fas fa-play"></i>';
     } else {
         musicPlayer.audio.play().catch(e => console.log('Resume error:', e));
         musicPlayer.isPlaying = true;
-        document.getElementById('musicPlayPauseBtn').innerHTML = '<i class="fas fa-pause"></i>';
-        document.getElementById('floatingPlayPause').innerHTML = '<i class="fas fa-pause"></i>';
+        const playPauseBtn = document.getElementById('musicPlayPauseBtn');
+        const floatingPlayPause = document.getElementById('floatingPlayPause');
+        if (playPauseBtn) playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+        if (floatingPlayPause) floatingPlayPause.innerHTML = '<i class="fas fa-pause"></i>';
         startProgressUpdate();
     }
 }
@@ -807,9 +904,12 @@ function startProgressUpdate() {
             const current = musicPlayer.audio.currentTime;
             const duration = musicPlayer.audio.duration;
             const percent = (current / duration) * 100;
-            document.getElementById('musicProgressFilled').style.width = percent + '%';
-            document.getElementById('musicCurrentTime').innerText = formatMusicTime(current);
-            document.getElementById('musicDuration').innerText = formatMusicTime(duration);
+            const progressFilled = document.getElementById('musicProgressFilled');
+            const currentTime = document.getElementById('musicCurrentTime');
+            const durationElem = document.getElementById('musicDuration');
+            if (progressFilled) progressFilled.style.width = percent + '%';
+            if (currentTime) currentTime.innerText = formatMusicTime(current);
+            if (durationElem) durationElem.innerText = formatMusicTime(duration);
         }
     }, 500);
 }
@@ -831,39 +931,96 @@ function seekMusic(e) {
 function setMusicVolume(value) {
     musicPlayer.volume = value;
     if (musicPlayer.audio) musicPlayer.audio.volume = value / 100;
-    document.getElementById('musicVolumeSlider').value = value;
+    const volumeSlider = document.getElementById('musicVolumeSlider');
+    if (volumeSlider) volumeSlider.value = value;
     localStorage.setItem('rayy_music_volume', value);
 }
 
 function openMusicModal() {
-    document.getElementById('musicModal').style.display = 'flex';
+    const modal = document.getElementById('musicModal');
+    if (modal) modal.style.display = 'flex';
     loadMusicHistory();
 }
 
 function closeMusicModal() {
-    document.getElementById('musicModal').style.display = 'none';
+    const modal = document.getElementById('musicModal');
+    if (modal) modal.style.display = 'none';
 }
 
 function initMusicEventListeners() {
-    document.getElementById('musicBtn').onclick = (e) => { 
-        e.preventDefault(); 
-        openMusicModal(); 
-    };
-    document.getElementById('closeMusicModal').onclick = closeMusicModal;
-    document.getElementById('musicPlayPauseBtn').onclick = togglePlayPause;
-    document.getElementById('musicStopBtn').onclick = stopMusic;
-    document.getElementById('musicSearchBtn').onclick = () => searchMusic(document.getElementById('musicSearchInput').value);
-    document.getElementById('musicSearchInput').onkeypress = (e) => { 
-        if (e.key === 'Enter') searchMusic(e.target.value); 
-    };
-    document.getElementById('musicVolumeSlider').oninput = (e) => setMusicVolume(parseInt(e.target.value));
-    document.getElementById('musicVolDown').onclick = () => setMusicVolume(Math.max(0, musicPlayer.volume - 10));
-    document.getElementById('musicVolUp').onclick = () => setMusicVolume(Math.min(100, musicPlayer.volume + 10));
-    document.getElementById('musicProgressBar').onclick = seekMusic;
-    document.getElementById('clearMusicHistory').onclick = clearMusicHistory;
-    document.getElementById('musicModal').onclick = (e) => { 
-        if (e.target === document.getElementById('musicModal')) closeMusicModal(); 
-    };
+    const musicBtn = document.getElementById('musicBtn');
+    const sidebarMusicBtn = document.getElementById('sidebarMusicBtn');
+    
+    if (musicBtn) {
+        musicBtn.onclick = (e) => { 
+            e.preventDefault(); 
+            openMusicModal(); 
+        };
+    }
+    if (sidebarMusicBtn) {
+        sidebarMusicBtn.onclick = (e) => { 
+            e.preventDefault(); 
+            openMusicModal(); 
+        };
+    }
+    
+    const closeModal = document.getElementById('closeMusicModal');
+    if (closeModal) closeModal.onclick = closeMusicModal;
+    
+    const playPauseBtn = document.getElementById('musicPlayPauseBtn');
+    if (playPauseBtn) playPauseBtn.onclick = togglePlayPause;
+    
+    const stopBtn = document.getElementById('musicStopBtn');
+    if (stopBtn) stopBtn.onclick = stopMusic;
+    
+    const searchBtn = document.getElementById('musicSearchBtn');
+    if (searchBtn) {
+        searchBtn.onclick = function() {
+            const input = document.getElementById('musicSearchInput');
+            if (input) searchMusic(input.value);
+        };
+    }
+    
+    const searchInput = document.getElementById('musicSearchInput');
+    if (searchInput) {
+        searchInput.onkeypress = function(e) {
+            if (e.key === 'Enter') searchMusic(e.target.value);
+        };
+    }
+    
+    const volumeSlider = document.getElementById('musicVolumeSlider');
+    if (volumeSlider) {
+        volumeSlider.oninput = function(e) {
+            setMusicVolume(parseInt(e.target.value));
+        };
+    }
+    
+    const volDown = document.getElementById('musicVolDown');
+    if (volDown) {
+        volDown.onclick = function() {
+            setMusicVolume(Math.max(0, musicPlayer.volume - 10));
+        };
+    }
+    
+    const volUp = document.getElementById('musicVolUp');
+    if (volUp) {
+        volUp.onclick = function() {
+            setMusicVolume(Math.min(100, musicPlayer.volume + 10));
+        };
+    }
+    
+    const progressBar = document.getElementById('musicProgressBar');
+    if (progressBar) progressBar.onclick = seekMusic;
+    
+    const clearHistory = document.getElementById('clearMusicHistory');
+    if (clearHistory) clearHistory.onclick = clearMusicHistory;
+    
+    const musicModal = document.getElementById('musicModal');
+    if (musicModal) {
+        musicModal.onclick = function(e) {
+            if (e.target === musicModal) closeMusicModal();
+        };
+    }
     
     const savedVol = localStorage.getItem('rayy_music_volume');
     if (savedVol) setMusicVolume(parseInt(savedVol));
@@ -888,17 +1045,25 @@ function initFloatingPlayer() {
     document.addEventListener('touchmove', onDrag, { passive: false });
     document.addEventListener('touchend', stopDrag);
     
-    document.getElementById('floatingPlayPause').onclick = () => togglePlayPause();
-    document.getElementById('floatingStop').onclick = () => stopMusic();
-    document.getElementById('floatingClose').onclick = () => {
-        stopMusic();
-        floatingPlayer.style.display = 'none';
-    };
+    const floatingPlayPause = document.getElementById('floatingPlayPause');
+    const floatingStop = document.getElementById('floatingStop');
+    const floatingClose = document.getElementById('floatingClose');
+    
+    if (floatingPlayPause) floatingPlayPause.onclick = togglePlayPause;
+    if (floatingStop) floatingStop.onclick = stopMusic;
+    if (floatingClose) {
+        floatingClose.onclick = function() {
+            stopMusic();
+            if (floatingPlayer) floatingPlayer.style.display = 'none';
+        };
+    }
 }
 
 function startDrag(e) {
     isDragging = true;
     const floatingPlayer = document.getElementById('floatingPlayer');
+    if (!floatingPlayer) return;
+    
     const rect = floatingPlayer.getBoundingClientRect();
     
     if (e.type === 'mousedown') {
@@ -926,6 +1091,8 @@ function onDrag(e) {
     }
     
     const floatingPlayer = document.getElementById('floatingPlayer');
+    if (!floatingPlayer) return;
+    
     let newX = clientX - dragStartX;
     let newY = clientY - dragStartY;
     const maxX = window.innerWidth - floatingPlayer.offsetWidth - 10;
@@ -945,31 +1112,43 @@ function onDrag(e) {
 function stopDrag() {
     isDragging = false;
     const floatingPlayer = document.getElementById('floatingPlayer');
-    floatingPlayer.style.transition = '';
+    if (floatingPlayer) floatingPlayer.style.transition = '';
 }
 
 function updateFloatingPlayer(track) {
     const floatingPlayer = document.getElementById('floatingPlayer');
+    if (!floatingPlayer) return;
+    
     if (!track) {
         floatingPlayer.style.display = 'none';
         return;
     }
     
     floatingPlayer.style.display = 'block';
-    document.getElementById('floatingThumb').src = track.thumbnail || 'https://via.placeholder.com/40x40?text=🎵';
-    document.getElementById('floatingTitle').innerText = track.title || 'Unknown Title';
-    document.getElementById('floatingArtist').innerText = track.artist || 'Unknown Artist';
+    const floatingThumb = document.getElementById('floatingThumb');
+    const floatingTitle = document.getElementById('floatingTitle');
+    const floatingArtist = document.getElementById('floatingArtist');
+    const floatingPlayPause = document.getElementById('floatingPlayPause');
     
-    if (musicPlayer.isPlaying) {
-        document.getElementById('floatingPlayPause').innerHTML = '<i class="fas fa-pause"></i>';
-    } else {
-        document.getElementById('floatingPlayPause').innerHTML = '<i class="fas fa-play"></i>';
+    if (floatingThumb) floatingThumb.src = track.thumbnail || 'https://via.placeholder.com/40x40?text=🎵';
+    if (floatingTitle) floatingTitle.innerText = track.title || 'Unknown Title';
+    if (floatingArtist) floatingArtist.innerText = track.artist || 'Unknown Artist';
+    
+    if (floatingPlayPause) {
+        if (musicPlayer.isPlaying) {
+            floatingPlayPause.innerHTML = '<i class="fas fa-pause"></i>';
+        } else {
+            floatingPlayPause.innerHTML = '<i class="fas fa-play"></i>';
+        }
     }
 }
 
 // ========================================
 // INITIALIZE
 // ========================================
+document.getElementById('menuToggle').onclick = toggleSidebar;
+document.getElementById('sidebarClose').onclick = closeSidebar;
+
 if (!checkUserIdentity()) {
     // Redirect to profile
 } else {
@@ -994,3 +1173,6 @@ window.playFromHistory = playFromHistory;
 window.applyVoucherFromCart = applyVoucherFromCart;
 window.removeVoucherFromCart = removeVoucherFromCart;
 window.copyVoucherCode = copyVoucherCode;
+window.closeSidebar = closeSidebar;
+window.openSidebar = openSidebar;
+window.toggleSidebar = toggleSidebar;

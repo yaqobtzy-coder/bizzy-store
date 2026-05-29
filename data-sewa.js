@@ -58,13 +58,11 @@ function loadProfileName() {
     const buyerNameInput = document.getElementById('buyerName');
     
     if (profileName && profileName !== 'Customer' && profileName !== 'null' && profileName !== 'Guest') {
-        // Sudah ada nama profile, tampilkan dan disable input
         buyerNameInput.value = profileName;
         buyerNameInput.readOnly = true;
         buyerNameInput.style.backgroundColor = '#f1f5f9';
         buyerNameInput.style.color = '#1e293b';
     } else {
-        // Belum ada nama, redirect ke profile
         alert('⚠️ Silakan isi nama terlebih dahulu di halaman Profil!');
         window.location.href = 'profile.html';
     }
@@ -99,7 +97,6 @@ async function submitData() {
     const linkGroup = document.getElementById('linkGroup').value.trim();
     const notes = document.getElementById('notes').value.trim();
     
-    // Validasi nama dari profile
     if (!buyerName || buyerName === 'Customer' || buyerName === 'null' || buyerName === 'Guest') {
         alert('⚠️ Silakan isi nama terlebih dahulu di halaman Profil!');
         window.location.href = 'profile.html';
@@ -163,6 +160,7 @@ async function submitData() {
     localStorage.setItem('checkoutTotal', total);
     localStorage.setItem('userName', buyerName);
     
+    // Kirim notifikasi ke Telegram (sudah ada via sendTelegramNotification)
     if (typeof sendTelegramNotification !== 'undefined') {
         const produkList = cart.map(item => `${item.name} x${item.quantity}`).join(', ');
         const messageTelegram = `🛍️ PRODUK DIPROSES (CHECKOUT)\n\n` +
