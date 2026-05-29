@@ -1,14 +1,15 @@
 // ========================================
-// RAYY STORE - MAIN JAVASCRIPT
+// RAYY STORE - MAIN JAVASCRIPT (FIXED VOUCHER & CLEAR CART ON REFRESH)
 // ========================================
 
 let sewaProducts = [];
 let scriptProducts = [];
-let cart = JSON.parse(localStorage.getItem('cart')) || [];
+let cart = []; // 🔥 KOSONGKAN SAAT START
 let swiperInstance = null;
 let activeVoucher = null;
 let voucherDiscount = 0;
 let voucherUsed = false;
+let usedVoucherIds = JSON.parse(localStorage.getItem('usedVouchers')) || [];
 
 // Music Player
 let musicPlayer = { 
@@ -21,15 +22,68 @@ let musicPlayer = {
 };
 
 // ========================================
-// CEK USER LOGIN
+// CEK NAMA USER (WAJIB ISI NAMA DULU)
 // ========================================
-function checkUserIdentity() {
+function requireName() {
     const userName = localStorage.getItem('userName');
-    if (!userName || userName === '' || userName === 'Customer' || userName === 'null') {
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    
+    if (!isLoggedIn || !userName || userName === '' || userName === 'Customer' || userName === 'null' || userName === 'Guest') {
+        alert('⚠️ Silakan login terlebih dahulu di halaman Profil!');
         window.location.href = 'profile.html';
         return false;
     }
     return true;
+}
+
+function checkUserIdentity() {
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    const userName = localStorage.getItem('userName');
+    
+    if (!isLoggedIn || !userName || userName === '' || userName === 'Customer' || userName === 'null' || userName === 'Guest') {
+        window.location.href = 'profile.html';
+        return false;
+    }
+    return true;
+}
+
+// ========================================
+// CLEAR CART ON REFRESH
+// ========================================
+function clearCartOnRefresh() {
+    localStorage.removeItem('cart');
+    cart = [];
+    updateCartCount();
+    if (typeof renderCartItems === 'function') renderCartItems();
+}
+
+// ========================================
+// SIDEBAR FUNCTIONS
+// ========================================
+function openSidebar() {
+    document.getElementById('sidebar').classList.add('open');
+    document.getElementById('overlay').classList.add('active');
+}
+
+function closeSidebar() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('overlay').classList.remove('active');
+}
+
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar.classList.contains('open')) {
+        closeSidebar();
+    } else {
+        openSidebar();
+    }
+}
+
+function updateSidebarProfile() {
+    const userName = localStorage.getItem('userName') || 'Customer';
+    const userEmail = localStorage.getItem('userEmail') || 'customer@rayystore.com';
+    document.getElementById('sidebarName').innerText = userName;
+    document.getElementById('sidebarEmail').innerText = userEmail;
 }
 
 // ========================================
@@ -236,7 +290,7 @@ function renderSewaProducts() {
                 <div class="product-category"><i class="fas fa-calendar-alt"></i> Sewa ${product.duration || '7 Hari'}</div>
                 <div class="product-price">Rp ${formatNumber(product.price || 0)}</div>
                 <div class="product-stock">${getStockBadge(product.stock || 0)}</div>
-                ${product.allowVoucher !== false ? '<div class="voucher-badge"><i class="fas fa-ticket-alt"></i> Bisa Pakai Voucher</div>' : '<div class="voucher-badge disabled"><i class="fas fa-ban"></i> Tidak Bisa Voucher</div>'}
+                ${product.allowVoucher !== false ? '<div class="voucher-badge"><i class="fas fa-ticket-alt"></i> Bisa Pakai Voucher</div>' : '<div class="voucher-badge disabled" style="background:#fee2e2; color:#dc2626;"><i class="fas fa-ban"></i> Tidak Bisa Voucher</div>'}
                 <button class="add-to-cart" ${(product.stock || 0) <= 0 ? 'disabled' : ''} onclick="addToCart('${product.id}', 'sewa')">${(product.stock || 0) <= 0 ? 'Stok Habis' : 'Sewa Sekarang'}</button>
             </div>
         </div>
@@ -259,7 +313,7 @@ function renderScriptProducts() {
                 <div class="product-category"><i class="fas fa-code"></i> ${product.category || 'Script'}</div>
                 <div class="product-price">Rp ${formatNumber(product.price || 0)}</div>
                 <div class="product-stock">${getStockBadge(product.stock || 0)}</div>
-                ${product.allowVoucher !== false ? '<div class="voucher-badge"><i class="fas fa-ticket-alt"></i> Bisa Pakai Voucher</div>' : '<div class="voucher-badge disabled"><i class="fas fa-ban"></i> Tidak Bisa Voucher</div>'}
+                ${product.allowVoucher !== false ? '<div class="voucher-badge"><i class="fas fa-ticket-alt"></i> Bisa Pakai Voucher</div>' : '<div class="voucher-badge disabled" style="background:#fee2e2; color:#dc2626;"><i class="fas fa-ban"></i> Tidak Bisa Voucher</div>'}
                 <button class="add-to-cart" ${(product.stock || 0) <= 0 ? 'disabled' : ''} onclick="addToCart('${product.id}', 'script')">${(product.stock || 0) <= 0 ? 'Stok Habis' : 'Beli Sekarang'}</button>
             </div>
         </div>
@@ -296,11 +350,44 @@ function showNotification(msg, type) {
 }
 
 // ========================================
+// HELPER: CEK PRODUK NON-VOUCHER
+// ========================================
+function hasNonVoucherProductInCart() {
+    return cart.some(item => item.allowVoucher === false);
+}
+
+function clearActiveVoucher() {
+    activeVoucher = null;
+    voucherDiscount = 0;
+    voucherUsed = false;
+    localStorage.removeItem('activeVoucher');
+    
+    const voucherInfo = document.getElementById('voucherInfo');
+    const discountRow = document.getElementById('discountRow');
+    if (voucherInfo) voucherInfo.style.display = 'none';
+    if (discountRow) discountRow.style.display = 'none';
+    
+    const voucherMessage = document.getElementById('voucherMessageCart');
+    if (voucherMessage) {
+        voucherMessage.textContent = '';
+        voucherMessage.className = 'voucher-message-cart';
+    }
+}
+
+// ========================================
 // CART FUNCTIONS
 // ========================================
 function addToCart(productId, productType) {
+    if (!requireName()) return;
+    
     let product = productType === 'sewa' ? sewaProducts.find(p => p.id === productId) : scriptProducts.find(p => p.id === productId);
     if (!product || product.stock <= 0) return;
+    
+    // 🔥 CEK: Jika produk TIDAK SUPPORT VOUCHER, hapus voucher yang aktif
+    if (product.allowVoucher === false && activeVoucher) {
+        clearActiveVoucher();
+        showNotification('⚠️ Voucher dihapus karena produk yang ditambahkan tidak support voucher!', 'error');
+    }
     
     const existing = cart.find(item => item.id === productId);
     
@@ -334,7 +421,11 @@ function addToCart(productId, productType) {
 function updateCartCount() {
     const total = cart.reduce((sum, item) => sum + item.quantity, 0);
     const cartCount = document.getElementById('cartCount');
+    const topCartCount = document.getElementById('topCartCount');
+    const sidebarCartCount = document.getElementById('sidebarCartCount');
     if (cartCount) cartCount.textContent = total;
+    if (topCartCount) topCartCount.textContent = total;
+    if (sidebarCartCount) sidebarCartCount.textContent = total;
 }
 
 function renderCartItems() {
@@ -345,6 +436,7 @@ function renderCartItems() {
         container.innerHTML = `<div class="empty-cart"><i class="fas fa-shopping-bag"></i><p>Keranjang belanja kosong</p></div>`;
         document.getElementById('subtotalAmount').innerHTML = 'Rp 0';
         document.getElementById('cartTotal').innerHTML = 'Rp 0';
+        if (activeVoucher) clearActiveVoucher();
         return;
     }
     
@@ -370,10 +462,17 @@ function renderCartItems() {
         `;
     }).join('');
     
+    // 🔥 JIKA ADA PRODUK NON-VOUCHER, PASTIKAN VOUCHER DIHAPUS
+    if (hasNonVoucherProductInCart() && activeVoucher) {
+        clearActiveVoucher();
+        showNotification('⚠️ Voucher dihapus karena ada produk yang tidak support voucher!', 'error');
+    }
+    
     let finalTotal = subtotal;
     let discountAmount = 0;
     
-    if (activeVoucher && voucherDiscount > 0 && !voucherUsed) {
+    // 🔥 HANYA APPLY VOUCHER JIKA TIDAK ADA PRODUK NON-VOUCHER
+    if (activeVoucher && voucherDiscount > 0 && !voucherUsed && !hasNonVoucherProductInCart()) {
         discountAmount = Math.min(voucherDiscount, subtotal);
         finalTotal = subtotal - discountAmount;
         if (finalTotal <= 0) finalTotal = 0;
@@ -417,44 +516,32 @@ function removeFromCart(id) {
 }
 
 function toggleCart() {
+    if (!requireName()) return;
     const sidebar = document.getElementById('cartSidebar');
-    const overlay = document.getElementById('overlay');
     if (sidebar) sidebar.classList.toggle('open');
-    if (overlay) overlay.classList.toggle('active');
     if (sidebar && sidebar.classList.contains('open')) renderCartItems();
 }
 
-function checkout() {
-    if (cart.length === 0) {
-        showNotification('Keranjang kosong!', 'error');
-        return;
-    }
-    
-    const firstItem = cart[0];
-    let total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    let isGratis = false;
-    
-    if (activeVoucher && voucherDiscount > 0 && !voucherUsed) {
-        total = total - Math.min(voucherDiscount, total);
-        if (total <= 0) isGratis = true;
-        voucherUsed = true;
-    }
-    
-    localStorage.setItem('checkoutCart', JSON.stringify(cart));
-    localStorage.setItem('checkoutTotal', total);
-    
-    if (isGratis) showNotification('🎉 Selamat! Pesanan Anda GRATIS!', 'success');
-    
-    window.location.href = firstItem.type === 'sewa' ? 'data-sewa.html' : 'data-script.html';
-}
+document.getElementById('overlay')?.addEventListener('click', () => {
+    closeSidebar();
+    const cartSidebar = document.getElementById('cartSidebar');
+    if (cartSidebar) cartSidebar.classList.remove('open');
+});
 
 // ========================================
-// VOUCHER FUNCTIONS
+// VOUCHER FUNCTIONS - FULLY FIXED
 // ========================================
+
 function applyVoucherFromCart() {
     const code = document.getElementById('voucherCodeCart').value.trim().toUpperCase();
     if (!code) {
         showVoucherMessageCart('Masukkan kode voucher!', 'error');
+        return;
+    }
+    
+    // 🔥 CEK PRODUK YANG TIDAK BISA VOUCHER - WAJIB!!!
+    if (hasNonVoucherProductInCart()) {
+        showVoucherMessageCart('❌ GAGAL! Ada produk yang TIDAK support voucher. Hapus produk tersebut terlebih dahulu.', 'error');
         return;
     }
     
@@ -469,6 +556,11 @@ function applyVoucherFromCart() {
                 const now = new Date();
                 const expired = new Date(voucher.expiredAt);
                 
+                if (usedVoucherIds.includes(voucher.id)) {
+                    showVoucherMessageCart('❌ Voucher sudah pernah Anda gunakan! (1 user 1 voucher)', 'error');
+                    return;
+                }
+                
                 if (voucher.used >= voucher.usageLimit) {
                     showVoucherMessageCart('Voucher sudah mencapai batas penggunaan!', 'error');
                     return;
@@ -478,9 +570,9 @@ function applyVoucherFromCart() {
                     return;
                 }
                 
-                const hasNonVoucherProduct = cart.some(item => item.allowVoucher === false);
-                if (hasNonVoucherProduct) {
-                    showVoucherMessageCart('Ada produk yang tidak mendukung voucher!', 'error');
+                // 🔥 DOUBLE CEK lagi sebelum apply
+                if (hasNonVoucherProductInCart()) {
+                    showVoucherMessageCart('❌ GAGAL! Ada produk yang tidak support voucher!', 'error');
                     return;
                 }
                 
@@ -491,6 +583,15 @@ function applyVoucherFromCart() {
                 } else {
                     voucherDiscount = Math.min(voucher.value, subtotal);
                 }
+                voucherUsed = false;
+                
+                localStorage.setItem('activeVoucher', JSON.stringify({
+                    code: voucher.code,
+                    id: voucher.id,
+                    type: voucher.type,
+                    value: voucher.value,
+                    discount: voucherDiscount
+                }));
                 
                 showVoucherMessageCart(`✅ Voucher ${voucher.code} berhasil dipakai!`, 'success');
                 document.getElementById('voucherCodeCart').value = '';
@@ -503,20 +604,21 @@ function applyVoucherFromCart() {
 }
 
 function removeVoucherFromCart() {
-    activeVoucher = null;
-    voucherDiscount = 0;
-    localStorage.removeItem('activeVoucher');
+    clearActiveVoucher();
     showVoucherMessageCart('Voucher dihapus', 'success');
     renderCartItems();
 }
 
 function showVoucherMessageCart(msg, type) {
     const msgDiv = document.getElementById('voucherMessageCart');
+    if (!msgDiv) return;
     msgDiv.textContent = msg;
     msgDiv.className = `voucher-message-cart ${type}`;
     setTimeout(() => {
-        msgDiv.textContent = '';
-        msgDiv.className = 'voucher-message-cart';
+        if (msgDiv) {
+            msgDiv.textContent = '';
+            msgDiv.className = 'voucher-message-cart';
+        }
     }, 3000);
 }
 
@@ -525,10 +627,70 @@ function loadSavedVoucher() {
     if (saved) {
         try {
             const voucher = JSON.parse(saved);
-            activeVoucher = { code: voucher.code, id: voucher.id, type: voucher.type, value: voucher.value };
-            voucherDiscount = voucher.discount;
-        } catch(e) {}
+            // 🔥 JANGAN LOAD VOUCHER JIKA ADA PRODUK NON-VOUCHER
+            if (!hasNonVoucherProductInCart() && !usedVoucherIds.includes(voucher.id)) {
+                activeVoucher = { code: voucher.code, id: voucher.id, type: voucher.type, value: voucher.value };
+                voucherDiscount = voucher.discount;
+                voucherUsed = false;
+            } else {
+                localStorage.removeItem('activeVoucher');
+            }
+        } catch(e) {
+            localStorage.removeItem('activeVoucher');
+        }
     }
+}
+
+// ========================================
+// CHECKOUT FUNCTION
+// ========================================
+function checkout() {
+    if (!requireName()) return;
+    
+    if (cart.length === 0) {
+        showNotification('Keranjang kosong!', 'error');
+        return;
+    }
+    
+    // 🔥 CEK: Jika ada voucher aktif tapi ada produk NON-VOUCHER
+    if (activeVoucher && voucherDiscount > 0 && hasNonVoucherProductInCart()) {
+        showNotification('❌ GAGAL CHECKOUT! Ada produk yang tidak support voucher. Hapus voucher atau hapus produk tersebut.', 'error');
+        return;
+    }
+    
+    const firstItem = cart[0];
+    let total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    let isGratis = false;
+    
+    if (activeVoucher && voucherDiscount > 0 && !voucherUsed && !hasNonVoucherProductInCart()) {
+        total = total - Math.min(voucherDiscount, total);
+        if (total <= 0) isGratis = true;
+        voucherUsed = true;
+        
+        if (activeVoucher && activeVoucher.id) {
+            if (!usedVoucherIds.includes(activeVoucher.id)) {
+                usedVoucherIds.push(activeVoucher.id);
+                localStorage.setItem('usedVouchers', JSON.stringify(usedVoucherIds));
+                
+                const voucherRef = database.ref('vouchers/' + activeVoucher.id);
+                voucherRef.transaction((currentData) => {
+                    if (currentData) {
+                        return { ...currentData, used: (currentData.used || 0) + 1 };
+                    }
+                    return currentData;
+                });
+            }
+        }
+        
+        clearActiveVoucher();
+    }
+    
+    localStorage.setItem('checkoutCart', JSON.stringify(cart));
+    localStorage.setItem('checkoutTotal', total);
+    
+    if (isGratis) showNotification('🎉 Selamat! Pesanan Anda GRATIS!', 'success');
+    
+    window.location.href = firstItem.type === 'sewa' ? 'data-sewa.html' : 'data-script.html';
 }
 
 // ========================================
@@ -546,351 +708,86 @@ setTimeout(() => {
 }, 2000);
 
 // ========================================
-// MUSIC PLAYER
+// MUSIC PLAYER (SEDERHANA)
 // ========================================
-function loadMusicHistory() {
-    const saved = localStorage.getItem('rayy_music_history');
-    if (saved) {
-        try {
-            musicPlayer.playHistory = JSON.parse(saved);
-            if (musicPlayer.playHistory.length > 0) {
-                renderMusicHistory();
-                document.getElementById('musicHistorySection').style.display = 'block';
-            }
-        } catch(e) {}
-    }
+function loadMusicHistory(){const s=localStorage.getItem('rayy_music_history');if(s){try{musicPlayer.playHistory=JSON.parse(s);if(musicPlayer.playHistory.length>0){renderMusicHistory();const hs=document.getElementById('musicHistorySection');if(hs)hs.style.display='block';}}catch(e){}}}
+function saveMusicHistory(){localStorage.setItem('rayy_music_history',JSON.stringify(musicPlayer.playHistory));}
+function renderMusicHistory(){const hl=document.getElementById('musicHistoryList');if(!hl)return;if(musicPlayer.playHistory.length===0){const hs=document.getElementById('musicHistorySection');if(hs)hs.style.display='none';return;}
+    hl.innerHTML=musicPlayer.playHistory.map((t,i)=>`<div class="history-item" onclick="playFromHistory(${i})"><img src="${t.thumbnail||'https://via.placeholder.com/35x35?text=🎵'}" onerror="this.src='https://via.placeholder.com/35x35?text=🎵'"><div class="history-item-info"><div class="history-item-title">${escapeHtml(t.title.substring(0,40))}${t.title.length>40?'...':''}</div><div class="history-item-artist">${escapeHtml(t.artist||'Unknown Artist')}</div></div><i class="fas fa-play-circle" style="color:#4facfe;opacity:0.6"></i></div>`).join('');
 }
-
-function saveMusicHistory() { 
-    localStorage.setItem('rayy_music_history', JSON.stringify(musicPlayer.playHistory)); 
+function playFromHistory(i){const t=musicPlayer.playHistory[i];if(t&&t.url)playMusic(t.title,t.url,t.thumbnail,t.artist);}
+function clearMusicHistory(){if(confirm('Hapus semua riwayat putar?')){musicPlayer.playHistory=[];saveMusicHistory();renderMusicHistory();const hs=document.getElementById('musicHistorySection');if(hs)hs.style.display='none';showNotification('Riwayat musik dihapus','success');}}
+async function searchMusic(q){const rl=document.getElementById('musicResultsList');if(!q.trim()){rl.innerHTML='<div class="empty-message">Masukkan judul lagu</div>';return;}
+    rl.innerHTML='<div class="loading-indicator"><i class="fas fa-spinner fa-pulse"></i> Mencari...</div>';
+    try{const res=await fetch(`https://api-faa.my.id/faa/ytplay?query=${encodeURIComponent(q)}`);if(!res.ok)throw new Error();const d=await res.json();
+        if(d.status&&d.result){const r=d.result;rl.innerHTML=`<div class="result-item" data-title="${escapeHtml(r.title)}" data-url="${r.mp3}" data-thumb="${r.thumbnail}" data-artist="${escapeHtml(r.author)}"><img src="${r.thumbnail}" onerror="this.src='https://via.placeholder.com/45x45?text=🎵'"><div class="result-info"><div class="result-title">${escapeHtml(r.title)}</div><div class="result-artist">${escapeHtml(r.author)}</div><div class="result-duration">${r.duration_timestamp||'0:00'}</div></div></div>`;
+            document.querySelector('#musicResultsList .result-item')?.addEventListener('click',function(){playMusic(this.dataset.title,this.dataset.url,this.dataset.thumb,this.dataset.artist);});
+        }else{rl.innerHTML='<div class="empty-message">Lagu tidak ditemukan</div>';}
+    }catch(e){rl.innerHTML='<div class="empty-message">Error koneksi</div>';}
 }
-
-function addToMusicHistory(track) {
-    if (!track || !track.title) return;
-    musicPlayer.playHistory = musicPlayer.playHistory.filter(t => t.url !== track.url);
-    musicPlayer.playHistory.unshift({ 
-        title: track.title, 
-        url: track.url, 
-        thumbnail: track.thumbnail, 
-        artist: track.artist, 
-        timestamp: new Date().toISOString() 
-    });
-    if (musicPlayer.playHistory.length > 20) musicPlayer.playHistory = musicPlayer.playHistory.slice(0, 20);
-    saveMusicHistory();
-    renderMusicHistory();
-    document.getElementById('musicHistorySection').style.display = 'block';
+function playMusic(title,url,thumbnail,artist){if(!url||url==='undefined'){showNotification('URL tidak valid','error');return;}
+    const a=document.getElementById('globalAudio');if(!a)return;if(musicPlayer.updateInterval)clearInterval(musicPlayer.updateInterval);
+    musicPlayer.currentTrack={title,url,thumbnail,artist};musicPlayer.audio=a;a.src=url;a.load();a.play().catch(e=>console.log(e));musicPlayer.isPlaying=true;
+    const np=document.getElementById('musicNowPlaying'),mt=document.getElementById('musicThumb'),mti=document.getElementById('musicTitle'),ma=document.getElementById('musicArtist'),ppb=document.getElementById('musicPlayPauseBtn');
+    if(np)np.style.display='flex';if(mt)mt.src=thumbnail||'https://via.placeholder.com/60x60?text=🎵';if(mti)mti.innerText=title||'Unknown';if(ma)ma.innerText=artist||'Unknown';if(ppb)ppb.innerHTML='<i class="fas fa-pause"></i>';
+    updateFloatingPlayer({title,thumbnail,artist});addToMusicHistory({title,url,thumbnail,artist});showToast(`🎵 Memutar: ${title}`,'success');startProgressUpdate();
 }
-
-function renderMusicHistory() {
-    const historyList = document.getElementById('musicHistoryList');
-    if (!historyList) return;
-    if (musicPlayer.playHistory.length === 0) {
-        document.getElementById('musicHistorySection').style.display = 'none';
-        return;
-    }
-    historyList.innerHTML = musicPlayer.playHistory.map((track, index) => `
-        <div class="history-item" onclick="playFromHistory(${index})">
-            <img src="${track.thumbnail || 'https://via.placeholder.com/35x35?text=🎵'}" onerror="this.src='https://via.placeholder.com/35x35?text=🎵'">
-            <div class="history-item-info">
-                <div class="history-item-title">${escapeHtml(track.title.substring(0, 40))}${track.title.length > 40 ? '...' : ''}</div>
-                <div class="history-item-artist">${escapeHtml(track.artist || 'Unknown Artist')}</div>
-            </div>
-            <i class="fas fa-play-circle" style="color:#4facfe;opacity:0.6;"></i>
-        </div>
-    `).join('');
+function addToMusicHistory(t){if(!t||!t.title)return;musicPlayer.playHistory=musicPlayer.playHistory.filter(h=>h.url!==t.url);musicPlayer.playHistory.unshift({title:t.title,url:t.url,thumbnail:t.thumbnail,artist:t.artist,timestamp:new Date().toISOString()});if(musicPlayer.playHistory.length>20)musicPlayer.playHistory=musicPlayer.playHistory.slice(0,20);saveMusicHistory();renderMusicHistory();const hs=document.getElementById('musicHistorySection');if(hs)hs.style.display='block';}
+function stopMusic(){if(musicPlayer.audio){musicPlayer.audio.pause();musicPlayer.audio.currentTime=0;musicPlayer.isPlaying=false;musicPlayer.currentTrack=null;
+    const np=document.getElementById('musicNowPlaying'),ppb=document.getElementById('musicPlayPauseBtn'),pf=document.getElementById('musicProgressFilled'),ct=document.getElementById('musicCurrentTime');
+    if(np)np.style.display='none';if(ppb)ppb.innerHTML='<i class="fas fa-play"></i>';if(pf)pf.style.width='0%';if(ct)ct.innerText='0:00';updateFloatingPlayer(null);if(musicPlayer.updateInterval)clearInterval(musicPlayer.updateInterval);showToast('⏹️ Musik dihentikan','success');}}
+function togglePlayPause(){if(!musicPlayer.audio||!musicPlayer.currentTrack){showToast('Pilih lagu dulu','error');return;}
+    if(musicPlayer.isPlaying){musicPlayer.audio.pause();musicPlayer.isPlaying=false;const ppb=document.getElementById('musicPlayPauseBtn'),fpp=document.getElementById('floatingPlayPause');if(ppb)ppb.innerHTML='<i class="fas fa-play"></i>';if(fpp)fpp.innerHTML='<i class="fas fa-play"></i>';}else{musicPlayer.audio.play().catch(e=>console.log(e));musicPlayer.isPlaying=true;const ppb=document.getElementById('musicPlayPauseBtn'),fpp=document.getElementById('floatingPlayPause');if(ppb)ppb.innerHTML='<i class="fas fa-pause"></i>';if(fpp)fpp.innerHTML='<i class="fas fa-pause"></i>';startProgressUpdate();}}
+function startProgressUpdate(){if(musicPlayer.updateInterval)clearInterval(musicPlayer.updateInterval);musicPlayer.updateInterval=setInterval(()=>{if(musicPlayer.audio&&musicPlayer.audio.duration&&musicPlayer.isPlaying){const c=musicPlayer.audio.currentTime,d=musicPlayer.audio.duration,p=(c/d)*100;const pf=document.getElementById('musicProgressFilled'),ct=document.getElementById('musicCurrentTime'),de=document.getElementById('musicDuration');if(pf)pf.style.width=p+'%';if(ct)ct.innerText=formatMusicTime(c);if(de)de.innerText=formatMusicTime(d);}},500);}
+function formatMusicTime(s){if(!s||isNaN(s))return '0:00';const m=Math.floor(s/60),sc=Math.floor(s%60);return `${m}:${sc.toString().padStart(2,'0')}`;}
+function setMusicVolume(v){musicPlayer.volume=v;if(musicPlayer.audio)musicPlayer.audio.volume=v/100;const vs=document.getElementById('musicVolumeSlider');if(vs)vs.value=v;localStorage.setItem('rayy_music_volume',v);}
+function openMusicModal(){const m=document.getElementById('musicModal');if(m)m.style.display='flex';loadMusicHistory();}
+function closeMusicModal(){const m=document.getElementById('musicModal');if(m)m.style.display='none';}
+let isDragging=false,dragStartX,dragStartY;
+function initFloatingPlayer(){const fp=document.getElementById('floatingPlayer'),dh=document.getElementById('floatingDrag');if(!dh)return;
+    dh.addEventListener('mousedown',startDrag);dh.addEventListener('touchstart',startDrag,{passive:false});document.addEventListener('mousemove',onDrag);document.addEventListener('mouseup',stopDrag);document.addEventListener('touchmove',onDrag,{passive:false});document.addEventListener('touchend',stopDrag);
+    document.getElementById('floatingPlayPause').onclick=togglePlayPause;document.getElementById('floatingStop').onclick=stopMusic;document.getElementById('floatingClose').onclick=()=>{stopMusic();if(fp)fp.style.display='none';};
 }
-
-function playFromHistory(index) {
-    const track = musicPlayer.playHistory[index];
-    if (track && track.url) playMusic(track.title, track.url, track.thumbnail, track.artist);
+function startDrag(e){isDragging=true;const fp=document.getElementById('floatingPlayer');if(!fp)return;const rect=fp.getBoundingClientRect();
+    if(e.type==='mousedown'){dragStartX=e.clientX-rect.left;dragStartY=e.clientY-rect.top;}else{dragStartX=e.touches[0].clientX-rect.left;dragStartY=e.touches[0].clientY-rect.top;}
+    fp.style.transition='none';e.preventDefault();}
+function onDrag(e){if(!isDragging)return;let cx,cy;if(e.type==='mousemove'){cx=e.clientX;cy=e.clientY;}else{cx=e.touches[0].clientX;cy=e.touches[0].clientY;}
+    const fp=document.getElementById('floatingPlayer');if(!fp)return;let nx=cx-dragStartX,ny=cy-dragStartY;const mx=window.innerWidth-fp.offsetWidth-10,my=window.innerHeight-fp.offsetHeight-10;
+    nx=Math.min(Math.max(nx,10),mx);ny=Math.min(Math.max(ny,10),my);fp.style.left=nx+'px';fp.style.top=ny+'px';fp.style.right='auto';fp.style.bottom='auto';e.preventDefault();}
+function stopDrag(){isDragging=false;const fp=document.getElementById('floatingPlayer');if(fp)fp.style.transition='';}
+function updateFloatingPlayer(t){const fp=document.getElementById('floatingPlayer');if(!fp)return;if(!t){fp.style.display='none';return;}
+    fp.style.display='block';const ft=document.getElementById('floatingThumb'),fti=document.getElementById('floatingTitle'),fa=document.getElementById('floatingArtist'),fpp=document.getElementById('floatingPlayPause');
+    if(ft)ft.src=t.thumbnail||'https://via.placeholder.com/40x40?text=🎵';if(fti)fti.innerText=t.title||'Unknown';if(fa)fa.innerText=t.artist||'Unknown';if(fpp)fpp.innerHTML=musicPlayer.isPlaying?'<i class="fas fa-pause"></i>':'<i class="fas fa-play"></i>';
 }
-
-function clearMusicHistory() {
-    if (confirm('Hapus semua riwayat putar?')) {
-        musicPlayer.playHistory = [];
-        saveMusicHistory();
-        renderMusicHistory();
-        document.getElementById('musicHistorySection').style.display = 'none';
-        showNotification('Riwayat musik dihapus', 'success');
-    }
-}
-
-async function searchMusic(query) {
-    const resultsList = document.getElementById('musicResultsList');
-    if (!query.trim()) {
-        resultsList.innerHTML = '<div class="empty-message">Masukkan judul lagu</div>';
-        return;
-    }
-    resultsList.innerHTML = '<div class="loading-indicator"><i class="fas fa-spinner fa-pulse"></i> Mencari lagu...</div>';
-    try {
-        const response = await fetch(`https://api-faa.my.id/faa/ytplay?query=${encodeURIComponent(query)}`);
-        if (!response.ok) throw new Error('API error');
-        const data = await response.json();
-        if (data.status && data.result) {
-            const r = data.result;
-            resultsList.innerHTML = `<div class="result-item" data-title="${escapeHtml(r.title)}" data-url="${r.mp3}" data-thumb="${r.thumbnail}" data-artist="${escapeHtml(r.author)}">
-                <img src="${r.thumbnail}" onerror="this.src='https://via.placeholder.com/45x45?text=🎵'">
-                <div class="result-info">
-                    <div class="result-title">${escapeHtml(r.title)}</div>
-                    <div class="result-artist">${escapeHtml(r.author)}</div>
-                    <div class="result-duration">${r.duration_timestamp || '0:00'}</div>
-                </div>
-            </div>`;
-            document.querySelector('#musicResultsList .result-item').addEventListener('click', function() {
-                playMusic(this.dataset.title, this.dataset.url, this.dataset.thumb, this.dataset.artist);
-            });
-        } else {
-            resultsList.innerHTML = '<div class="empty-message">Lagu tidak ditemukan</div>';
-        }
-    } catch (error) {
-        resultsList.innerHTML = '<div class="empty-message">Error koneksi, coba lagi</div>';
-    }
-}
-
-function playMusic(title, url, thumbnail, artist) {
-    if (!url || url === 'undefined') { 
-        showNotification('❌ URL lagu tidak valid', 'error'); 
-        return; 
-    }
-    
-    const audio = document.getElementById('globalAudio');
-    if (!audio) return;
-    
-    if (musicPlayer.updateInterval) clearInterval(musicPlayer.updateInterval);
-    
-    musicPlayer.currentTrack = { title, url, thumbnail, artist };
-    musicPlayer.audio = audio;
-    audio.src = url;
-    audio.load();
-    audio.play().catch(e => console.log('Play error:', e));
-    musicPlayer.isPlaying = true;
-    
-    document.getElementById('musicNowPlaying').style.display = 'flex';
-    document.getElementById('musicThumb').src = thumbnail || 'https://via.placeholder.com/60x60?text=🎵';
-    document.getElementById('musicTitle').innerText = title || 'Unknown Title';
-    document.getElementById('musicArtist').innerText = artist || 'Unknown Artist';
-    document.getElementById('musicPlayPauseBtn').innerHTML = '<i class="fas fa-pause"></i>';
-    
-    updateFloatingPlayer({ title, thumbnail, artist });
-    
-    addToMusicHistory({ title, url, thumbnail, artist });
-    showNotification(`🎵 Memutar: ${title}`, 'success');
-    
-    startProgressUpdate();
-}
-
-function stopMusic() {
-    if (musicPlayer.audio) {
-        musicPlayer.audio.pause();
-        musicPlayer.audio.currentTime = 0;
-        musicPlayer.isPlaying = false;
-        musicPlayer.currentTrack = null;
-        
-        document.getElementById('musicNowPlaying').style.display = 'none';
-        document.getElementById('musicPlayPauseBtn').innerHTML = '<i class="fas fa-play"></i>';
-        document.getElementById('musicProgressFilled').style.width = '0%';
-        document.getElementById('musicCurrentTime').innerText = '0:00';
-        
-        updateFloatingPlayer(null);
-        
-        if (musicPlayer.updateInterval) clearInterval(musicPlayer.updateInterval);
-        showNotification('⏹️ Musik dihentikan', 'success');
-    }
-}
-
-function togglePlayPause() {
-    if (!musicPlayer.audio || !musicPlayer.currentTrack) { 
-        showNotification('Pilih lagu terlebih dahulu', 'error'); 
-        return; 
-    }
-    
-    if (musicPlayer.isPlaying) {
-        musicPlayer.audio.pause();
-        musicPlayer.isPlaying = false;
-        document.getElementById('musicPlayPauseBtn').innerHTML = '<i class="fas fa-play"></i>';
-        document.getElementById('floatingPlayPause').innerHTML = '<i class="fas fa-play"></i>';
-    } else {
-        musicPlayer.audio.play().catch(e => console.log('Resume error:', e));
-        musicPlayer.isPlaying = true;
-        document.getElementById('musicPlayPauseBtn').innerHTML = '<i class="fas fa-pause"></i>';
-        document.getElementById('floatingPlayPause').innerHTML = '<i class="fas fa-pause"></i>';
-        startProgressUpdate();
-    }
-}
-
-function startProgressUpdate() {
-    if (musicPlayer.updateInterval) clearInterval(musicPlayer.updateInterval);
-    musicPlayer.updateInterval = setInterval(() => {
-        if (musicPlayer.audio && musicPlayer.audio.duration && musicPlayer.isPlaying) {
-            const current = musicPlayer.audio.currentTime;
-            const duration = musicPlayer.audio.duration;
-            const percent = (current / duration) * 100;
-            document.getElementById('musicProgressFilled').style.width = percent + '%';
-            document.getElementById('musicCurrentTime').innerText = formatMusicTime(current);
-            document.getElementById('musicDuration').innerText = formatMusicTime(duration);
-        }
-    }, 500);
-}
-
-function formatMusicTime(seconds) {
-    if (!seconds || isNaN(seconds)) return '0:00';
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-}
-
-function seekMusic(e) {
-    if (!musicPlayer.audio || !musicPlayer.audio.duration) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const percent = (e.clientX - rect.left) / rect.width;
-    musicPlayer.audio.currentTime = percent * musicPlayer.audio.duration;
-}
-
-function setMusicVolume(value) {
-    musicPlayer.volume = value;
-    if (musicPlayer.audio) musicPlayer.audio.volume = value / 100;
-    document.getElementById('musicVolumeSlider').value = value;
-    localStorage.setItem('rayy_music_volume', value);
-}
-
-function openMusicModal() {
-    document.getElementById('musicModal').style.display = 'flex';
-    loadMusicHistory();
-}
-
-function closeMusicModal() {
-    document.getElementById('musicModal').style.display = 'none';
-}
-
-function initMusicEventListeners() {
-    document.getElementById('musicBtn').onclick = (e) => { 
-        e.preventDefault(); 
-        openMusicModal(); 
-    };
-    document.getElementById('closeMusicModal').onclick = closeMusicModal;
-    document.getElementById('musicPlayPauseBtn').onclick = togglePlayPause;
-    document.getElementById('musicStopBtn').onclick = stopMusic;
-    document.getElementById('musicSearchBtn').onclick = () => searchMusic(document.getElementById('musicSearchInput').value);
-    document.getElementById('musicSearchInput').onkeypress = (e) => { 
-        if (e.key === 'Enter') searchMusic(e.target.value); 
-    };
-    document.getElementById('musicVolumeSlider').oninput = (e) => setMusicVolume(parseInt(e.target.value));
-    document.getElementById('musicVolDown').onclick = () => setMusicVolume(Math.max(0, musicPlayer.volume - 10));
-    document.getElementById('musicVolUp').onclick = () => setMusicVolume(Math.min(100, musicPlayer.volume + 10));
-    document.getElementById('musicProgressBar').onclick = seekMusic;
-    document.getElementById('clearMusicHistory').onclick = clearMusicHistory;
-    document.getElementById('musicModal').onclick = (e) => { 
-        if (e.target === document.getElementById('musicModal')) closeMusicModal(); 
-    };
-    
-    const savedVol = localStorage.getItem('rayy_music_volume');
-    if (savedVol) setMusicVolume(parseInt(savedVol));
-    else setMusicVolume(70);
-}
-
-// Floating Player
-let isDragging = false;
-let dragStartX, dragStartY;
-
-function initFloatingPlayer() {
-    const floatingPlayer = document.getElementById('floatingPlayer');
-    const dragHandle = document.getElementById('floatingDrag');
-    
-    if (!dragHandle) return;
-    
-    dragHandle.addEventListener('mousedown', startDrag);
-    dragHandle.addEventListener('touchstart', startDrag, { passive: false });
-    
-    document.addEventListener('mousemove', onDrag);
-    document.addEventListener('mouseup', stopDrag);
-    document.addEventListener('touchmove', onDrag, { passive: false });
-    document.addEventListener('touchend', stopDrag);
-    
-    document.getElementById('floatingPlayPause').onclick = () => togglePlayPause();
-    document.getElementById('floatingStop').onclick = () => stopMusic();
-    document.getElementById('floatingClose').onclick = () => {
-        stopMusic();
-        floatingPlayer.style.display = 'none';
-    };
-}
-
-function startDrag(e) {
-    isDragging = true;
-    const floatingPlayer = document.getElementById('floatingPlayer');
-    const rect = floatingPlayer.getBoundingClientRect();
-    
-    if (e.type === 'mousedown') {
-        dragStartX = e.clientX - rect.left;
-        dragStartY = e.clientY - rect.top;
-    } else {
-        dragStartX = e.touches[0].clientX - rect.left;
-        dragStartY = e.touches[0].clientY - rect.top;
-    }
-    
-    floatingPlayer.style.transition = 'none';
-    e.preventDefault();
-}
-
-function onDrag(e) {
-    if (!isDragging) return;
-    
-    let clientX, clientY;
-    if (e.type === 'mousemove') {
-        clientX = e.clientX;
-        clientY = e.clientY;
-    } else {
-        clientX = e.touches[0].clientX;
-        clientY = e.touches[0].clientY;
-    }
-    
-    const floatingPlayer = document.getElementById('floatingPlayer');
-    let newX = clientX - dragStartX;
-    let newY = clientY - dragStartY;
-    const maxX = window.innerWidth - floatingPlayer.offsetWidth - 10;
-    const maxY = window.innerHeight - floatingPlayer.offsetHeight - 10;
-    
-    newX = Math.min(Math.max(newX, 10), maxX);
-    newY = Math.min(Math.max(newY, 10), maxY);
-    
-    floatingPlayer.style.left = newX + 'px';
-    floatingPlayer.style.top = newY + 'px';
-    floatingPlayer.style.right = 'auto';
-    floatingPlayer.style.bottom = 'auto';
-    
-    e.preventDefault();
-}
-
-function stopDrag() {
-    isDragging = false;
-    const floatingPlayer = document.getElementById('floatingPlayer');
-    floatingPlayer.style.transition = '';
-}
-
-function updateFloatingPlayer(track) {
-    const floatingPlayer = document.getElementById('floatingPlayer');
-    if (!track) {
-        floatingPlayer.style.display = 'none';
-        return;
-    }
-    
-    floatingPlayer.style.display = 'block';
-    document.getElementById('floatingThumb').src = track.thumbnail || 'https://via.placeholder.com/40x40?text=🎵';
-    document.getElementById('floatingTitle').innerText = track.title || 'Unknown Title';
-    document.getElementById('floatingArtist').innerText = track.artist || 'Unknown Artist';
-    
-    if (musicPlayer.isPlaying) {
-        document.getElementById('floatingPlayPause').innerHTML = '<i class="fas fa-pause"></i>';
-    } else {
-        document.getElementById('floatingPlayPause').innerHTML = '<i class="fas fa-play"></i>';
-    }
+function initMusicEventListeners(){
+    document.getElementById('sidebarMusicBtn').onclick=(e)=>{e.preventDefault();openMusicModal();};
+    document.getElementById('closeMusicModal').onclick=closeMusicModal;
+    document.getElementById('musicPlayPauseBtn').onclick=togglePlayPause;
+    document.getElementById('musicStopBtn').onclick=stopMusic;
+    document.getElementById('musicSearchBtn').onclick=()=>searchMusic(document.getElementById('musicSearchInput').value);
+    document.getElementById('musicSearchInput').onkeypress=(e)=>{if(e.key==='Enter')searchMusic(e.target.value);};
+    document.getElementById('musicVolumeSlider').oninput=(e)=>setMusicVolume(parseInt(e.target.value));
+    document.getElementById('musicVolDown').onclick=()=>setMusicVolume(Math.max(0,musicPlayer.volume-10));
+    document.getElementById('musicVolUp').onclick=()=>setMusicVolume(Math.min(100,musicPlayer.volume+10));
+    document.getElementById('musicProgressBar').onclick=(e)=>{if(musicPlayer.audio&&musicPlayer.audio.duration){const rect=e.currentTarget.getBoundingClientRect();const percent=(e.clientX-rect.left)/rect.width;musicPlayer.audio.currentTime=percent*musicPlayer.audio.duration;}};
+    document.getElementById('clearMusicHistory').onclick=clearMusicHistory;
+    document.getElementById('musicModal').onclick=(e)=>{if(e.target===document.getElementById('musicModal'))closeMusicModal();};
+    const sv=localStorage.getItem('rayy_music_volume');if(sv)setMusicVolume(parseInt(sv));else setMusicVolume(70);
 }
 
 // ========================================
 // INITIALIZE
 // ========================================
+document.getElementById('menuToggle').onclick = toggleSidebar;
+document.getElementById('sidebarClose').onclick = closeSidebar;
+
+// 🔥 HAPUS KERANJANG SETIAP REFRESH HALAMAN
+clearCartOnRefresh();
+
 if (!checkUserIdentity()) {
     // Redirect to profile
 } else {
+    updateSidebarProfile();
     loadSlider();
     loadMarqueeText();
     loadProducts();
@@ -912,3 +809,5 @@ window.playFromHistory = playFromHistory;
 window.applyVoucherFromCart = applyVoucherFromCart;
 window.removeVoucherFromCart = removeVoucherFromCart;
 window.copyVoucherCode = copyVoucherCode;
+window.closeSidebar = closeSidebar;
+window.openSidebar = openSidebar;
