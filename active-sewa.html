@@ -9,6 +9,8 @@
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
         body{background:#f8fafc;font-family:'Inter',sans-serif;overflow-x:hidden;color:#1e293b}
+        
+        /* SIDEBAR */
         .sidebar{position:fixed;top:0;left:-280px;width:280px;height:100%;background:#fff;z-index:1002;transition:left .3s;display:flex;flex-direction:column;box-shadow:2px 0 10px rgba(0,0,0,.1);border-right:1px solid #e2e8f0}
         .sidebar.open{left:0}
         .sidebar-header{display:flex;justify-content:space-between;align-items:center;padding:20px;border-bottom:1px solid #e2e8f0}
@@ -32,6 +34,8 @@
         .cart-icon-sidebar span:last-child{flex:1;color:#475569;font-weight:500}
         .overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:1001;display:none}
         .overlay.active{display:block}
+        
+        /* TOP NAVBAR */
         .top-navbar{background:#fff;padding:12px 20px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;border-bottom:1px solid #e2e8f0}
         .menu-toggle{background:0;border:none;font-size:22px;color:#475569;cursor:pointer}
         .logo-small{font-size:18px;font-weight:700;color:#0f172a}
@@ -40,49 +44,80 @@
         .top-cart-icon .cart-count{position:absolute;top:-8px;right:-10px;background:#3b82f6;color:#fff;border-radius:50%;padding:2px 6px;font-size:10px;font-weight:600;min-width:18px;text-align:center}
         .main-content{min-height:100vh}
         .container{max-width:1000px;margin:0 auto;padding:30px 20px}
+        
+        /* PAGE HEADER */
         .page-header{text-align:center;margin-bottom:30px}
         .page-header h1{font-size:28px;font-weight:700;color:#0f172a;margin-bottom:8px}
         .page-header h1 i{color:#3b82f6}
         .page-header p{color:#64748b;font-size:14px}
+        
+        /* PERMISSION NOTIFICATION */
+        .permission-banner{background:#eef2ff;border-radius:16px;padding:12px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+        .permission-banner p{color:#1e40af;font-size:13px}
+        .permission-banner p i{color:#3b82f6;margin-right:8px}
+        .btn-allow-notif{background:#3b82f6;border:none;padding:8px 20px;border-radius:30px;color:white;font-weight:600;cursor:pointer}
+        .btn-allow-notif:hover{background:#2563eb}
+        
+        /* SEWA LIST */
         .sewa-list{display:flex;flex-direction:column;gap:20px}
         .sewa-card{background:#fff;border-radius:20px;border:1px solid #e2e8f0;overflow:hidden;transition:all .3s}
         .sewa-card:hover{transform:translateY(-3px);box-shadow:0 12px 25px rgba(0,0,0,.08);border-color:#3b82f6}
         .sewa-header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;background:linear-gradient(135deg,#f8fafc,#fff);border-bottom:1px solid #e2e8f0;flex-wrap:wrap;gap:10px}
         .sewa-status{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600}
         .status-active{background:#dcfce7;color:#16a34a}
-        .status-warning{background:#fef3c7;color:#d97706}
-        .status-critical{background:#fee2e2;color:#dc2626;animation:pulse 1s infinite}
+        .status-warning{background:#fef3c7;color:#d97706;animation:pulseWarning 1s infinite}
+        .status-critical{background:#fee2e2;color:#dc2626;animation:pulseCritical 0.8s infinite}
         .status-expired{background:#6c757d;color:#fff}
-        @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+        .status-rejected{background:#dc2626;color:#fff;animation:pulseRejected 0.5s infinite}
+        @keyframes pulseWarning{0%,100%{opacity:1}50%{opacity:0.7}}
+        @keyframes pulseCritical{0%,100%{opacity:1;background:#fee2e2}50%{opacity:0.6;background:#fecaca}}
+        @keyframes pulseRejected{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+        
         .sewa-product{font-weight:600;font-size:14px;color:#1e293b}
         .sewa-body{padding:20px}
         .info-row{display:flex;margin-bottom:12px;font-size:13px;flex-wrap:wrap}
         .info-label{width:120px;color:#64748b}
         .info-value{flex:1;color:#1e293b;font-weight:500;word-break:break-all}
+        .rejected-message{background:#fee2e2;border-radius:12px;padding:12px;margin:12px 0;border-left:3px solid #dc2626}
+        .rejected-message p{color:#dc2626;font-size:13px;margin:0}
+        .rejected-message i{margin-right:8px}
+        
+        /* COUNTDOWN TIMER */
         .countdown-timer{background:#f1f5f9;border-radius:12px;padding:15px;text-align:center;margin:15px 0}
         .timer-value{font-size:32px;font-weight:700;font-family:'Courier New',monospace;color:#3b82f6}
-        .timer-value.warning{color:#d97706}
-        .timer-value.critical{color:#dc2626;animation:pulse 1s infinite}
+        .timer-value.warning{color:#d97706;animation:pulseWarning 1s infinite}
+        .timer-value.critical{color:#dc2626;animation:pulseCritical 0.8s infinite}
         .timer-label{font-size:11px;color:#64748b;margin-top:5px}
+        
+        /* BUTTONS */
         .sewa-footer{display:flex;gap:12px;padding:16px 20px;background:#fafcfd;border-top:1px solid #e2e8f0}
         .btn-renew-now{flex:1;background:linear-gradient(135deg,#f59e0b,#e67e22);border:none;padding:10px;border-radius:12px;color:#fff;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
         .btn-renew-now:hover{opacity:.85}
         .btn-wa-support{flex:1;background:#25D366;border:none;padding:10px;border-radius:12px;color:#fff;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none}
         .btn-wa-support:hover{opacity:.85}
+        .btn-retry{flex:1;background:#3b82f6;border:none;padding:10px;border-radius:12px;color:#fff;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+        
+        /* EMPTY STATE */
         .empty-state{text-align:center;padding:60px 20px;background:#fff;border-radius:20px;border:1px solid #e2e8f0}
         .empty-state i{font-size:60px;color:#cbd5e1;margin-bottom:16px}
         .empty-state p{color:#64748b;font-size:14px;margin-bottom:20px}
         .btn-primary{background:#3b82f6;border:none;padding:10px 24px;border-radius:30px;color:#fff;font-weight:600;cursor:pointer;text-decoration:none;display:inline-block}
         .btn-primary:hover{background:#2563eb}
+        
+        /* LOADING */
         .loading-spinner{text-align:center;padding:60px;color:#94a3b8}
         .loading-spinner i{font-size:40px;color:#3b82f6;animation:spin 1s linear infinite}
         @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+        
+        /* TOAST NOTIFICATION */
         .toast-notification{position:fixed;bottom:20px;right:20px;padding:10px 20px;border-radius:40px;color:#fff;font-weight:500;z-index:1002;animation:slideIn .3s ease;font-size:13px}
         .toast-notification.success{background:#22c55e}
         .toast-notification.error{background:#ef4444}
         .toast-notification.warning{background:#f59e0b}
         @keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
         @keyframes slideOut{from{transform:translateX(0);opacity:1}to{transform:translateX(100%);opacity:0}}
+        
+        /* MODAL RENEW */
         .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:2000;display:flex;justify-content:center;align-items:center}
         .modal-content{background:#fff;border-radius:20px;width:90%;max-width:550px;max-height:85vh;overflow-y:auto;padding:24px;position:relative}
         .modal-close{position:absolute;top:15px;right:20px;background:0;border:none;font-size:24px;color:#94a3b8;cursor:pointer}
@@ -105,9 +140,8 @@
         .total-renew .label{font-size:13px;color:#64748b}
         .total-renew .amount{font-size:24px;font-weight:700;color:#0f172a}
         .total-renew .discount{color:#16a34a;font-size:14px;margin-top:5px}
-        .checkbox-group{margin:16px 0}
-        .checkbox-label{display:flex;align-items:center;gap:10px;cursor:pointer;color:#334155;font-size:13px;font-weight:500}
-        .checkbox-label input{width:18px;height:18px;cursor:pointer;margin:0}
+        
+        /* MUSIC MODAL */
         .music-modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:2000;display:flex;justify-content:center;align-items:center}
         .music-modal-content{background:#fff;border-radius:20px;width:90%;max-width:500px;max-height:85vh;overflow-y:auto}
         .music-modal-header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid #e2e8f0}
@@ -122,17 +156,23 @@
         .floating-controls button{background:#f1f5f9;border:none;width:32px;height:32px;border-radius:50%;cursor:pointer}
         .floating-controls button:hover{background:#3b82f6;color:#fff}
         .floating-drag{cursor:grab;color:#94a3b8;padding:0 5px}
+        
         @media (max-width:768px){
             .page-header h1{font-size:22px}
             .sewa-header{flex-direction:column;align-items:flex-start}
             .sewa-footer{flex-direction:column}
-            .btn-renew-now,.btn-wa-support{width:100%}
             .sidebar{width:260px;left:-260px}
             .info-label{width:100px}
             .timer-value{font-size:24px}
             .modal-content{width:95%;padding:20px}
+            .permission-banner{flex-direction:column;text-align:center}
         }
         @media (min-width:769px){.menu-toggle{display:none}}
+        
+        /* NOTIFICATION BELL ANIMATION */
+        .notification-badge{position:relative}
+        @keyframes ring{0%{transform:rotate(0)}25%{transform:rotate(15deg)}50%{transform:rotate(-15deg)}75%{transform:rotate(5deg)}100%{transform:rotate(0)}}
+        .bell-ring{animation:ring 0.5s ease-in-out}
     </style>
 </head>
 <body>
@@ -181,6 +221,13 @@
                 <h1><i class="fas fa-calendar-check"></i> Sewa Bot Aktif</h1>
                 <p>Pantau masa aktif sewa bot Anda secara realtime</p>
             </div>
+
+            <!-- PERMISSION NOTIFICATION BANNER -->
+            <div class="permission-banner" id="permissionBanner" style="display: none;">
+                <p><i class="fas fa-bell"></i> Aktifkan notifikasi untuk mendapatkan peringatan saat masa sewa hampir habis!</p>
+                <button class="btn-allow-notif" onclick="requestNotificationPermission()"><i class="fas fa-check"></i> Aktifkan Notifikasi</button>
+            </div>
+
             <div class="sewa-list" id="sewaList">
                 <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>Memuat data sewa aktif...</p></div>
             </div>
@@ -213,6 +260,9 @@
             </div>
         </div>
         <audio id="globalAudio" style="display:none"></audio>
+        <audio id="notificationSound" preload="auto" style="display:none">
+            <source src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3" type="audio/mpeg">
+        </audio>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -228,7 +278,160 @@
         let currentProductPrice = 0;
         let activeVoucher = null;
         let voucherDiscount = 0;
+        let notificationSentForOrders = new Set(); // Track which orders already sent notification
         const ADMIN_WA = "6285794545996";
+
+        // ============ NOTIFICATION FUNCTIONS ============
+        let notificationAudio = null;
+        let audioPlayCount = 0;
+        let audioInterval = null;
+
+        function initNotificationSound() {
+            if (!notificationAudio) {
+                notificationAudio = document.getElementById('notificationSound');
+                if (!notificationAudio) {
+                    notificationAudio = new Audio('https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3');
+                    notificationAudio.preload = 'auto';
+                }
+            }
+        }
+
+        function playNotificationSound(repeat = 5) {
+            initNotificationSound();
+            
+            if (audioInterval) clearInterval(audioInterval);
+            audioPlayCount = 0;
+            
+            function play() {
+                if (audioPlayCount >= repeat) {
+                    clearInterval(audioInterval);
+                    audioInterval = null;
+                    return;
+                }
+                notificationAudio.currentTime = 0;
+                notificationAudio.play().catch(e => console.log('Audio play error:', e));
+                audioPlayCount++;
+            }
+            
+            play();
+            audioInterval = setInterval(play, 800);
+            
+            // Add bell ring animation
+            const bellIcon = document.querySelector('.page-header h1 i');
+            if (bellIcon) {
+                bellIcon.classList.add('bell-ring');
+                setTimeout(() => bellIcon.classList.remove('bell-ring'), 500);
+            }
+        }
+
+        // Request notification permission
+        function requestNotificationPermission() {
+            if ('Notification' in window) {
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        showToast('✅ Notifikasi diaktifkan!', 'success');
+                        document.getElementById('permissionBanner').style.display = 'none';
+                        localStorage.setItem('notifPermission', 'granted');
+                        
+                        // Test notification
+                        new Notification('Rayy Store', {
+                            body: 'Notifikasi berhasil diaktifkan! Anda akan mendapat peringatan masa sewa.',
+                            icon: 'https://files.catbox.moe/vrlec4.jpg',
+                            tag: 'test'
+                        });
+                    } else {
+                        showToast('⚠️ Izin notifikasi ditolak', 'warning');
+                    }
+                });
+            } else {
+                showToast('Browser Anda tidak mendukung notifikasi', 'error');
+            }
+        }
+
+        function checkNotificationPermission() {
+            if ('Notification' in window) {
+                if (Notification.permission === 'granted') {
+                    document.getElementById('permissionBanner').style.display = 'none';
+                } else if (Notification.permission !== 'denied') {
+                    document.getElementById('permissionBanner').style.display = 'flex';
+                } else {
+                    document.getElementById('permissionBanner').style.display = 'none';
+                }
+            }
+        }
+
+        function sendBrowserNotification(title, body, tag = 'sewa') {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                try {
+                    const notification = new Notification(title, {
+                        body: body,
+                        icon: 'https://files.catbox.moe/vrlec4.jpg',
+                        tag: tag,
+                        requireInteraction: true,
+                        vibrate: [200, 100, 200]
+                    });
+                    
+                    notification.onclick = function() {
+                        window.focus();
+                        this.close();
+                    };
+                    
+                    setTimeout(() => notification.close(), 10000);
+                } catch(e) { console.log('Notif error:', e); }
+            }
+        }
+
+        // Check if sewa is almost expired and send notification
+        function checkAndSendExpiryNotification(sewa) {
+            if (!sewa.expiredAt) return;
+            
+            const ms = sewa.expiredAt - Date.now();
+            const hoursLeft = ms / (1000 * 60 * 60);
+            const daysLeft = ms / (1000 * 60 * 60 * 24);
+            
+            // Send notification when 24 hours left, 6 hours left, 1 hour left
+            const shouldNotify = 
+                (hoursLeft <= 24 && hoursLeft > 23.5 && !notificationSentForOrders.has(`${sewa.orderId}_24h`)) ||
+                (hoursLeft <= 6 && hoursLeft > 5.5 && !notificationSentForOrders.has(`${sewa.orderId}_6h`)) ||
+                (hoursLeft <= 1 && hoursLeft > 0.5 && !notificationSentForOrders.has(`${sewa.orderId}_1h`)) ||
+                (daysLeft <= 3 && daysLeft > 2.9 && !notificationSentForOrders.has(`${sewa.orderId}_3d`)) ||
+                (daysLeft <= 1 && daysLeft > 0.9 && !notificationSentForOrders.has(`${sewa.orderId}_1d`));
+            
+            if (shouldNotify) {
+                let notifTitle = '⚠️ Peringatan Sewa Bot!';
+                let notifBody = '';
+                let notifKey = '';
+                
+                if (hoursLeft <= 1 && hoursLeft > 0.5) {
+                    notifBody = `Sewa bot Anda akan berakhir dalam ${Math.ceil(hoursLeft)} jam! Segera perpanjang.`;
+                    notifKey = `${sewa.orderId}_1h`;
+                    playNotificationSound(5);
+                } else if (hoursLeft <= 6 && hoursLeft > 5.5) {
+                    notifBody = `Sewa bot Anda akan berakhir dalam ${Math.ceil(hoursLeft)} jam! Jangan sampai expired.`;
+                    notifKey = `${sewa.orderId}_6h`;
+                    playNotificationSound(3);
+                } else if (hoursLeft <= 24 && hoursLeft > 23.5) {
+                    notifBody = `Sewa bot Anda akan berakhir besok! Segera perpanjang agar tetap aktif.`;
+                    notifKey = `${sewa.orderId}_24h`;
+                    playNotificationSound(2);
+                } else if (daysLeft <= 1 && daysLeft > 0.9) {
+                    notifBody = `Sewa bot Anda tinggal 1 hari lagi! Segera perpanjang.`;
+                    notifKey = `${sewa.orderId}_1d`;
+                    playNotificationSound(3);
+                } else if (daysLeft <= 3 && daysLeft > 2.9) {
+                    notifBody = `Sewa bot Anda akan berakhir dalam 3 hari! Jangan lupa perpanjang.`;
+                    notifKey = `${sewa.orderId}_3d`;
+                    playNotificationSound(2);
+                }
+                
+                if (notifKey) {
+                    notificationSentForOrders.add(notifKey);
+                    sendBrowserNotification(notifTitle, notifBody, `expiry_${sewa.orderId}`);
+                    showToast(notifBody, 'warning');
+                    console.log(`🔔 Notifikasi terkirim untuk ${sewa.orderId}: ${notifBody}`);
+                }
+            }
+        }
 
         function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('overlay').classList.add('active');}
         function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('active');}
@@ -257,7 +460,7 @@
             const n=document.createElement('div');n.className=`toast-notification ${type}`;
             n.innerHTML=`<i class="fas ${type==='success'?'fa-check-circle':type==='warning'?'fa-exclamation-triangle':'fa-exclamation-circle'}"></i> ${msg}`;
             document.body.appendChild(n);
-            setTimeout(()=>{if(n){n.style.animation='slideOut .3s ease';setTimeout(()=>{if(n&&n.remove)n.remove();},300);}},3000);
+            setTimeout(()=>{if(n){n.style.animation='slideOut .3s ease';setTimeout(()=>{if(n&&n.remove)n.remove();},300);}},4000);
         }
         
         // ========== LOAD ACTIVE SEWA ==========
@@ -279,6 +482,7 @@
             countdownIntervals.forEach(i=>clearInterval(i));
             countdownIntervals=[];
             activeSewas=[];
+            notificationSentForOrders.clear();
             
             try {
                 const sewaOrdersSnapshot = await database.ref('sewa_orders').once('value');
@@ -291,19 +495,25 @@
                         
                         const isUserOrder = (order.buyerName === userName || order.username === userName);
                         const isActive = (order.status === 'active' || order.status === 'success' || order.status === 'approved');
-                        const hasExpiredAt = order.expiredAt && order.expiredAt > Date.now();
+                        const isExpired = order.expiredAt && order.expiredAt <= Date.now();
+                        const isRejected = (order.status === 'rejected');
                         
-                        console.log(`📦 Order: ${order.orderId}, Status: ${order.status}, buyerName: ${order.buyerName}, isUser: ${isUserOrder}`);
+                        console.log(`📦 Order: ${order.orderId}, Status: ${order.status}, isUser: ${isUserOrder}`);
                         
-                        if(isUserOrder && isActive && order.expiredAt && hasExpiredAt){
+                        if(isUserOrder && (isActive || isExpired || isRejected)){
+                            // Mark as expired if expired
+                            if(isExpired && order.status !== 'expired' && order.status !== 'rejected'){
+                                order.status = 'expired';
+                                database.ref(`sewa_orders/${order.orderId}`).update({ status: 'expired' });
+                            }
                             activeSewas.push(order);
-                            console.log(`✅ Sewa aktif ditambahkan: ${order.orderId}`);
+                            console.log(`✅ Sewa ditambahkan: ${order.orderId} - Status: ${order.status}`);
                         }
                     });
                 }
                 
-                console.log(`Total active sewa ditemukan: ${activeSewas.length}`);
-                activeSewas.sort((a,b) => a.expiredAt - b.expiredAt);
+                console.log(`Total sewa ditemukan: ${activeSewas.length}`);
+                activeSewas.sort((a,b) => (a.expiredAt || Infinity) - (b.expiredAt || Infinity));
                 renderActiveSewas();
                 startAllCountdowns();
                 
@@ -338,22 +548,49 @@
                 const bp = s.buyerPhone || '-';
                 const sd = formatDate(s.startedAt || s.createdAt);
                 const ed = formatDate(expiredAt);
+                const isRejected = s.status === 'rejected';
+                const isExpired = s.status === 'expired' || (expiredAt && expiredAt <= Date.now());
+                const rejectedMessage = s.rejectionMessage || 'Pesanan Anda ditolak oleh admin. Silakan hubungi customer service untuk informasi lebih lanjut.';
                 
                 let countdownText = 'Menghitung...', statusClass = 'status-active', timerClass = '';
-                if(expiredAt){
+                let statusIcon = '<i class="fas fa-check-circle"></i>';
+                let statusText = 'AKTIF';
+                
+                if(isRejected){
+                    countdownText = 'PESANAN DITOLAK';
+                    statusClass = 'status-rejected';
+                    timerClass = 'critical';
+                    statusIcon = '<i class="fas fa-ban"></i>';
+                    statusText = 'DITOLAK';
+                } else if(isExpired){
+                    countdownText = 'EXPIRED';
+                    statusClass = 'status-expired';
+                    timerClass = 'critical';
+                    statusIcon = '<i class="fas fa-exclamation-triangle"></i>';
+                    statusText = 'EXPIRED';
+                } else if(expiredAt){
                     const ms = expiredAt - Date.now();
                     if(ms <= 0){
                         countdownText = 'EXPIRED';
                         statusClass = 'status-expired';
                         timerClass = 'critical';
+                        statusIcon = '<i class="fas fa-exclamation-triangle"></i>';
+                        statusText = 'EXPIRED';
                     } else {
                         const days = Math.floor(ms / 86400000);
                         if(days <= 0){
                             statusClass = 'status-critical';
                             timerClass = 'critical';
+                            statusIcon = '<i class="fas fa-exclamation-triangle"></i>';
+                            statusText = 'SEGERA EXPIRED';
                         } else if(days <= 3){
                             statusClass = 'status-warning';
                             timerClass = 'warning';
+                            statusIcon = '<i class="fas fa-clock"></i>';
+                            statusText = 'HAMPIR HABIS';
+                        } else {
+                            statusIcon = '<i class="fas fa-check-circle"></i>';
+                            statusText = 'AKTIF';
                         }
                         const hours = Math.floor((ms % 86400000) / 3600000);
                         const mins = Math.floor((ms % 3600000) / 60000);
@@ -371,8 +608,7 @@
                 return `<div class="sewa-card">
                     <div class="sewa-header">
                         <span class="sewa-status ${statusClass}">
-                            <i class="fas ${statusClass==='status-active'?'fa-check-circle':statusClass==='status-warning'?'fa-clock':'fa-exclamation-triangle'}"></i> 
-                            ${statusClass==='status-active'?'AKTIF':statusClass==='status-warning'?'HAMPIR HABIS':statusClass==='status-critical'?'SEGERA EXPIRED':'EXPIRED'}
+                            ${statusIcon} ${statusText}
                         </span>
                         <span class="sewa-product">${escapeHtml(pn)}</span>
                     </div>
@@ -383,13 +619,15 @@
                         <div class="info-row"><span class="info-label"><i class="fas fa-calendar"></i> Mulai:</span><span class="info-value">${sd}</span></div>
                         <div class="info-row"><span class="info-label"><i class="fas fa-calendar-times"></i> Berakhir:</span><span class="info-value">${ed}</span></div>
                         <div class="info-row"><span class="info-label"><i class="fas fa-money-bill"></i> Harga:</span><span class="info-value">Rp ${formatNumber(pp)}</span></div>
+                        ${isRejected ? `<div class="rejected-message"><p><i class="fas fa-exclamation-circle"></i> ${escapeHtml(rejectedMessage)}</p></div>` : ''}
                         <div class="countdown-timer">
                             <div class="timer-value ${timerClass}" id="timer_${sid}">${countdownText}</div>
                             <div class="timer-label">Sisa Masa Aktif</div>
                         </div>
                     </div>
                     <div class="sewa-footer">
-                        <button class="btn-renew-now" onclick="renewFromActive('${sIdSafe}')"><i class="fas fa-sync-alt"></i> Perpanjang</button>
+                        ${!isRejected && !isExpired ? `<button class="btn-renew-now" onclick="renewFromActive('${sIdSafe}')"><i class="fas fa-sync-alt"></i> Perpanjang</button>` : ''}
+                        ${isRejected ? `<button class="btn-retry" onclick="window.location.href='rayy-store.com.html'"><i class="fas fa-redo-alt"></i> Pesan Ulang</button>` : ''}
                         <a href="https://wa.me/${ADMIN_WA}?text=Halo%20Admin%2C%20saya%20ingin%20bertanya%20tentang%20sewa%20bot%20${encodeURIComponent(pn)}" class="btn-wa-support" target="_blank"><i class="fab fa-whatsapp"></i> Hubungi Admin</a>
                     </div>
                 </div>`;
@@ -400,8 +638,11 @@
             countdownIntervals.forEach(i=>clearInterval(i));
             countdownIntervals=[];
             activeSewas.forEach(s=>{
-                if(s.expiredAt){
-                    const interval = setInterval(() => updateCountdownForSewa(s), 1000);
+                if(s.expiredAt && s.status !== 'rejected' && s.status !== 'expired'){
+                    const interval = setInterval(() => {
+                        updateCountdownForSewa(s);
+                        checkAndSendExpiryNotification(s);
+                    }, 1000);
                     countdownIntervals.push(interval);
                 }
             });
@@ -424,6 +665,9 @@
                         sb.className = 'sewa-status status-expired';
                         sb.innerHTML = '<i class="fas fa-exclamation-triangle"></i> EXPIRED';
                     }
+                }
+                if(s.status !== 'expired'){
+                    database.ref(`sewa_orders/${s.orderId}`).update({ status: 'expired' });
                 }
                 return;
             }
@@ -454,8 +698,16 @@
                     } else if(days <= 3){
                         sb.className = 'sewa-status status-warning';
                         sb.innerHTML = '<i class="fas fa-clock"></i> HAMPIR HABIS';
+                    } else {
+                        sb.className = 'sewa-status status-active';
+                        sb.innerHTML = '<i class="fas fa-check-circle"></i> AKTIF';
                     }
                 }
+            }
+            
+            // Check for notifications every minute
+            if(ms % 60000 < 1000){
+                checkAndSendExpiryNotification(s);
             }
         }
         
@@ -463,6 +715,18 @@
             const s = activeSewas.find(a => a.orderId === sewaId);
             if(!s){
                 showToast('Data sewa tidak ditemukan!','error');
+                return;
+            }
+            
+            // Cek jika sudah expired atau ditolak
+            if(s.status === 'rejected'){
+                showToast('Pesanan ditolak, silakan pesan ulang','error');
+                window.location.href = 'rayy-store.com.html';
+                return;
+            }
+            if(s.status === 'expired' || (s.expiredAt && s.expiredAt <= Date.now())){
+                showToast('Sewa sudah expired, silakan pesan ulang','error');
+                window.location.href = 'rayy-store.com.html';
                 return;
             }
             
@@ -769,10 +1033,27 @@
             const sv=localStorage.getItem('rayy_music_volume');if(sv)setMusicVolume(parseInt(sv));else setMusicVolume(70);
         }
         
+        // Check for rejected orders and play notification
+        function checkForRejectedOrders() {
+            const rejectedOrders = activeSewas.filter(s => s.status === 'rejected');
+            if(rejectedOrders.length > 0 && !sessionStorage.getItem('rejectedNotified')) {
+                playNotificationSound(5);
+                sendBrowserNotification('❌ Pesanan Ditolak', 'Salah satu pesanan sewa Anda ditolak oleh admin. Silakan cek halaman Sewa Aktif.', 'rejected');
+                sessionStorage.setItem('rejectedNotified', 'true');
+            }
+        }
+        
         document.addEventListener('DOMContentLoaded',function(){
             document.getElementById('menuToggle').onclick=toggleSidebar;
             document.getElementById('sidebarClose').onclick=closeSidebar;
             updateSidebarProfile();updateCartCount();loadActiveSewa();initMusicEventListeners();initFloatingPlayer();
+            checkNotificationPermission();
+            
+            // Set interval to check for expiry notifications every 30 seconds
+            setInterval(() => {
+                activeSewas.forEach(sewa => checkAndSendExpiryNotification(sewa));
+                checkForRejectedOrders();
+            }, 30000);
         });
         
         window.closeRenewModal=closeRenewModal;
@@ -784,6 +1065,8 @@
         window.openSidebar=openSidebar;
         window.toggleSidebar=toggleSidebar;
         window.loadActiveSewa=loadActiveSewa;
+        window.requestNotificationPermission=requestNotificationPermission;
+        window.playNotificationSound=playNotificationSound;
     </script>
 </body>
 </html>
