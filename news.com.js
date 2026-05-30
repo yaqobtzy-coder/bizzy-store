@@ -1,5 +1,6 @@
 // ========================================
 // NEWS.COM.JS - RAYY STORE
+// Updated with Live Chat & Customer Service News
 // ========================================
 
 // Set date badge
@@ -30,6 +31,14 @@ function goToVouchers() {
     window.location.href = 'vouchers.html';
 }
 
+function goToLiveChat() {
+    window.location.href = 'live-chat.html';
+}
+
+function goToCS() {
+    window.location.href = 'cs-chat.html';
+}
+
 function checkStatus() {
     showToast('Menghubungi server... Silakan tunggu');
     setTimeout(() => {
@@ -38,19 +47,19 @@ function checkStatus() {
 }
 
 function showToast(msg) {
-    let existing = document.querySelector('.toast');
-    if (existing) existing.remove();
+    const toast = document.getElementById('toast');
+    if (!toast) return;
     
-    let toast = document.createElement('div');
-    toast.className = 'toast';
     toast.innerHTML = `<i class="fas fa-info-circle"></i> ${msg}`;
-    document.body.appendChild(toast);
+    toast.style.display = 'block';
     
-    setTimeout(() => toast.remove(), 3000);
+    setTimeout(() => {
+        toast.style.display = 'none';
+    }, 3000);
 }
 
 // Animate cards
-const cards = document.querySelectorAll('.update-card');
+const cards = document.querySelectorAll('.update-card, .chat-preview-card');
 cards.forEach((card, index) => {
     card.style.animationDelay = `${0.1 + (index % 5) * 0.1}s`;
 });
@@ -58,6 +67,7 @@ cards.forEach((card, index) => {
 // Load stats from Firebase
 function loadStats() {
     if (typeof database !== 'undefined') {
+        // Load total products
         database.ref('products').once('value', (snapshot) => {
             let count = 0;
             snapshot.forEach(typeSnapshot => {
@@ -79,6 +89,28 @@ function loadStats() {
             }
             console.log(`✅ Sewa aktif: ${activeCount}`);
         });
+        
+        // Load live chat messages count
+        database.ref('live_chat_messages').once('value', (snapshot) => {
+            let messageCount = 0;
+            if(snapshot.exists()){
+                snapshot.forEach(child => {
+                    messageCount++;
+                });
+            }
+            console.log(`💬 Total pesan live chat: ${messageCount}`);
+        });
+        
+        // Load CS sessions count
+        database.ref('cs_chat_sessions').once('value', (snapshot) => {
+            let sessionCount = 0;
+            if(snapshot.exists()){
+                snapshot.forEach(() => {
+                    sessionCount++;
+                });
+            }
+            console.log(`🎧 Total sesi CS: ${sessionCount}`);
+        });
     }
 }
 
@@ -86,7 +118,24 @@ function loadStats() {
 document.body.classList.remove('dark');
 document.body.classList.add('light');
 
+// Add animation to timeline items
+const timelineItems = document.querySelectorAll('.timeline-item');
+timelineItems.forEach((item, index) => {
+    item.style.animation = `fadeInUp 0.5s ease ${index * 0.1}s both`;
+});
+
 // Initialize
 setTimeout(() => {
     loadStats();
 }, 500);
+
+// Export functions to global
+window.goToStore = goToStore;
+window.goToHistory = goToHistory;
+window.goToActiveSewa = goToActiveSewa;
+window.goToPanel = goToPanel;
+window.goToVouchers = goToVouchers;
+window.goToLiveChat = goToLiveChat;
+window.goToCS = goToCS;
+window.checkStatus = checkStatus;
+window.showToast = showToast;
