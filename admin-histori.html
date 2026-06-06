@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Admin - Histori Belanja All User | Rayy Store</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="admin-histori.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="admin-header">
+            <div class="header-title">
+                <h1><i class="fas fa-history"></i> Histori Belanja All User</h1>
+                <p>Kelola dan pantau semua transaksi pelanggan</p>
+            </div>
+            <div class="header-stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalOrders">0</div>
+                    <div class="stat-label">Total Pesanan</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalRevenue">Rp 0</div>
+                    <div class="stat-label">Total Pendapatan</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalUsers">0</div>
+                    <div class="stat-label">Total User</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="all">📦 Semua Pesanan</button>
+            <button class="tab-btn" data-tab="sewa">🤖 Sewa Bot</button>
+            <button class="tab-btn" data-tab="script">📜 Script</button>
+            <button class="tab-btn" data-tab="panel">🖥️ Panel Hosting</button>
+            <button class="tab-btn" data-tab="pending">⏳ Menunggu</button>
+            <button class="tab-btn" data-tab="done">✅ Selesai</button>
+        </div>
+
+        <!-- Filter Section -->
+        <div class="filter-section">
+            <div class="filter-grid">
+                <div class="filter-group">
+                    <label><i class="fas fa-search"></i> Cari Nama/Order ID</label>
+                    <input type="text" id="searchInput" placeholder="Ketik nama atau ID order...">
+                </div>
+                <div class="filter-group">
+                    <label><i class="fas fa-calendar"></i> Dari Tanggal</label>
+                    <input type="date" id="dateFrom">
+                </div>
+                <div class="filter-group">
+                    <label><i class="fas fa-calendar"></i> Sampai Tanggal</label>
+                    <input type="date" id="dateTo">
+                </div>
+                <div class="filter-group">
+                    <label><i class="fas fa-sort"></i> Urutkan</label>
+                    <select id="sortBy">
+                        <option value="newest">Terbaru</option>
+                        <option value="oldest">Terlama</option>
+                        <option value="highest">Termahal</option>
+                        <option value="lowest">Termurah</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label><i class="fas fa-download"></i> Export</label>
+                    <button class="action-btn export-btn" id="exportBtn"><i class="fas fa-file-excel"></i> Export Excel</button>
+                </div>
+                <div class="filter-group">
+                    <button class="reset-btn" id="resetFiltersBtn"><i class="fas fa-undo"></i> Reset Filter</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading -->
+        <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+            <div class="loading-spinner">
+                <i class="fas fa-spinner fa-pulse"></i>
+                <p>Memuat data...</p>
+            </div>
+        </div>
+
+        <!-- Table Container -->
+        <div class="table-container">
+            <table id="ordersTable">
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>Tanggal</th>
+                        <th>Order ID</th>
+                        <th>Pembeli</th>
+                        <th>No WhatsApp</th>
+                        <th>Produk</th>
+                        <th>Durasi</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                        <th>Tipe</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="ordersTableBody">
+                    <tr>
+                        <td colspan="11" class="empty-message">
+                            <i class="fas fa-inbox"></i>
+                            <p>Belum ada data pesanan</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination">
+            <button id="prevPageBtn" disabled><i class="fas fa-chevron-left"></i> Sebelumnya</button>
+            <span id="pageInfo">Halaman 1 dari 1</span>
+            <button id="nextPageBtn" disabled>Selanjutnya <i class="fas fa-chevron-right"></i></button>
+        </div>
+    </div>
+
+    <!-- Modal Detail -->
+    <div id="detailModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-receipt"></i> Detail Pesanan</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Content will be filled by JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <!-- FIREBASE SCRIPTS (HARUS URUT) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
+    <!-- FIREBASE CONFIG (AMBIL DARI SINI) -->
+    <script src="firebase-config.js"></script>
+    
+    <!-- CUSTOM SCRIPT -->
+    <script src="admin-histori.js"></script>
+</body>
+</html>

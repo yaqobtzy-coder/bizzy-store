@@ -57,6 +57,7 @@
                 linkGroup: doneData?.linkGroup || null,
                 durasi: doneData?.durasi || null,
                 buyerName: doneData?.buyerName || null,
+                buyerPhone: localStorage.getItem('userPhone') || null,
                 createdAt: new Date().toISOString()
             });
             console.log('✅ Perintah dikirim ke WA Bot:', command);
@@ -77,7 +78,8 @@
         canvas.width = w;
         canvas.height = h;
         
-        const buyerName = doneData?.buyerName || "Nama Pembeli";
+        const buyerName = doneData?.buyerName || localStorage.getItem('userName') || "Nama Pembeli";
+        const buyerPhone = localStorage.getItem('userPhone') || '-';
         const productName = doneData?.productsText || "Produk Digital";
         const productQty = "1";
         const totalAmount = doneData?.totalAmount || 0;
@@ -292,8 +294,10 @@
     }
     
     async function saveToAdmin(buyerName, productName, total, tanggal) {
+        const buyerPhone = localStorage.getItem('userPhone') || '';
         const canvasData = {
             buyerName: buyerName,
+            buyerPhone: buyerPhone,
             productName: productName,
             total: total,
             tanggal: tanggal,
@@ -322,13 +326,15 @@
     }
     
     function sendToWhatsApp(canvasUrl) {
-        const buyerName = doneData?.buyerName || 'Customer';
+        const buyerName = doneData?.buyerName || localStorage.getItem('userName') || 'Customer';
+        const buyerPhone = localStorage.getItem('userPhone') || '';
         const productsText = doneData?.productsText || 'Produk Digital';
         const totalAmount = doneData?.totalAmount || 0;
         const isGratis = totalAmount === 0;
         
         const message = `*📝 FORMAT ORDER PRODUK RAYY STORE*%0A%0A` +
             `*👤 Nama* : ${buyerName}%0A` +
+            `*📱 No WA* : ${buyerPhone}%0A` +
             `*🛒 Produk* : ${productsText}%0A` +
             `*💰 Harga* : ${isGratis ? 'GRATIS!' : 'Rp ' + formatNumber(totalAmount)}%0A` +
             `*💳 Metode Bayar* : ${isGratis ? 'GRATIS' : 'QRIS'}%0A` +
@@ -380,10 +386,11 @@
                     uploadedCanvasUrl = data.data.url;
                     
                     if (typeof notifyDoneCanvas !== 'undefined') {
-                        const buyerName = doneData?.buyerName || 'Customer';
+                        const buyerName = doneData?.buyerName || localStorage.getItem('userName') || 'Customer';
+                        const buyerPhone = localStorage.getItem('userPhone') || '';
                         const productsText = doneData?.productsText || 'Produk Digital';
                         const totalAmount = doneData?.totalAmount || 0;
-                        await notifyDoneCanvas(buyerName, productsText, totalAmount, uploadedCanvasUrl);
+                        await notifyDoneCanvas(buyerName, buyerPhone, productsText, totalAmount, uploadedCanvasUrl);
                     }
                     
                     if (uploadLoading) uploadLoading.style.display = 'none';

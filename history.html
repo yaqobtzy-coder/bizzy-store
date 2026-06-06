@@ -9,6 +9,8 @@
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
         body{background:#f8fafc;font-family:'Inter',sans-serif;overflow-x:hidden;color:#1e293b}
+        
+        /* SIDEBAR */
         .sidebar{position:fixed;top:0;left:-280px;width:280px;height:100%;background:#fff;z-index:1002;transition:left .3s;display:flex;flex-direction:column;box-shadow:2px 0 10px rgba(0,0,0,.1);border-right:1px solid #e2e8f0}
         .sidebar.open{left:0}
         .sidebar-header{display:flex;justify-content:space-between;align-items:center;padding:20px;border-bottom:1px solid #e2e8f0}
@@ -32,6 +34,8 @@
         .cart-icon-sidebar span:last-child{flex:1;color:#475569;font-weight:500}
         .overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:1001;display:none}
         .overlay.active{display:block}
+        
+        /* TOP NAVBAR */
         .top-navbar{background:#fff;padding:12px 20px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;border-bottom:1px solid #e2e8f0}
         .menu-toggle{background:0;border:none;font-size:22px;color:#475569;cursor:pointer}
         .logo-small{font-size:18px;font-weight:700;color:#0f172a}
@@ -178,7 +182,7 @@
         <div class="container">
             <div class="page-header">
                 <h1><i class="fas fa-history"></i> Histori Belanja</h1>
-                <p>Semua riwayat transaksi Anda</p>
+                <p>Riwayat transaksi Anda yang sudah selesai</p>
             </div>
             <div class="filter-tabs">
                 <button class="filter-btn active" data-filter="all">Semua</button>
@@ -225,7 +229,7 @@
     <script src="firebase-config.js"></script>
     <script src="telegram-notif.js"></script>
     <script>
-        // ==================== HISTORY PAGE - LENGKAP ====================
+        // ==================== HISTORY PAGE - HANYA PESANAN VALID ====================
         let allOrders = [];
         let currentFilter = 'all';
         let currentUserName = '';
@@ -233,6 +237,13 @@
         let currentProductPrice = 0;
         let activeVoucher = null;
         let voucherDiscount = 0;
+
+        // STATUS VALID UNTUK HISTORY (HANYA PESANAN YANG SUDAH SELESAI)
+        // Hanya tampilkan pesanan dengan status: done, completed, active, approved, success
+        const VALID_HISTORY_STATUS = ['done', 'completed', 'active', 'approved', 'success', 'aktif'];
+        
+        // STATUS YANG TIDAK DITAMPILKAN (pending, cancelled, expired, rejected)
+        const INVALID_HISTORY_STATUS = ['pending', 'pending_approval', 'cancelled', 'expired', 'rejected', 'menunggu'];
 
         function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('overlay').classList.add('active');}
         function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('active');}
@@ -312,6 +323,7 @@
             if(order.linkGroup&&!lg) lg=order.linkGroup;
             if(order.username&&!bn) bn=order.username;
             if(!bn) bn=localStorage.getItem('userName')||'Customer';
+            if(!bp) bp=localStorage.getItem('userPhone')||'';
             return {buyerName:bn, buyerPhone:bp, linkGroup:lg};
         }
         
@@ -321,7 +333,18 @@
             return null;
         }
         
-        // ========== LOAD ORDER HISTORY ==========
+        // CEK APAKAH PESANAN VALID UNTUK DITAMPILKAN DI HISTORY
+        function isValidHistoryOrder(order) {
+            const status = (order.status || '').toLowerCase();
+            // Jika status termasuk valid, tampilkan
+            if (VALID_HISTORY_STATUS.includes(status)) return true;
+            // Jika status termasuk invalid, jangan tampilkan
+            if (INVALID_HISTORY_STATUS.includes(status)) return false;
+            // Fallback: tampilkan hanya jika status bukan pending
+            return status !== 'pending' && status !== 'pending_approval' && status !== 'cancelled';
+        }
+        
+        // ========== LOAD ORDER HISTORY (HANYA YANG VALID) ==========
         async function loadOrderHistory(){
             const c=document.getElementById('historyList');if(!c)return;
             c.innerHTML='<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>Memuat histori...</p></div>';
@@ -337,19 +360,20 @@
             
             allOrders=[];
             try{
-                // BACA DARI sewa_orders (UTAMA)
+                // BACA DARI sewa_orders (UTAMA) - HANYA YANG VALID
                 const sewaSnap=await database.ref('sewa_orders').once('value');
                 console.log('🔍 Memeriksa sewa_orders untuk history...');
                 if(sewaSnap.exists()){
                     sewaSnap.forEach(ch=>{
                         const o=ch.val();o.orderId=ch.key;o.type='sewa';
                         const isUser = (o.buyerName === userName || o.username === userName);
-                        console.log(`📦 sewa_orders: ${o.orderId}, buyerName: ${o.buyerName}, isUser: ${isUser}`);
-                        if(isUser) allOrders.push(o);
+                        const isValid = isValidHistoryOrder(o);
+                        console.log(`📦 sewa_orders: ${o.orderId}, status: ${o.status}, isUser: ${isUser}, isValid: ${isValid}`);
+                        if(isUser && isValid) allOrders.push(o);
                     });
                 }
                 
-                // BACA DARI orders (BACKUP)
+                // BACA DARI orders (BACKUP) - HANYA YANG VALID
                 const orderSnap=await database.ref('orders').once('value');
                 if(orderSnap.exists()){
                     orderSnap.forEach(ch=>{
@@ -357,22 +381,29 @@
                         let isUser=false;
                         if(o.customerData?.buyerName===userName||o.customerData?.wajib?.ownerName===userName) isUser=true;
                         if(o.buyerName===userName||o.username===userName) isUser=true;
-                        if(isUser && !allOrders.some(a=>a.orderId===o.orderId)) allOrders.push(o);
+                        const isValid = isValidHistoryOrder(o);
+                        if(isUser && isValid && !allOrders.some(a=>a.orderId===o.orderId)) allOrders.push(o);
                     });
                 }
                 
-                // BACA DARI panel_orders
+                // BACA DARI panel_orders - HANYA YANG VALID
                 const panelSnap=await database.ref('panel_orders').once('value');
                 if(panelSnap.exists()){
                     panelSnap.forEach(ch=>{
                         const o=ch.val();o.orderId=ch.key;o.type='panel';
-                        if(o.username===userName||o.panelUsername===userName||o.buyerName===userName){
-                            if(!allOrders.some(a=>a.orderId===o.orderId)) allOrders.push(o);
-                        }
+                        const isUser = (o.username===userName||o.panelUsername===userName||o.buyerName===userName);
+                        const isValid = isValidHistoryOrder(o);
+                        if(isUser && isValid && !allOrders.some(a=>a.orderId===o.orderId)) allOrders.push(o);
                     });
                 }
                 
                 allOrders.sort((a,b)=>new Date(b.createdAt||b.timestamp||0)-new Date(a.createdAt||a.timestamp||0));
+                
+                if(allOrders.length === 0){
+                    c.innerHTML=`<div class="empty-state"><i class="fas fa-inbox"></i><p>Belum ada riwayat transaksi selesai</p><p style="font-size:12px; margin-top:8px;">Hanya pesanan yang sudah dibayar dan selesai yang muncul di sini</p><a href="rayy-store.com.html" class="btn-primary">Belanja Yuk</a></div>`;
+                    return;
+                }
+                
                 renderHistory();
             }catch(e){console.error(e);c.innerHTML=`<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Gagal memuat.</p><button onclick="loadOrderHistory()" class="btn-primary">Coba Lagi</button></div>`;}
         }
@@ -382,7 +413,7 @@
             let fo=allOrders;
             if(currentFilter!=='all') fo=allOrders.filter(o=>getOrderType(o)===currentFilter);
             if(fo.length===0){
-                c.innerHTML=`<div class="empty-state"><i class="fas fa-inbox"></i><p>Belum ada histori</p><a href="rayy-store.com.html" class="btn-primary">Belanja Yuk</a></div>`;
+                c.innerHTML=`<div class="empty-state"><i class="fas fa-inbox"></i><p>Tidak ada histori untuk kategori ini</p><a href="rayy-store.com.html" class="btn-primary">Belanja Yuk</a></div>`;
                 return;
             }
             c.innerHTML=fo.map(o=>{
@@ -552,7 +583,7 @@
         
         function initFilters(){document.querySelectorAll('.filter-btn').forEach(btn=>{btn.addEventListener('click',()=>{document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');currentFilter=btn.dataset.filter;renderHistory();});});}
         
-        // ========== MUSIC PLAYER ==========
+        // ========== MUSIC PLAYER (SINGKAT) ==========
         function loadMusicHistory(){const s=localStorage.getItem('rayy_music_history');if(s){try{musicPlayer.playHistory=JSON.parse(s);if(musicPlayer.playHistory.length>0){renderMusicHistory();const hs=document.getElementById('musicHistorySection');if(hs)hs.style.display='block';}}catch(e){}}}
         function saveMusicHistory(){localStorage.setItem('rayy_music_history',JSON.stringify(musicPlayer.playHistory));}
         function renderMusicHistory(){const hl=document.getElementById('musicHistoryList');if(!hl)return;if(musicPlayer.playHistory.length===0){const hs=document.getElementById('musicHistorySection');if(hs)hs.style.display='none';return;}

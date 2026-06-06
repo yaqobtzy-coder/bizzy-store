@@ -22,12 +22,13 @@ let musicPlayer = {
 };
 
 // ============ NOTIFIKASI KE TELEGRAM VIA FIREBASE ============
-async function sendAddToCartNotification(productName, price, quantity, userName) {
+async function sendAddToCartNotification(productName, price, quantity, userName, userPhone) {
     try {
         await database.ref('cart_notifications').push({
             type: 'add_to_cart',
             data: {
                 userName: userName,
+                userPhone: userPhone,
                 productName: productName,
                 price: price,
                 quantity: quantity,
@@ -35,10 +36,28 @@ async function sendAddToCartNotification(productName, price, quantity, userName)
             },
             timestamp: Date.now()
         });
+        
+        // Kirim notifikasi langsung ke Telegram
+        if (typeof sendTelegramNotification !== 'undefined') {
+            const messageTelegram = `🛒 *TAMBAH KE KERANJANG*\n\n` +
+                `👤 *User:* ${userName || 'Guest'}\n` +
+                `📱 *No WA:* ${userPhone || '-'}\n` +
+                `📦 *Produk:* ${productName}\n` +
+                `🔢 *Jumlah:* ${quantity}\n` +
+                `💰 *Harga:* Rp ${formatNumber(price)}\n` +
+                `⏰ *Waktu:* ${new Date().toLocaleString('id-ID')}`;
+            await sendTelegramNotification(messageTelegram);
+        }
+        
         console.log('✅ Notifikasi tambah ke keranjang terkirim');
     } catch (error) {
         console.error('❌ Gagal kirim notifikasi:', error);
     }
+}
+
+function formatNumber(num) {
+    if (!num) return '0';
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 }
 
 // ========================================
@@ -73,14 +92,23 @@ function updateSidebarProfile() {
 }
 
 // ========================================
-// CEK USER LOGIN
+// CEK USER LOGIN (WAJIB NAMA + NO WA)
 // ========================================
 function checkUserIdentity() {
     const userName = localStorage.getItem('userName');
+    const userPhone = localStorage.getItem('userPhone');
+    
     if (!userName || userName === '' || userName === 'Customer' || userName === 'null') {
         window.location.href = 'profile.html';
         return false;
     }
+    
+    if (!userPhone || userPhone === 'null') {
+        alert('⚠️ Silakan isi nomor WhatsApp terlebih dahulu di halaman Profil!');
+        window.location.href = 'profile.html';
+        return false;
+    }
+    
     updateSidebarProfile();
     return true;
 }
@@ -326,11 +354,6 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-function formatNumber(num) {
-    if (!num) return '0';
-    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-}
-
 function getStockBadge(stock) {
     if (stock <= 0) return '<span class="stock-badge stock-out">Stok Habis</span>';
     if (stock < 5) return '<span class="stock-badge stock-low">Sisa ' + stock + '</span>';
@@ -413,9 +436,10 @@ async function addToCart(productId, productType) {
     updateCartCount();
     renderCartItems();
     
-    // 🔥 KIRIM NOTIFIKASI TAMBAH KE KERANJANG
+    // 🔥 KIRIM NOTIFIKASI TAMBAH KE KERANJANG DENGAN NO WA
     const currentUser = localStorage.getItem('userName') || 'Customer';
-    await sendAddToCartNotification(product.name, product.price, 1, currentUser);
+    const currentPhone = localStorage.getItem('userPhone') || '';
+    await sendAddToCartNotification(product.name, product.price, 1, currentUser, currentPhone);
 }
 
 function updateCartCount() {
@@ -528,7 +552,7 @@ document.getElementById('overlay')?.addEventListener('click', () => {
 });
 
 // ========================================
-// VOUCHER FUNCTIONS - TIDAK DIUBAH
+// VOUCHER FUNCTIONS
 // ========================================
 function applyVoucherFromCart() {
     const code = document.getElementById('voucherCodeCart').value.trim().toUpperCase();
@@ -640,6 +664,22 @@ function loadSavedVoucher() {
 // CHECKOUT FUNCTION
 // ========================================
 function checkout() {
+    // CEK NAMA DAN NO WA
+    const userName = localStorage.getItem('userName');
+    const userPhone = localStorage.getItem('userPhone');
+    
+    if (!userName || userName === 'Customer' || userName === 'null' || userName === 'Guest') {
+        alert('⚠️ Silakan isi nama terlebih dahulu di halaman Profil!');
+        window.location.href = 'profile.html';
+        return;
+    }
+    
+    if (!userPhone || userPhone === 'null') {
+        alert('⚠️ Silakan isi nomor WhatsApp terlebih dahulu di halaman Profil!');
+        window.location.href = 'profile.html';
+        return;
+    }
+    
     if (cart.length === 0) {
         showNotification('Keranjang kosong!', 'error');
         return;
@@ -700,7 +740,7 @@ setTimeout(() => {
 }, 2000);
 
 // ========================================
-// MUSIC PLAYER
+// MUSIC PLAYER (SAMA SEPERTI SEBELUMNYA)
 // ========================================
 function loadMusicHistory() {
     const saved = localStorage.getItem('rayy_music_history');

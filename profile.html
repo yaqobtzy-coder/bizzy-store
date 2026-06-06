@@ -28,14 +28,23 @@
             <h2 id="displayName">Customer</h2>
             <p class="email" id="userEmail">customer@rayystore.com</p>
 
+            <!-- FIELD NAMA (WAJIB) -->
             <div class="form-group">
-                <label><i class="fas fa-pen"></i> Ganti Nama</label>
-                <input type="text" id="userNameInput" placeholder="Masukkan nama Anda">
+                <label><i class="fas fa-user"></i> Nama Lengkap <span style="color:#ff6b6b;">*</span></label>
+                <input type="text" id="userNameInput" placeholder="Masukkan nama lengkap Anda">
                 <small class="form-note" id="nameNote">Nama akan digunakan untuk histori transaksi Anda</small>
-                <button class="btn-save" id="saveBtn" onclick="saveName()">
-                    <i class="fas fa-save"></i> Simpan Nama
-                </button>
             </div>
+
+            <!-- FIELD NO WHATSAPP (WAJIB) -->
+            <div class="form-group">
+                <label><i class="fab fa-whatsapp"></i> Nomor WhatsApp <span style="color:#ff6b6b;">*</span></label>
+                <input type="tel" id="userPhoneInput" placeholder="Contoh: 6281234567890">
+                <small class="form-note" id="phoneNote">Gunakan format 62xxx (tanpa 0 di depan). Digunakan untuk notifikasi dan konfirmasi pesanan.</small>
+            </div>
+
+            <button class="btn-save" id="saveBtn" onclick="saveProfile()">
+                <i class="fas fa-save"></i> Simpan Profil
+            </button>
 
             <div class="info-section">
                 <h3><i class="fas fa-store"></i> Informasi Rayy Store</h3>
@@ -90,6 +99,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="firebase-config.js"></script>
+    <script src="telegram-notif.js"></script>
     <script src="profile.js"></script>
 </body>
 </html>

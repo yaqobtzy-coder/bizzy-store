@@ -25,6 +25,22 @@ function loadCheckoutData() {
     orderData = JSON.parse(localStorage.getItem('orderData')) || {};
     loadActiveGateways();
     
+    // CEK DATA USER LENGKAP
+    const userName = localStorage.getItem('userName');
+    const userPhone = localStorage.getItem('userPhone');
+    
+    if (!userName || userName === 'Customer' || userName === 'null' || userName === 'Guest') {
+        alert('⚠️ Silakan isi nama terlebih dahulu di halaman Profil!');
+        window.location.href = 'profile.html';
+        return;
+    }
+    
+    if (!userPhone || userPhone === 'null') {
+        alert('⚠️ Silakan isi nomor WhatsApp terlebih dahulu di halaman Profil!');
+        window.location.href = 'profile.html';
+        return;
+    }
+    
     console.log('📦 Loaded cart:', cart);
     console.log('💰 Total:', total);
     
@@ -494,7 +510,7 @@ async function paymentSuccess() {
     
     const orderId = Date.now().toString();
     const buyerName = orderData.buyerName || localStorage.getItem('buyerName') || 'Customer';
-    const buyerPhone = orderData.buyerPhone || '';
+    const buyerPhone = orderData.buyerPhone || localStorage.getItem('userPhone') || '';
     const linkGroup = orderData.linkGroup || '';
     const durasi = orderData.durasi || 7;
     const productName = cart[0]?.name || 'Sewa Bot';
@@ -538,12 +554,36 @@ async function paymentSuccess() {
         
         await database.ref('orders/' + orderId).set(orderDataBackup);
         
+        // KIRIM NOTIFIKASI TELEGRAM LENGKAP
+        if (typeof sendTelegramNotification !== 'undefined') {
+            const produkList = cart.map(item => `${item.name} x${item.quantity}`).join(', ');
+            const isRenew = orderData.isRenew || false;
+            
+            const messageTelegram = `✅ *PEMBAYARAN BERHASIL - SEWA${isRenew ? ' (PERPANJANGAN)' : ''}* ✅\n\n` +
+                `👤 *Pembeli:* ${buyerName}\n` +
+                `📱 *No WA:* ${buyerPhone}\n` +
+                `🔗 *Link Grup:* ${linkGroup}\n` +
+                `📦 *Produk:* ${produkList}\n` +
+                `💰 *Total:* Rp ${formatNumberPay(total)}\n` +
+                `📅 *Durasi:* ${durasi} hari\n` +
+                `🆔 *Order ID:* ${sewaOrderRef.key}\n` +
+                `💳 *Gateway:* ${currentGateway || 'QRIS'}\n` +
+                `🕐 *Waktu Bayar:* ${new Date().toLocaleString('id-ID')}\n\n` +
+                `📌 *Status:* Menunggu verifikasi admin\n` +
+                `🔗 *Link Verifikasi:* Gunakan tombol di bawah`;
+            
+            await sendTelegramNotification(messageTelegram);
+        }
+        
         await sendPaymentNotification('payment_success', {
             userName: buyerName,
+            userPhone: buyerPhone,
             orderId: sewaOrderRef.key,
             products: productName,
             total: total,
             gateway: currentGateway,
+            linkGroup: linkGroup,
+            durasi: durasi,
             paidAt: Date.now()
         });
         
@@ -575,7 +615,7 @@ async function paymentSuccess() {
 async function paymentSuccessGratis() {
     const orderId = Date.now().toString();
     const buyerName = orderData.buyerName || localStorage.getItem('buyerName') || 'Customer';
-    const buyerPhone = orderData.buyerPhone || '';
+    const buyerPhone = orderData.buyerPhone || localStorage.getItem('userPhone') || '';
     const linkGroup = orderData.linkGroup || '';
     const durasi = orderData.durasi || 7;
     const productName = cart[0]?.name || 'Sewa Bot';
@@ -617,12 +657,31 @@ async function paymentSuccessGratis() {
         
         await database.ref('orders/' + orderId).set(orderDataBackup);
         
+        // KIRIM NOTIFIKASI TELEGRAM GRATIS
+        if (typeof sendTelegramNotification !== 'undefined') {
+            const produkList = cart.map(item => `${item.name} x${item.quantity}`).join(', ');
+            const messageTelegram = `🎉 *PESANAN GRATIS - SEWA BOT* 🎉\n\n` +
+                `👤 *Pembeli:* ${buyerName}\n` +
+                `📱 *No WA:* ${buyerPhone}\n` +
+                `🔗 *Link Grup:* ${linkGroup}\n` +
+                `📦 *Produk:* ${produkList}\n` +
+                `📅 *Durasi:* ${durasi} hari\n` +
+                `🆔 *Order ID:* ${sewaOrderRef.key}\n` +
+                `🎁 *Total:* GRATIS!\n` +
+                `⏰ *Waktu:* ${new Date().toLocaleString('id-ID')}`;
+            
+            await sendTelegramNotification(messageTelegram);
+        }
+        
         await sendPaymentNotification('payment_success', {
             userName: buyerName,
+            userPhone: buyerPhone,
             orderId: sewaOrderRef.key,
             products: productName,
             total: 0,
             gateway: 'gratis',
+            linkGroup: linkGroup,
+            durasi: durasi,
             paidAt: Date.now()
         });
         

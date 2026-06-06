@@ -5,10 +5,18 @@ function loadCartData() {
     cart = JSON.parse(localStorage.getItem('checkoutCart')) || [];
     total = parseInt(localStorage.getItem('checkoutTotal')) || 0;
     
-    // CEK APAKAH USER SUDAH PUNYA NAMA
+    // CEK APAKAH USER SUDAH PUNYA NAMA DAN NO WA
     const userName = localStorage.getItem('userName');
+    const userPhone = localStorage.getItem('userPhone');
+    
     if (!userName || userName === 'Customer' || userName === 'null' || userName === 'Guest') {
         alert('⚠️ Silakan isi nama terlebih dahulu di halaman Profil!');
+        window.location.href = 'profile.html';
+        return;
+    }
+    
+    if (!userPhone || userPhone === 'null') {
+        alert('⚠️ Silakan isi nomor WhatsApp terlebih dahulu di halaman Profil!');
         window.location.href = 'profile.html';
         return;
     }
@@ -53,8 +61,9 @@ function displayOrderSummary() {
 }
 
 function loadProfileName() {
-    // Ambil nama dari PROFILE (WAJIB)
+    // Ambil nama dan nomor WA dari PROFILE (WAJIB)
     let profileName = localStorage.getItem('userName');
+    let profilePhone = localStorage.getItem('userPhone');
     const buyerNameInput = document.getElementById('buyerName');
     
     if (profileName && profileName !== 'Customer' && profileName !== 'null' && profileName !== 'Guest') {
@@ -65,6 +74,14 @@ function loadProfileName() {
     } else {
         alert('⚠️ Silakan isi nama terlebih dahulu di halaman Profil!');
         window.location.href = 'profile.html';
+        return;
+    }
+    
+    if (profilePhone && profilePhone !== 'null') {
+        const buyerPhoneInput = document.getElementById('buyerPhone');
+        if (buyerPhoneInput) {
+            buyerPhoneInput.value = profilePhone;
+        }
     }
 }
 
@@ -91,9 +108,9 @@ function hideLoading() {
 }
 
 async function submitData() {
-    // Ambil nama dari PROFILE (WAJIB)
+    // Ambil nama dan nomor WA dari PROFILE (WAJIB)
     let buyerName = localStorage.getItem('userName');
-    const buyerPhone = document.getElementById('buyerPhone').value.trim();
+    let buyerPhone = localStorage.getItem('userPhone');
     const linkGroup = document.getElementById('linkGroup').value.trim();
     const notes = document.getElementById('notes').value.trim();
     
@@ -103,8 +120,9 @@ async function submitData() {
         return;
     }
     
-    if (!buyerPhone) {
-        alert('Masukkan nomor WhatsApp!');
+    if (!buyerPhone || buyerPhone === 'null') {
+        alert('⚠️ Silakan isi nomor WhatsApp terlebih dahulu di halaman Profil!');
+        window.location.href = 'profile.html';
         return;
     }
     
@@ -160,18 +178,20 @@ async function submitData() {
     localStorage.setItem('checkoutTotal', total);
     localStorage.setItem('userName', buyerName);
     
-    // Kirim notifikasi ke Telegram (sudah ada via sendTelegramNotification)
+    // Kirim notifikasi ke Telegram (detail lengkap)
     if (typeof sendTelegramNotification !== 'undefined') {
         const produkList = cart.map(item => `${item.name} x${item.quantity}`).join(', ');
-        const messageTelegram = `🛍️ PRODUK DIPROSES (CHECKOUT)\n\n` +
-            `👤 User: ${buyerName}\n` +
-            `📱 No WA: ${buyerPhone}\n` +
-            `🔗 Link Grup: ${linkGroup}\n` +
-            `📦 Produk: ${produkList}\n` +
-            `💰 Total: Rp ${formatNumber(total)}\n` +
-            `📅 Durasi: ${durasi} hari\n` +
-            `📂 Kategori: SEWA BOT\n` +
-            `⏰ Waktu: ${new Date().toLocaleString('id-ID')}`;
+        const messageTelegram = `🛍️ *ORDER SEWA BOT - MENUNGGU PEMBAYARAN*\n\n` +
+            `👤 *Nama:* ${buyerName}\n` +
+            `📱 *No WA:* ${buyerPhone}\n` +
+            `🔗 *Link Grup:* ${linkGroup}\n` +
+            `📦 *Produk:* ${produkList}\n` +
+            `💰 *Total:* Rp ${formatNumber(total)}\n` +
+            `📅 *Durasi:* ${durasi} hari\n` +
+            `🆔 *Order ID:* ${newOrderRef.key}\n` +
+            `📂 *Kategori:* SEWA BOT\n` +
+            `⏰ *Waktu:* ${new Date().toLocaleString('id-ID')}\n\n` +
+            `📌 *Status:* Menunggu pembayaran dan verifikasi admin`;
         
         await sendTelegramNotification(messageTelegram);
     }

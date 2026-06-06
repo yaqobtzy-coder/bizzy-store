@@ -34,6 +34,7 @@ function loadOrderInfo() {
     orderId = localStorage.getItem('lastOrderId');
     const orderDataStr = localStorage.getItem('lastOrderData');
     buyerName = localStorage.getItem('buyerName') || localStorage.getItem('userName') || 'Customer';
+    const buyerPhone = localStorage.getItem('userPhone') || '';
     
     if (orderDataStr) {
         orderData = JSON.parse(orderDataStr);
@@ -59,6 +60,7 @@ function loadOrderInfo() {
         ${productsHtml}
         <p><strong style="color:${isGratis ? '#28a745' : '#00f2fe'};">Total: ${isGratis ? '🎉 GRATIS!' : 'Rp ' + formatNumber(total)}</strong></p>
         <p><strong>Pembeli:</strong> ${escapeHtml(buyerName)}</p>
+        <p><strong>No WhatsApp:</strong> ${escapeHtml(buyerPhone) || '-'}</p>
         ${orderData && orderData.isRenew ? '<p><strong style="color:#f59e0b;">🔄 Perpanjangan Sewa</strong></p>' : ''}
     `;
 }
@@ -157,6 +159,7 @@ if (submitBtn) {
             
             if (data.success) {
                 const imageUrl = data.data.url;
+                const buyerPhone = localStorage.getItem('userPhone') || '';
                 
                 if (orderId) {
                     await database.ref('orders/' + orderId).update({
@@ -171,9 +174,32 @@ if (submitBtn) {
                     orderId: orderId,
                     imageUrl: imageUrl,
                     buyerName: buyerName,
+                    buyerPhone: buyerPhone,
                     uploadedAt: new Date().toISOString(),
                     status: 'pending_verification'
                 });
+                
+                // KIRIM NOTIFIKASI UPLOAD BUKTI
+                if (typeof sendTelegramNotification !== 'undefined') {
+                    let produkText = '';
+                    let totalAmount = 0;
+                    if (orderData && orderData.cart) {
+                        produkText = orderData.cart.map(item => `${item.name} x${item.quantity}`).join(', ');
+                        totalAmount = orderData.total || 0;
+                    }
+                    
+                    const messageTelegram = `📸 *UPLOAD BUKTI PEMBAYARAN* 📸\n\n` +
+                        `🆔 *Order ID:* ${orderId || paymentId}\n` +
+                        `👤 *Pembeli:* ${buyerName}\n` +
+                        `📱 *No WA:* ${buyerPhone || '-'}\n` +
+                        `📦 *Produk:* ${produkText || '-'}\n` +
+                        `💰 *Total:* Rp ${formatNumber(totalAmount)}\n` +
+                        `🔗 *Link Bukti:* ${imageUrl}\n` +
+                        `⏰ *Waktu:* ${new Date().toLocaleString('id-ID')}\n\n` +
+                        `📌 *Status:* Menunggu verifikasi admin`;
+                    
+                    await sendTelegramNotification(messageTelegram);
+                }
                 
                 if (typeof notifyUploadBukti !== 'undefined') {
                     const total = orderData?.total || 0;
