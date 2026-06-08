@@ -44,11 +44,26 @@ function isPanelOrder() {
     return getOrderType() === 'panel';
 }
 
+// 🔥 AMBIL TOKEN DARI FIREBASE CONFIG
+function getZakkiToken() {
+    if (typeof PAYMENT_GATEWAYS !== 'undefined' && PAYMENT_GATEWAYS.zakki) {
+        return PAYMENT_GATEWAYS.zakki.token;
+    }
+    return null;
+}
+
+function getRamashopToken() {
+    if (typeof PAYMENT_GATEWAYS !== 'undefined' && PAYMENT_GATEWAYS.ramashop) {
+        return PAYMENT_GATEWAYS.ramashop.token;
+    }
+    return null;
+}
+
 // 🔥 KIRIM NOTIFIKASI KE TELEGRAM
 async function sendToTelegram(message, replyMarkup = null) {
     try {
-        const TELEGRAM_BOT_TOKEN = "8277063637:AAHUkTG_InkhLl3FV2GN-nMEz0P-pk8_z2Q";
-        const BOT_OWNER_ID = "6709377378";
+        const TELEGRAM_BOT_TOKEN = typeof TELEGRAM_BOT_TOKEN !== 'undefined' ? TELEGRAM_BOT_TOKEN : "8277063637:AAHUkTG_InkhLl3FV2GN-nMEz0P-pk8_z2Q";
+        const BOT_OWNER_ID = typeof BOT_OWNER_ID !== 'undefined' ? BOT_OWNER_ID : "6709377378";
         
         const body = {
             chat_id: BOT_OWNER_ID,
@@ -74,6 +89,84 @@ async function sendToTelegram(message, replyMarkup = null) {
         console.error('❌ Error kirim Telegram:', error);
         return false;
     }
+}
+
+// 🔥 BATALKAN TOPUP DI ZAKKI
+async function cancelTopup() {
+    if (!depositId) {
+        showNotification('Tidak ada transaksi yang aktif', 'error');
+        return;
+    }
+    
+    const zakkiToken = getZakkiToken();
+    if (!zakkiToken) {
+        showNotification('Token Zakki tidak tersedia', 'error');
+        return;
+    }
+    
+    showLoading('Membatalkan transaksi...');
+    
+    try {
+        const response = await fetch(`https://qris.zakki.store/cancel?token=${zakkiToken}&idtopup=${depositId}`, {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' }
+        });
+        
+        const data = await response.json();
+        console.log('📡 Cancel response:', data);
+        
+        if (data.code === 200 && data.status === 'success') {
+            // 🔥 KIRIM NOTIFIKASI KE TELEGRAM
+            const buyerName = orderData.buyerName || localStorage.getItem('userName') || 'Customer';
+            const buyerPhone = localStorage.getItem('userPhone') || '';
+            const produkList = cart.map(item => `${item.name} x${item.quantity}`).join(', ');
+            const orderType = getOrderType();
+            const totalAmount = total;
+            
+            const notifMessage = `❌ *TRANSAKSI DIBATALKAN* ❌\n\n` +
+                `👤 *Pembeli:* ${buyerName}\n` +
+                `📱 *No WA:* ${buyerPhone}\n` +
+                `📦 *Produk:* ${produkList}\n` +
+                `💰 *Total:* Rp ${formatNumberPay(totalAmount)}\n` +
+                `🏷️ *Tipe:* ${orderType.toUpperCase()}\n` +
+                `🆔 *Deposit ID:* ${depositId}\n` +
+                `⏰ *Waktu Batal:* ${new Date().toLocaleString('id-ID')}\n\n` +
+                `📌 *Transaksi dibatalkan oleh pembeli*`;
+            
+            await sendToTelegram(notifMessage);
+            
+            // Bersihkan session
+            clearExistingDeposit();
+            
+            showNotification('✅ Transaksi berhasil dibatalkan!', 'success');
+            
+            // Redirect ke toko
+            setTimeout(() => {
+                window.location.href = 'rayy-store.com.html';
+            }, 1500);
+        } else {
+            showNotification('Gagal membatalkan: ' + (data.message || 'Unknown error'), 'error');
+        }
+    } catch (err) {
+        console.error('Error cancel topup:', err);
+        showNotification('Gagal terhubung ke server', 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+function showLoading(msg = 'Memproses...') {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) {
+        overlay.style.display = 'flex';
+        const loadingText = overlay.querySelector('.loading-content p');
+        if (loadingText) loadingText.textContent = msg;
+    }
+}
+
+function hideLoading() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) overlay.style.display = 'none';
 }
 
 function loadCheckoutData() {
@@ -145,7 +238,6 @@ function displayOrderSummary() {
             </div>
         `;
         
-        // Tampilkan spesifikasi tambahan
         if (item.type === 'panel' && item.ramLabel) {
             itemsHtml += `<div class="spec-detail" style="font-size:11px; color:#4facfe; margin-top:-5px; margin-bottom:10px;">⚙️ ${item.ramLabel} RAM | UNLIMITED CPU | UNLIMITED Disk</div>`;
         }
@@ -166,7 +258,29 @@ function displayOrderSummary() {
     `;
 }
 
-// 🔥 KHUSUS PANEL GRATIS
+// 🔥 TAMBAHKAN TOMBOL BATAL
+function addCancelButton() {
+    const paymentInfo = document.getElementById('paymentInfo');
+    if (!paymentInfo) return;
+    
+    // Cek apakah tombol sudah ada
+    if (document.getElementById('cancelTopupBtn')) return;
+    
+    const cancelBtn = document.createElement('button');
+    cancelBtn.id = 'cancelTopupBtn';
+    cancelBtn.className = 'cancel-btn';
+    cancelBtn.innerHTML = '<i class="fas fa-times-circle"></i> Batalkan Transaksi';
+    cancelBtn.style.cssText = 'width:100%; background:rgba(220,53,69,0.2); border:1px solid #dc3545; padding:12px; border-radius:15px; color:#dc3545; font-weight:600; margin-top:15px; cursor:pointer; transition:all 0.2s;';
+    cancelBtn.onclick = () => {
+        if (confirm('Yakin ingin membatalkan transaksi ini?\n\nAnda bisa checkout ulang nanti.')) {
+            cancelTopup();
+        }
+    };
+    
+    paymentInfo.appendChild(cancelBtn);
+}
+
+// KHUSUS PANEL GRATIS
 async function paymentSuccessPanelGratis() {
     if (statusInterval) clearInterval(statusInterval);
     if (window.countdownInterval) clearInterval(window.countdownInterval);
@@ -223,7 +337,7 @@ async function paymentSuccessPanelGratis() {
     }
 }
 
-// 🔥 KHUSUS PANEL BERBAYAR
+// KHUSUS PANEL BERBAYAR
 async function paymentSuccessPanelPaid(orderIdBaru, depositIdValue) {
     if (statusInterval) clearInterval(statusInterval);
     if (window.countdownInterval) clearInterval(window.countdownInterval);
@@ -286,7 +400,7 @@ function renderGatewayOptions() {
     let html = '';
     let hasActive = false;
     
-    if (activeGateways.zakki) {
+    if (activeGateways.zakki && getZakkiToken()) {
         html += `
             <div class="gateway-option" data-gateway="zakki">
                 <div class="gateway-radio">
@@ -302,7 +416,7 @@ function renderGatewayOptions() {
         hasActive = true;
     }
     
-    if (activeGateways.ramashop) {
+    if (activeGateways.ramashop && getRamashopToken()) {
         html += `
             <div class="gateway-option" data-gateway="ramashop">
                 <div class="gateway-radio">
@@ -324,10 +438,10 @@ function renderGatewayOptions() {
     container.innerHTML = html;
     
     if (!currentGateway) {
-        if (activeGateways.zakki) {
+        if (activeGateways.zakki && getZakkiToken()) {
             currentGateway = 'zakki';
             document.getElementById('gatewayZakki')?.setAttribute('checked', 'checked');
-        } else if (activeGateways.ramashop) {
+        } else if (activeGateways.ramashop && getRamashopToken()) {
             currentGateway = 'ramashop';
             document.getElementById('gatewayRamashop')?.setAttribute('checked', 'checked');
         }
@@ -389,6 +503,7 @@ function loadExistingDeposit() {
                 qrSection.innerHTML = deposit.qrHtml;
                 document.getElementById('paymentInfo').style.display = 'block';
                 startCountdown(deposit.expiredAt);
+                addCancelButton(); // 🔥 TAMBAHKAN TOMBOL BATAL
             }
             
             if (currentGateway === 'zakki') {
@@ -483,14 +598,14 @@ async function createDeposit() {
     document.getElementById('paymentInfo').style.display = 'none';
     
     if (currentGateway === 'zakki') {
-        if (!activeGateways.zakki) {
-            showError('Gateway Zakki sedang tidak aktif');
+        if (!activeGateways.zakki || !getZakkiToken()) {
+            showError('Gateway Zakki sedang tidak aktif atau token tidak tersedia');
             return;
         }
         await createZakkiDeposit();
     } else if (currentGateway === 'ramashop') {
-        if (!activeGateways.ramashop) {
-            showError('Gateway Ramashop sedang tidak aktif');
+        if (!activeGateways.ramashop || !getRamashopToken()) {
+            showError('Gateway Ramashop sedang tidak aktif atau token tidak tersedia');
             return;
         }
         await createRamashopDeposit();
@@ -500,11 +615,17 @@ async function createDeposit() {
 // 🔥 CREATE DEPOSIT ZAKKI
 async function createZakkiDeposit() {
     try {
+        const zakkiToken = getZakkiToken();
+        if (!zakkiToken) {
+            showError('Token Zakki tidak tersedia');
+            return;
+        }
+        
         const response = await fetch('https://qris.zakki.store/topup', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                token: PAYMENT_GATEWAYS.zakki.token,
+                token: zakkiToken,
                 nominal: total
             })
         });
@@ -522,6 +643,8 @@ async function createZakkiDeposit() {
                 qrHtml: qrHtml,
                 expiredAt: data.data.expired_at
             });
+            
+            addCancelButton(); // 🔥 TAMBAHKAN TOMBOL BATAL
             
             // 🔥 KIRIM NOTIFIKASI QR KE TELEGRAM
             const buyerName = orderData.buyerName || localStorage.getItem('userName');
@@ -541,7 +664,8 @@ async function createZakkiDeposit() {
                     `🆔 *Deposit ID:* ${depositId}\n` +
                     `⏰ *Kadaluarsa:* ${new Date(data.data.expired_at).toLocaleString('id-ID')}\n\n` +
                     `📌 *Status:* Menunggu pembayaran dari pembeli\n` +
-                    `⚠️ *JANGAN KONFIRMASI SEBELUM UANG MASUK!*`;
+                    `⚠️ *JANGAN KONFIRMASI SEBELUM UANG MASUK!*\n\n` +
+                    `🔘 *Ada tombol "Batalkan Transaksi" di halaman pembayaran jika ingin membatalkan.*`;
             } else {
                 notifMessage = `🟡 *QRIS TELAH DIGENERATE - ${orderType.toUpperCase()}* 🟡\n\n` +
                     `👤 *Pembeli:* ${buyerName}\n` +
@@ -551,7 +675,8 @@ async function createZakkiDeposit() {
                     `🆔 *Deposit ID:* ${depositId}\n` +
                     `⏰ *Kadaluarsa:* ${new Date(data.data.expired_at).toLocaleString('id-ID')}\n\n` +
                     `📌 *Status:* Menunggu pembayaran dari pembeli\n` +
-                    `⚠️ *JANGAN KONFIRMASI SEBELUM UANG MASUK!*`;
+                    `⚠️ *JANGAN KONFIRMASI SEBELUM UANG MASUK!*\n\n` +
+                    `🔘 *Ada tombol "Batalkan Transaksi" di halaman pembayaran jika ingin membatalkan.*`;
             }
             
             await sendToTelegram(notifMessage);
@@ -589,7 +714,9 @@ function displayZakkiQR(data) {
         <div class="payment-info-box">
             <p><strong>Total Bayar:</strong> Rp ${formatNumberPay(data.rincian?.total_bayar || total)}</p>
             <p><strong>Kode Unik:</strong> ${data.rincian?.kode_unik || '-'}</p>
+            <p><strong>ID Transaksi:</strong> ${data.id_transaksi}</p>
             <p><strong>Jenis Pesanan:</strong> ${orderTypeText}</p>
+            <p style="font-size:11px; color:#ffc107; margin-top:10px;"><i class="fas fa-info-circle"></i> Jika ingin membatalkan, klik tombol merah di bawah</p>
         </div>
     `;
     
@@ -623,10 +750,16 @@ function startZakkiStatusCheck(id) {
 
 async function createRamashopDeposit() {
     try {
+        const ramashopToken = getRamashopToken();
+        if (!ramashopToken) {
+            showError('Token Ramashop tidak tersedia');
+            return;
+        }
+        
         const response = await fetch('https://ramashop.my.id/api/public/deposit/create', {
             method: 'POST',
             headers: {
-                'X-API-Key': PAYMENT_GATEWAYS.ramashop.token,
+                'X-API-Key': ramashopToken,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
@@ -648,6 +781,8 @@ async function createRamashopDeposit() {
                 qrHtml: qrHtml,
                 expiredAt: data.data.expiredAt
             });
+            
+            addCancelButton(); // 🔥 TAMBAHKAN TOMBOL BATAL
             
             // 🔥 KIRIM NOTIFIKASI QR KE TELEGRAM
             const buyerName = orderData.buyerName || localStorage.getItem('userName');
@@ -714,6 +849,7 @@ function displayRamashopQR(data) {
             <p><strong>Total Bayar:</strong> Rp ${formatNumberPay(data.totalAmount || total)}</p>
             <p><strong>Kode Unik:</strong> ${data.uniqueCode || '-'}</p>
             <p><strong>Jenis Pesanan:</strong> ${orderTypeText}</p>
+            <p style="font-size:11px; color:#ffc107; margin-top:10px;"><i class="fas fa-info-circle"></i> Jika ingin membatalkan, klik tombol merah di bawah</p>
         </div>
     `;
     
@@ -731,7 +867,7 @@ function startRamashopStatusCheck(id) {
         try {
             const response = await fetch(`https://ramashop.my.id/api/public/deposit/status/${id}`, {
                 headers: {
-                    'X-API-Key': PAYMENT_GATEWAYS.ramashop.token,
+                    'X-API-Key': getRamashopToken(),
                     'Content-Type': 'application/json'
                 }
             });
@@ -1056,5 +1192,8 @@ function showError(message) {
         `;
     }
 }
+
+// Expose cancelTopup ke global
+window.cancelTopup = cancelTopup;
 
 loadCheckoutData();
