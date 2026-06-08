@@ -7,363 +7,60 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
-            font-family: 'Inter', sans-serif;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 550px;
-            width: 100%;
-        }
-
-        .card {
-            background: #ffffff;
-            border-radius: 30px;
-            padding: 30px;
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-        }
-
-        .logo {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .logo h1 {
-            font-size: 28px;
-            font-weight: 800;
-            color: #0f172a;
-        }
-
-        .logo h1 span {
-            color: #3b82f6;
-        }
-
-        h2 {
-            color: #0f172a;
-            font-size: 20px;
-            margin-bottom: 5px;
-        }
-
-        .subtitle {
-            color: #64748b;
-            font-size: 14px;
-            margin-bottom: 25px;
-        }
-
-        .info-panel {
-            background: #eef2ff;
-            border-radius: 16px;
-            padding: 15px;
-            margin-bottom: 25px;
-            border-left: 4px solid #3b82f6;
-        }
-
-        .info-panel p {
-            color: #1e40af;
-            font-size: 13px;
-            line-height: 1.5;
-        }
-
-        .info-panel i {
-            color: #3b82f6;
-            margin-right: 8px;
-        }
-
-        .order-summary {
-            background: #f8fafc;
-            border-radius: 20px;
-            padding: 15px;
-            margin-bottom: 25px;
-            border: 1px solid #e2e8f0;
-        }
-
-        .order-item {
-            display: flex;
-            justify-content: space-between;
-            color: #1e293b;
-            margin-bottom: 10px;
-            font-size: 13px;
-        }
-
-        .order-total {
-            border-top: 1px solid #e2e8f0;
-            padding-top: 10px;
-            margin-top: 10px;
-            font-weight: 700;
-            color: #3b82f6;
-        }
-
-        .spec-detail {
-            font-size: 11px;
-            color: #3b82f6;
-            margin-top: 5px;
-            margin-bottom: 10px;
-            padding-left: 10px;
-            border-left: 2px solid #3b82f6;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            color: #334155;
-            margin-bottom: 8px;
-            font-size: 13px;
-            font-weight: 500;
-        }
-
-        .form-group .required {
-            color: #ef4444;
-        }
-
-        .form-group input,
-        .form-group textarea {
-            width: 100%;
-            padding: 12px 16px;
-            background: #ffffff;
-            border: 1px solid #cbd5e1;
-            border-radius: 12px;
-            color: #1e293b;
-            font-size: 14px;
-            font-family: inherit;
-            transition: all 0.2s;
-        }
-
-        .form-group input:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
-
-        .form-group input:read-only {
-            background: #f1f5f9;
-            cursor: not-allowed;
-        }
-
-        .form-group textarea {
-            resize: none;
-        }
-
-        .form-note {
-            display: block;
-            font-size: 11px;
-            color: #94a3b8;
-            margin-top: 5px;
-        }
-
-        .voucher-section {
-            background: #fef3c7;
-            border-radius: 16px;
-            padding: 15px;
-            margin-bottom: 20px;
-            border: 1px solid #fde68a;
-        }
-
-        .voucher-section label {
-            color: #92400e;
-            font-weight: 600;
-            font-size: 13px;
-        }
-
-        .voucher-input-group {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .voucher-input-group input {
-            flex: 1;
-            padding: 10px 12px;
-            border: 1px solid #fcd34d;
-            border-radius: 10px;
-            background: #fffbeb;
-            font-size: 13px;
-        }
-
-        .voucher-input-group button {
-            background: #d97706;
-            border: none;
-            padding: 10px 18px;
-            border-radius: 10px;
-            color: white;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .voucher-input-group button:hover {
-            background: #b45309;
-        }
-
-        .voucher-applied {
-            background: #dcfce7;
-            padding: 12px;
-            border-radius: 10px;
-            margin-top: 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .voucher-applied span {
-            color: #166534;
-            font-weight: 600;
-            font-size: 13px;
-        }
-
-        .voucher-applied button {
-            background: none;
-            border: none;
-            color: #dc2626;
-            cursor: pointer;
-            font-size: 16px;
-        }
-
-        .btn-submit {
-            width: 100%;
-            background: linear-gradient(135deg, #3b82f6, #2563eb);
-            border: none;
-            padding: 14px;
-            border-radius: 15px;
-            color: white;
-            font-weight: 700;
-            font-size: 16px;
-            cursor: pointer;
-            transition: all 0.2s;
-            margin-top: 10px;
-        }
-
-        .btn-submit:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-        }
-
-        .btn-submit:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        .back-link {
-            text-align: center;
-            margin-top: 20px;
-        }
-
-        .back-link a {
-            color: #64748b;
-            text-decoration: none;
-            font-size: 14px;
-        }
-
-        .back-link a:hover {
-            color: #3b82f6;
-        }
-
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(5px);
-            z-index: 2000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            display: none;
-        }
-
-        .loading-content {
-            text-align: center;
-            color: white;
-        }
-
-        .loading-content i {
-            font-size: 50px;
-            color: #3b82f6;
-            margin-bottom: 15px;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
-        .notification {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            padding: 12px 20px;
-            border-radius: 40px;
-            color: white;
-            font-weight: 500;
-            z-index: 1002;
-            animation: slideIn 0.3s ease;
-            font-size: 13px;
-        }
-
-        .notification.success { background: #22c55e; }
-        .notification.error { background: #ef4444; }
-        .notification.warning { background: #f59e0b; }
-
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0%); opacity: 1; }
-        }
-
-        @keyframes slideOut {
-            from { transform: translateX(0%); opacity: 1; }
-            to { transform: translateX(100%); opacity: 0; }
-        }
-
-        .success-box {
-            background: #dcfce7;
-            border-radius: 16px;
-            padding: 20px;
-            text-align: center;
-            margin-bottom: 20px;
-            border: 1px solid #bbf7d0;
-        }
-
-        .success-box i {
-            font-size: 48px;
-            color: #22c55e;
-            margin-bottom: 10px;
-        }
-
-        .success-box h3 {
-            color: #166534;
-            margin-bottom: 10px;
-        }
-
-        .success-box p {
-            color: #14532d;
-            font-size: 13px;
-        }
-
-        @media (max-width: 550px) {
-            .card { padding: 20px; }
-            h2 { font-size: 18px; }
-            .voucher-input-group { flex-direction: column; }
-            .voucher-input-group button { width: 100%; }
-        }
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{background:linear-gradient(135deg,#f8fafc,#f1f5f9);font-family:'Inter',sans-serif;min-height:100vh;display:flex;justify-content:center;align-items:center;padding:20px}
+        .container{max-width:550px;width:100%}
+        .card{background:#fff;border-radius:30px;padding:30px;border:1px solid #e2e8f0;box-shadow:0 4px 12px rgba(0,0,0,0.05)}
+        .logo{text-align:center;margin-bottom:20px}
+        .logo h1{font-size:28px;font-weight:800;color:#0f172a}
+        .logo h1 span{color:#3b82f6}
+        h2{color:#0f172a;font-size:20px;margin-bottom:5px}
+        .subtitle{color:#64748b;font-size:14px;margin-bottom:25px}
+        .info-panel{background:#eef2ff;border-radius:16px;padding:15px;margin-bottom:25px;border-left:4px solid #3b82f6}
+        .info-panel p{color:#1e40af;font-size:13px;line-height:1.5}
+        .info-panel i{color:#3b82f6;margin-right:8px}
+        .order-summary{background:#f8fafc;border-radius:20px;padding:15px;margin-bottom:25px;border:1px solid #e2e8f0}
+        .order-item{display:flex;justify-content:space-between;color:#1e293b;margin-bottom:10px;font-size:13px}
+        .order-total{border-top:1px solid #e2e8f0;padding-top:10px;margin-top:10px;font-weight:700;color:#3b82f6}
+        .spec-detail{font-size:11px;color:#3b82f6;margin-top:5px;margin-bottom:10px;padding-left:10px;border-left:2px solid #3b82f6}
+        .form-group{margin-bottom:20px}
+        .form-group label{display:block;color:#334155;margin-bottom:8px;font-size:13px;font-weight:500}
+        .form-group .required{color:#ef4444}
+        .form-group input,.form-group textarea{width:100%;padding:12px 16px;background:#fff;border:1px solid #cbd5e1;border-radius:12px;color:#1e293b;font-size:14px;font-family:inherit;transition:all 0.2s}
+        .form-group input:focus,.form-group textarea:focus{outline:none;border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,0.1)}
+        .form-group input:read-only{background:#f1f5f9;cursor:not-allowed}
+        .form-group textarea{resize:none}
+        .form-note{display:block;font-size:11px;color:#94a3b8;margin-top:5px}
+        .voucher-section{background:#fef3c7;border-radius:16px;padding:15px;margin-bottom:20px;border:1px solid #fde68a}
+        .voucher-section label{color:#92400e;font-weight:600;font-size:13px}
+        .voucher-input-group{display:flex;gap:10px;margin-top:10px}
+        .voucher-input-group input{flex:1;padding:10px 12px;border:1px solid #fcd34d;border-radius:10px;background:#fffbeb;font-size:13px}
+        .voucher-input-group button{background:#d97706;border:none;padding:10px 18px;border-radius:10px;color:white;font-weight:600;cursor:pointer;transition:all 0.2s}
+        .voucher-input-group button:hover{background:#b45309}
+        .voucher-applied{background:#dcfce7;padding:12px;border-radius:10px;margin-top:12px;display:flex;justify-content:space-between;align-items:center}
+        .voucher-applied span{color:#166534;font-weight:600;font-size:13px}
+        .voucher-applied button{background:none;border:none;color:#dc2626;cursor:pointer;font-size:16px}
+        .btn-submit{width:100%;background:linear-gradient(135deg,#3b82f6,#2563eb);border:none;padding:14px;border-radius:15px;color:white;font-weight:700;font-size:16px;cursor:pointer;transition:all 0.2s;margin-top:10px}
+        .btn-submit:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(59,130,246,0.3)}
+        .btn-submit:disabled{opacity:0.6;cursor:not-allowed}
+        .back-link{text-align:center;margin-top:20px}
+        .back-link a{color:#64748b;text-decoration:none;font-size:14px}
+        .back-link a:hover{color:#3b82f6}
+        .loading-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);backdrop-filter:blur(5px);z-index:2000;display:flex;justify-content:center;align-items:center;display:none}
+        .loading-content{text-align:center;color:white}
+        .loading-content i{font-size:50px;color:#3b82f6;margin-bottom:15px;animation:spin 1s linear infinite}
+        @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+        .notification{position:fixed;bottom:20px;right:20px;padding:12px 20px;border-radius:40px;color:white;font-weight:500;z-index:1002;animation:slideIn 0.3s ease;font-size:13px}
+        .notification.success{background:#22c55e}
+        .notification.error{background:#ef4444}
+        .notification.warning{background:#f59e0b}
+        @keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0%);opacity:1}}
+        @keyframes slideOut{from{transform:translateX(0%);opacity:1}to{transform:translateX(100%);opacity:0}}
+        .success-box{background:#dcfce7;border-radius:16px;padding:20px;text-align:center;margin-bottom:20px;border:1px solid #bbf7d0}
+        .success-box i{font-size:48px;color:#22c55e;margin-bottom:10px}
+        .success-box h3{color:#166534;margin-bottom:10px}
+        .success-box p{color:#14532d;font-size:13px}
+        @media (max-width:550px){.card{padding:20px}h2{font-size:18px}.voucher-input-group{flex-direction:column}.voucher-input-group button{width:100%}}
     </style>
 </head>
 <body>
@@ -379,7 +76,7 @@
                 <p><i class="fas fa-info-circle"></i> <strong>Informasi Penting:</strong></p>
                 <p>✅ Data panel Anda akan muncul di <strong>WEB DATA PANEL</strong></p>
                 <p>📌 Cara akses: Buka <strong>Sidebar</strong> di Web Store Utama → Klik <strong>"Data Panel Saya"</strong></p>
-                <p>🔔 Setelah pesanan diproses, panel akan otomatis dibuat dan datanya muncul di halaman tersebut.</p>
+                <p>🔔 Setelah pembayaran berhasil, panel akan otomatis dibuat.</p>
             </div>
 
             <div class="order-summary" id="orderSummary">
@@ -455,7 +152,7 @@
     <div id="successModal" class="loading-overlay" style="display: none;">
         <div class="loading-content" style="background: #1a1d2e; border-radius: 24px; padding: 30px;">
             <i class="fas fa-check-circle" style="color: #22c55e; font-size: 60px;"></i>
-            <h3 style="color: white; margin: 15px 0;">✅ Pesanan Berhasil!</h3>
+            <h3 style="color: white; margin: 15px 0;">🎉 Pesanan GRATIS Berhasil!</h3>
             <p style="color: #94a3b8;">Panel sedang dibuat...</p>
             <p style="color: #94a3b8; font-size: 12px; margin-top: 10px;">Data panel akan muncul di halaman Data Panel Saya</p>
             <button onclick="window.location.href='panel-data.html'" style="margin-top: 20px; background: #3b82f6; border: none; padding: 10px 20px; border-radius: 30px; color: white; cursor: pointer;">Lihat Data Panel</button>
@@ -469,6 +166,8 @@
         (function() {
             // ========================================
             // BUY PANEL - UNLIMITED ONLY
+            // 🔥 GRATIS = langsung proses
+            // 🔥 BERBAYAR = redirect ke pay.html
             // ========================================
             
             const PRODUCT = {
@@ -674,7 +373,7 @@
             
             async function sendToBot(orderData) {
                 try {
-                    const message = `🖥️ *ORDER PANEL BARU - LANGSUNG DIPROSES*\n\n` +
+                    const message = `🖥️ *ORDER PANEL BARU - ${orderData.total <= 0 ? 'GRATIS' : 'MENUNGGU PEMBAYARAN'}*\n\n` +
                         `👤 *Pembeli:* ${orderData.buyerName}\n` +
                         `📱 *No WA:* ${orderData.userPhone}\n` +
                         `📦 *Paket:* ${orderData.ramLabel}\n` +
@@ -685,8 +384,7 @@
                         `💬 *Catatan:* ${orderData.notes || '-'}\n` +
                         (orderData.voucherCode ? `🎫 *Voucher:* ${orderData.voucherCode} (Diskon Rp ${formatNumber(orderData.voucherDiscount)})\n` : '') +
                         `🆔 *Order ID:* ${orderData.orderId}\n\n` +
-                        `🤖 *Perintah untuk bot:*\n/buatpanel ${orderData.panelUsername} unli ${orderData.panelPassword}\n\n` +
-                        `⚠️ *Bot akan otomatis membuat panel sekarang juga!*`;
+                        `${orderData.total <= 0 ? '✅ GRATIS! Panel akan langsung dibuat.' : '⚠️ Menunggu pembayaran. Bot akan auto create panel setelah pembayaran sukses.'}`;
                     
                     await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
                         method: 'POST',
@@ -707,7 +405,6 @@
             
             async function saveToFirebase(orderData) {
                 try {
-                    // Simpan ke panel_orders (trigger bot untuk generate)
                     const panelOrderRef = database.ref('panel_orders').push();
                     await panelOrderRef.set({
                         orderId: orderData.orderId,
@@ -725,12 +422,11 @@
                         disk: 0,
                         status: 'pending',
                         isPaid: true,
-                        isGratis: orderData.total <= 0,
-                        paidAt: new Date().toISOString(),
+                        isGratis: true,
                         createdAt: new Date().toISOString()
                     });
                     
-                    console.log('✅ Data panel disimpan ke Firebase');
+                    console.log('✅ Data panel gratis disimpan ke Firebase');
                     return true;
                 } catch (error) {
                     console.error('❌ Gagal simpan ke Firebase:', error);
@@ -792,7 +488,7 @@
                 showLoading();
                 
                 const orderId = Date.now().toString();
-                const isGratis = total <= 0;
+                const isGratis = total <= 0;  // 🔥 CEK APAKAH GRATIS
                 
                 const orderData = {
                     orderId: orderId,
@@ -810,7 +506,7 @@
                     ramLabel: PRODUCT.ramLabel,
                     ram: PRODUCT.ram,
                     timestamp: Date.now(),
-                    status: 'pending',
+                    status: isGratis ? 'pending' : 'pending_payment',
                     isGratis: isGratis
                 };
                 
@@ -832,11 +528,43 @@
                     }
                 }
                 
+                // Simpan ke localStorage untuk proses selanjutnya
+                const cart = [{
+                    id: PRODUCT.id,
+                    name: PRODUCT.name,
+                    price: PRODUCT.price,
+                    quantity: 1,
+                    type: 'panel',
+                    ramSize: 0,
+                    ramLabel: PRODUCT.ramLabel,
+                    ram: PRODUCT.ram,
+                    cpu: 0,
+                    disk: 0
+                }];
+                
+                localStorage.setItem('checkoutCart', JSON.stringify(cart));
+                localStorage.setItem('checkoutTotal', total);
+                localStorage.setItem('orderData', JSON.stringify(orderData));
+                localStorage.setItem('buyerName', buyerName);
+                localStorage.setItem('lastOrderId', orderId);
+                
+                // Kirim notifikasi ke bot
                 await sendToBot(orderData);
-                await saveToFirebase(orderData);
                 
                 hideLoading();
-                showSuccessModal();
+                
+                // 🔥🔥🔥 LOGIKA UTAMA: GRATIS vs BERBAYAR 🔥🔥🔥
+                if (isGratis) {
+                    // GRATIS → langsung simpan ke Firebase dan redirect ke panel-data
+                    await saveToFirebase(orderData);
+                    showSuccessModal(); // redirect ke panel-data.html
+                } else {
+                    // BERBAYAR → redirect ke pay.html, JANGAN simpan ke Firebase dulu
+                    showNotification('✅ Data tersimpan! Mengalihkan ke pembayaran...', 'success');
+                    setTimeout(() => {
+                        window.location.href = 'pay.html';
+                    }, 1500);
+                }
             }
             
             const applyBtn = document.getElementById('applyVoucherBtn');

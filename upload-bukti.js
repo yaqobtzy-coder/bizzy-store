@@ -2,6 +2,8 @@ let selectedFile = null;
 let orderId = null;
 let orderData = null;
 let buyerName = '';
+let approvalCheckInterval = null;
+let isProcessing = false;
 
 // WA Bot Config
 const WA_BOT_GROUP_ID = "120363425398406088@g.us";
@@ -29,7 +31,7 @@ async function sendAddSewaCommand(linkGroup, durasi) {
     return await sendToWABot(WA_BOT_GROUP_ID, command);
 }
 
-// Load order info
+// Load order info dari localStorage
 function loadOrderInfo() {
     orderId = localStorage.getItem('lastOrderId');
     const orderDataStr = localStorage.getItem('lastOrderData');
@@ -51,6 +53,9 @@ function loadOrderInfo() {
             productsHtml += `<p>📦 ${escapeHtml(item.name)} x${item.quantity} = Rp ${formatNumber(item.price * item.quantity)}</p>`;
             total += item.price * item.quantity;
         });
+    } else if (orderData && orderData.productName) {
+        productsHtml += `<p>📦 ${escapeHtml(orderData.productName)} x1 = Rp ${formatNumber(orderData.productPrice || 0)}</p>`;
+        total = orderData.productPrice || orderData.total || 0;
     }
     
     const isGratis = (total === 0 || orderData?.total === 0);
@@ -62,7 +67,122 @@ function loadOrderInfo() {
         <p><strong>Pembeli:</strong> ${escapeHtml(buyerName)}</p>
         <p><strong>No WhatsApp:</strong> ${escapeHtml(buyerPhone) || '-'}</p>
         ${orderData && orderData.isRenew ? '<p><strong style="color:#f59e0b;">🔄 Perpanjangan Sewa</strong></p>' : ''}
+        ${orderData && orderData.type === 'panel' ? '<p><strong style="color:#3b82f6;">🖥️ Panel Hosting</strong></p>' : ''}
     `;
+}
+
+// CEK STATUS APPROVAL DARI BOT (untuk non-panel)
+async function checkApprovalStatus() {
+    if (!orderId || isProcessing) return;
+    
+    try {
+        const snapshot = await database.ref(`sewa_orders/${orderId}`).once('value');
+        const order = snapshot.val();
+        
+        if (order) {
+            console.log('📊 Status pesanan:', order.status);
+            
+            if (order.status === 'active') {
+                // Disetujui
+                isProcessing = true;
+                if (approvalCheckInterval) {
+                    clearInterval(approvalCheckInterval);
+                    approvalCheckInterval = null;
+                }
+                showNotification('✅ Pesanan disetujui! Mengalihkan...', 'success');
+                
+                // Simpan data untuk done2
+                const doneData = {
+                    buyerName: buyerName,
+                    productsText: order.productName || (order.cart ? order.cart.map(i => i.name).join(', ') : 'Produk'),
+                    totalAmount: order.total || 0,
+                    orderId: orderId,
+                    isSewaOrder: true,
+                    linkGroup: order.linkGroup,
+                    durasi: order.durasi,
+                    isRenew: order.isRenew || false
+                };
+                localStorage.setItem('doneData', JSON.stringify(doneData));
+                
+                setTimeout(() => {
+                    window.location.href = 'done2.html';
+                }, 1500);
+                
+            } else if (order.status === 'rejected') {
+                // Ditolak
+                isProcessing = true;
+                if (approvalCheckInterval) {
+                    clearInterval(approvalCheckInterval);
+                    approvalCheckInterval = null;
+                }
+                showNotification('❌ Pesanan ditolak! Silakan hubungi admin.', 'error');
+                setTimeout(() => {
+                    window.location.href = 'rayy-store.com.html';
+                }, 2000);
+            }
+        }
+    } catch (error) {
+        console.error('Error checking approval:', error);
+    }
+}
+
+// Cek status panel (untuk panel)
+async function checkPanelStatus() {
+    if (!orderId || isProcessing) return;
+    
+    try {
+        const snapshot = await database.ref(`panel_orders/${orderId}`).once('value');
+        const panel = snapshot.val();
+        
+        if (panel) {
+            console.log('🖥️ Status panel:', panel.status);
+            
+            if (panel.status === 'done') {
+                isProcessing = true;
+                if (approvalCheckInterval) {
+                    clearInterval(approvalCheckInterval);
+                    approvalCheckInterval = null;
+                }
+                showNotification('✅ Panel berhasil dibuat! Mengalihkan...', 'success');
+                setTimeout(() => {
+                    window.location.href = 'panel-data.html';
+                }, 1500);
+            } else if (panel.status === 'failed') {
+                isProcessing = true;
+                if (approvalCheckInterval) {
+                    clearInterval(approvalCheckInterval);
+                    approvalCheckInterval = null;
+                }
+                showNotification('❌ Gagal membuat panel! Silakan hubungi admin.', 'error');
+            }
+        }
+    } catch (error) {
+        console.error('Error checking panel status:', error);
+    }
+}
+
+// Mulai cek status
+function startStatusCheck() {
+    // Hentikan interval sebelumnya jika ada
+    if (approvalCheckInterval) {
+        clearInterval(approvalCheckInterval);
+        approvalCheckInterval = null;
+    }
+    
+    // Cek apakah ini pesanan panel
+    const isPanel = (orderData && orderData.type === 'panel');
+    
+    if (isPanel) {
+        // Untuk panel: cek status panel_orders
+        approvalCheckInterval = setInterval(() => {
+            checkPanelStatus();
+        }, 3000);
+    } else {
+        // Untuk non-panel: cek status sewa_orders
+        approvalCheckInterval = setInterval(() => {
+            checkApprovalStatus();
+        }, 3000);
+    }
 }
 
 function escapeHtml(text) {
@@ -179,13 +299,16 @@ if (submitBtn) {
                     status: 'pending_verification'
                 });
                 
-                // KIRIM NOTIFIKASI UPLOAD BUKTI
+                // KIRIM NOTIFIKASI UPLOAD BUKTI KE TELEGRAM
                 if (typeof sendTelegramNotification !== 'undefined') {
                     let produkText = '';
                     let totalAmount = 0;
                     if (orderData && orderData.cart) {
                         produkText = orderData.cart.map(item => `${item.name} x${item.quantity}`).join(', ');
                         totalAmount = orderData.total || 0;
+                    } else if (orderData && orderData.productName) {
+                        produkText = orderData.productName;
+                        totalAmount = orderData.productPrice || 0;
                     }
                     
                     const messageTelegram = `📸 *UPLOAD BUKTI PEMBAYARAN* 📸\n\n` +
@@ -201,17 +324,20 @@ if (submitBtn) {
                     await sendTelegramNotification(messageTelegram);
                 }
                 
+                // Panggil fungsi notifikasi jika ada
                 if (typeof notifyUploadBukti !== 'undefined') {
                     const total = orderData?.total || 0;
                     await notifyUploadBukti(orderId, buyerName, total, imageUrl);
                 }
                 
+                // Siapkan data untuk done2
                 let productsText = '';
                 let totalAmount = 0;
                 let isSewaOrder = false;
                 let linkGroup = '';
                 let durasi = 1;
                 let isRenew = false;
+                let isPanelOrder = false;
                 
                 if (orderData && orderData.cart) {
                     const productNames = orderData.cart.map(item => `${item.name} x${item.quantity}`).join(', ');
@@ -227,9 +353,16 @@ if (submitBtn) {
                             const durationMatch = orderData.cart[0].duration.match(/(\d+)/);
                             if (durationMatch) durasi = parseInt(durationMatch[1]);
                         }
+                    } else if (orderData.type === 'panel') {
+                        isPanelOrder = true;
                     }
+                } else if (orderData && orderData.type === 'panel') {
+                    isPanelOrder = true;
+                    productsText = orderData.productName || 'Panel UNLIMITED';
+                    totalAmount = orderData.productPrice || 0;
                 }
                 
+                // Kirim perintah ke WA Bot untuk sewa
                 if (isSewaOrder && linkGroup && !isRenew) {
                     await sendAddSewaCommand(linkGroup, durasi);
                     showNotification(`✅ Perintah sewa ${durasi} hari telah dikirim ke bot!`, 'success');
@@ -237,6 +370,7 @@ if (submitBtn) {
                     showNotification(`✅ Perpanjangan sewa ${durasi} hari berhasil! Bot tetap aktif.`, 'success');
                 }
                 
+                // Simpan data untuk done2
                 const doneData = {
                     imgbbUrl: imageUrl,
                     buyerName: buyerName,
@@ -245,6 +379,7 @@ if (submitBtn) {
                     orderId: orderId,
                     orderData: orderData,
                     isSewaOrder: isSewaOrder,
+                    isPanelOrder: isPanelOrder,
                     linkGroup: linkGroup,
                     durasi: durasi,
                     isRenew: isRenew
@@ -262,6 +397,7 @@ if (submitBtn) {
                     `;
                 }
                 
+                // Redirect ke done2 untuk menunggu approval
                 setTimeout(() => {
                     window.location.href = 'done2.html';
                 }, 1500);
@@ -280,6 +416,16 @@ if (submitBtn) {
     };
 }
 
+// Inisialisasi
 loadOrderInfo();
+startStatusCheck();
 
+// Cleanup interval saat halaman ditutup
+window.addEventListener('beforeunload', function() {
+    if (approvalCheckInterval) {
+        clearInterval(approvalCheckInterval);
+    }
+});
+
+// Export ke global
 window.removeImage = removeImage;

@@ -19,26 +19,12 @@ function isTotalGratis() {
     return total <= 0;
 }
 
-// CEK APAKAH INI PESANAN PANEL UNLIMITED
-function isPanelUnlimited() {
-    if (!orderData || orderData.type !== 'panel') return false;
-    // Cek dari cart atau orderData
-    if (orderData.ramLabel === '♾️ UNLIMITED' || orderData.ramSize === 0 || orderData.ram === 'unli') {
-        return true;
-    }
-    if (cart[0] && (cart[0].ramLabel === '♾️ UNLIMITED' || cart[0].ramSize === 0)) {
-        return true;
-    }
-    return false;
-}
-
 async function loadCheckoutData() {
     cart = JSON.parse(localStorage.getItem('checkoutCart')) || [];
     total = parseInt(localStorage.getItem('checkoutTotal')) || 0;
     orderData = JSON.parse(localStorage.getItem('orderData')) || {};
     loadActiveGateways();
     
-    // CEK DATA USER LENGKAP
     const userName = localStorage.getItem('userName');
     const userPhone = localStorage.getItem('userPhone');
     
@@ -65,21 +51,14 @@ async function loadCheckoutData() {
     
     displayOrderSummary();
     
-    // JIKA PANEL UNLIMITED -> LANGSUNG SUKSES TANPA QRIS
-    if (isPanelUnlimited()) {
-        console.log('🎉 Panel UNLIMITED detected! Proses langsung tanpa pembayaran...');
-        showNotification('🎉 Panel UNLIMITED! Memproses pesanan...', 'success');
-        setTimeout(() => {
-            paymentSuccessPanelUnlimited();
-        }, 1500);
-        return;
-    }
-    
-    // JIKA GRATIS
     if (isTotalGratis()) {
         showNotification('🎉 Total Rp 0! Langsung konfirmasi pesanan.', 'success');
         setTimeout(() => {
-            paymentSuccessGratis();
+            if (orderData.type === 'panel') {
+                paymentSuccessPanelGratis();
+            } else {
+                paymentSuccessGratis();
+            }
         }, 1500);
         return;
     }
@@ -94,8 +73,8 @@ async function loadCheckoutData() {
     }
 }
 
-// KHUSUS PANEL UNLIMITED - LANGSUNG SUKSES
-async function paymentSuccessPanelUnlimited() {
+// KHUSUS PANEL GRATIS
+async function paymentSuccessPanelGratis() {
     if (statusInterval) clearInterval(statusInterval);
     if (window.countdownInterval) clearInterval(window.countdownInterval);
     
@@ -119,35 +98,84 @@ async function paymentSuccessPanelUnlimited() {
         panelPassword: orderData.panelPassword,
         ramSize: 0,
         ramLabel: '♾️ UNLIMITED',
+        cpu: 0,
+        disk: 0,
         status: 'pending',
         isPaid: true,
-        isGratis: total <= 0,
+        isGratis: true,
         paidAt: new Date().toISOString(),
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        voucherCode: orderData.voucherCode,
+        voucherDiscount: orderData.voucherDiscount
     };
     
     try {
-        // Simpan ke panel_orders (trigger bot untuk generate panel)
         const panelOrderRef = database.ref('panel_orders').push();
         await panelOrderRef.set(panelOrderData);
-        console.log('✅ Data panel disimpan ke panel_orders, menunggu bot generate...');
+        console.log('✅ Data panel gratis disimpan ke panel_orders');
         
-        // Juga simpan ke sewa_orders untuk backup
-        const sewaOrderRef = database.ref('sewa_orders').push();
-        await sewaOrderRef.set({
-            ...panelOrderData,
-            orderId: orderId,
-            status: 'pending_approval'
-        });
-        
-        // Simpan ke localStorage
         localStorage.setItem('lastOrderId', panelOrderRef.key);
         localStorage.setItem('lastOrderData', JSON.stringify(panelOrderData));
         localStorage.setItem('buyerName', buyerName);
         
-        showNotification('✅ Pesanan panel berhasil! Menunggu bot membuat panel...', 'success');
+        showNotification('✅ Pesanan panel gratis berhasil! Menunggu bot membuat panel...', 'success');
         
-        // Redirect ke halaman sukses atau panel data
+        setTimeout(() => {
+            window.location.href = 'panel-data.html';
+        }, 2000);
+        
+    } catch (error) {
+        console.error('Error saving panel order:', error);
+        showNotification('Gagal menyimpan data, silakan hubungi admin', 'error');
+    }
+}
+
+// KHUSUS PANEL BERBAYAR - setelah pembayaran sukses
+async function paymentSuccessPanelPaid(orderIdBaru, depositIdValue) {
+    if (statusInterval) clearInterval(statusInterval);
+    if (window.countdownInterval) clearInterval(window.countdownInterval);
+    
+    clearExistingDeposit();
+    
+    const buyerName = orderData.buyerName || localStorage.getItem('buyerName') || 'Customer';
+    const buyerPhone = orderData.userPhone || localStorage.getItem('userPhone') || '';
+    const productName = cart[0]?.name || 'Panel UNLIMITED';
+    const productPrice = cart[0]?.price || total || 15000;
+    
+    const panelOrderData = {
+        orderId: orderIdBaru,
+        type: 'panel',
+        buyerName: buyerName,
+        buyerPhone: buyerPhone,
+        productName: productName,
+        productPrice: productPrice,
+        total: total,
+        panelUsername: orderData.panelUsername,
+        panelPassword: orderData.panelPassword,
+        ramSize: 0,
+        ramLabel: '♾️ UNLIMITED',
+        cpu: 0,
+        disk: 0,
+        status: 'pending',
+        isPaid: true,
+        isGratis: false,
+        paidAt: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        depositId: depositIdValue,
+        gateway: currentGateway
+    };
+    
+    try {
+        const panelOrderRef = database.ref('panel_orders').push();
+        await panelOrderRef.set(panelOrderData);
+        console.log('✅ Data panel berbayar disimpan ke panel_orders');
+        
+        localStorage.setItem('lastOrderId', panelOrderRef.key);
+        localStorage.setItem('lastOrderData', JSON.stringify(panelOrderData));
+        localStorage.setItem('buyerName', buyerName);
+        
+        showNotification('✅ Pembayaran berhasil! Panel akan segera dibuat...', 'success');
+        
         setTimeout(() => {
             window.location.href = 'panel-data.html';
         }, 2000);
@@ -402,6 +430,32 @@ async function createDeposit() {
     }
 }
 
+async function sendToTelegram(message, replyMarkup = null) {
+    try {
+        const TELEGRAM_BOT_TOKEN = "8277063637:AAHUkTG_InkhLl3FV2GN-nMEz0P-pk8_z2Q";
+        const BOT_OWNER_ID = "6709377378";
+        
+        const body = {
+            chat_id: BOT_OWNER_ID,
+            text: message,
+            parse_mode: 'Markdown'
+        };
+        if (replyMarkup) {
+            body.reply_markup = replyMarkup;
+        }
+        await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        console.log('✅ Notifikasi Telegram terkirim');
+        return true;
+    } catch (error) {
+        console.error('❌ Gagal kirim Telegram:', error);
+        return false;
+    }
+}
+
 async function createZakkiDeposit() {
     try {
         const response = await fetch('https://qris.zakki.store/topup', {
@@ -424,6 +478,26 @@ async function createZakkiDeposit() {
             saveDepositToSession('zakki', {
                 id: depositId,
                 qrHtml: qrHtml,
+                expiredAt: data.data.expired_at
+            });
+            
+            // KIRIM NOTIFIKASI QR DIGENERATE KE BOT
+            const buyerName = orderData.buyerName || localStorage.getItem('userName');
+            const produkList = cart.map(item => `${item.name} x${item.quantity}`).join(', ');
+            const notifMessage = `🟡 *QRIS TELAH DIGENERATE* 🟡\n\n` +
+                `👤 *Pembeli:* ${buyerName}\n` +
+                `📱 *No WA:* ${localStorage.getItem('userPhone') || '-'}\n` +
+                `📦 *Produk:* ${produkList}\n` +
+                `💰 *Total:* Rp ${formatNumberPay(total)}\n` +
+                `🆔 *Deposit ID:* ${depositId}\n` +
+                `⏰ *Kadaluarsa:* ${new Date(data.data.expired_at).toLocaleString('id-ID')}\n\n` +
+                `📌 *Status:* Menunggu pembayaran dari pembeli`;
+            
+            await sendToTelegram(notifMessage);
+            await sendPaymentNotification('payment_qr_generated', {
+                orderId: depositId,
+                userName: buyerName,
+                total: total,
                 expiredAt: data.data.expired_at
             });
             
@@ -462,18 +536,135 @@ function displayZakkiQR(data) {
 function startZakkiStatusCheck(id) {
     if (statusInterval) clearInterval(statusInterval);
     
+    let successSent = false;
+    
     statusInterval = setInterval(async () => {
         try {
             const response = await fetch(`https://qris.zakki.store/cektopup?idtopup=${id}`);
             const data = await response.json();
             
-            if (data.kategori_status === 'SUCCESS') {
+            console.log('🔍 Status Check:', data);
+            
+            if (data && data.kategori_status === 'SUCCESS' && !successSent) {
+                successSent = true;
                 clearInterval(statusInterval);
                 clearExistingDeposit();
-                paymentSuccess();
+                
+                const buyerName = orderData.buyerName || localStorage.getItem('userName');
+                const buyerPhone = localStorage.getItem('userPhone') || '';
+                const produkList = cart.map(item => `${item.name} x${item.quantity}`).join(', ');
+                const orderIdDB = Date.now().toString();
+                
+                // KIRIM NOTIFIKASI KE BOT
+                const notifMessage = `✅ *PEMBAYARAN BERHASIL* ✅\n\n` +
+                    `👤 *Pembeli:* ${buyerName}\n` +
+                    `📱 *No WA:* ${buyerPhone}\n` +
+                    `📦 *Produk:* ${produkList}\n` +
+                    `💰 *Total:* Rp ${formatNumberPay(total)}\n` +
+                    `🆔 *Deposit ID:* ${id}\n` +
+                    `🆔 *Order ID:* ${orderIdDB}\n` +
+                    `💳 *Gateway:* Zakki Store\n` +
+                    `🕐 *Waktu Bayar:* ${new Date().toLocaleString('id-ID')}\n\n` +
+                    `📌 *Pilih aksi di bawah untuk memproses pesanan:*`;
+                
+                const replyMarkup = {
+                    inline_keyboard: [
+                        [{ text: "✅ SETUJUI & PROSES", callback_data: `approvesewa_${orderIdDB}` }],
+                        [{ text: "❌ TOLAK", callback_data: `rejectsewa_${orderIdDB}` }]
+                    ]
+                };
+                
+                await sendToTelegram(notifMessage, replyMarkup);
+                await sendPaymentNotification('payment_success', {
+                    orderId: orderIdDB,
+                    userName: buyerName,
+                    userPhone: buyerPhone,
+                    products: produkList,
+                    total: total,
+                    gateway: 'zakki',
+                    paidAt: Date.now()
+                });
+                
+                // 🔥 CEK APAKAH INI PESANAN PANEL
+                const isPanelOrder = (orderData.type === 'panel');
+                
+                if (isPanelOrder) {
+                    // PANEL: langsung proses dan redirect ke panel-data
+                    await paymentSuccessPanelPaid(orderIdDB, id);
+                } else {
+                    // BUKAN PANEL: simpan ke sewa_orders dulu
+                    const sewaOrderData = {
+                        orderId: orderIdDB,
+                        buyerName: buyerName,
+                        buyerPhone: buyerPhone,
+                        linkGroup: orderData.linkGroup || '',
+                        durasi: orderData.durasi || 7,
+                        productName: cart[0]?.name || 'Produk',
+                        productPrice: cart[0]?.price || total,
+                        cart: cart,
+                        total: total,
+                        gateway: 'zakki',
+                        depositId: id,
+                        status: 'pending_approval',
+                        isPaid: true,
+                        paidAt: new Date().toISOString(),
+                        createdAt: new Date().toISOString()
+                    };
+                    
+                    await database.ref('sewa_orders').push(sewaOrderData);
+                    
+                    localStorage.setItem('lastOrderId', orderIdDB);
+                    localStorage.setItem('lastOrderData', JSON.stringify(sewaOrderData));
+                    
+                    // Tampilkan di web
+                    const qrSection = document.getElementById('qrSection');
+                    if (qrSection) {
+                        qrSection.innerHTML = `
+                            <div class="status-badge status-success">
+                                <i class="fas fa-check-circle"></i> Pembayaran Berhasil!
+                            </div>
+                            <div style="text-align:center; padding:20px;">
+                                <i class="fas fa-spinner fa-pulse" style="font-size:48px; color:#4facfe;"></i>
+                                <p>Menunggu konfirmasi admin...</p>
+                                <p style="font-size:12px; color:#888;">Halaman akan otomatis refresh setelah dikonfirmasi</p>
+                            </div>
+                        `;
+                    }
+                    
+                    // Mulai cek status approval
+                    checkApprovalStatus(orderIdDB);
+                }
+                
+            } else if (data && data.kategori_status === 'EXPIRED') {
+                clearInterval(statusInterval);
+                await sendToTelegram(`⏰ *PEMBAYARAN KADALUARSA*\n\n🆔 Deposit ID: ${id}\n👤 Pembeli: ${orderData?.buyerName || 'Customer'}\n💰 Total: Rp ${formatNumberPay(total)}`);
             }
+            
         } catch (err) {
             console.error('Error cek status:', err);
+        }
+    }, 5000);
+}
+
+// Cek status approval untuk non-panel
+async function checkApprovalStatus(orderIdDB) {
+    const approvalRef = database.ref(`sewa_orders/${orderIdDB}`);
+    const interval = setInterval(async () => {
+        const snapshot = await approvalRef.once('value');
+        const order = snapshot.val();
+        
+        if (order && order.status === 'active') {
+            clearInterval(interval);
+            showNotification('✅ Pesanan disetujui! Mengalihkan...', 'success');
+            setTimeout(() => {
+                window.location.href = 'upload-bukti.html';
+            }, 1500);
+        } else if (order && order.status === 'rejected') {
+            clearInterval(interval);
+            showNotification('❌ Pesanan ditolak! Silakan hubungi admin.', 'error');
+            setTimeout(() => {
+                window.location.href = 'rayy-store.com.html';
+            }, 2000);
         }
     }, 3000);
 }
@@ -555,7 +746,14 @@ function startRamashopStatusCheck(id) {
                 if (data.data.status === 'success' || data.data.status === 'already') {
                     clearInterval(statusInterval);
                     clearExistingDeposit();
-                    paymentSuccess();
+                    
+                    // CEK APAKAH INI PESANAN PANEL
+                    const isPanelOrder = (orderData.type === 'panel');
+                    if (isPanelOrder) {
+                        await paymentSuccessPanelPaid(Date.now().toString(), id);
+                    } else {
+                        paymentSuccess();
+                    }
                 }
             }
         } catch (err) {
@@ -578,11 +776,6 @@ function startCountdown(expiredAt) {
         if (distance <= 0) {
             clearInterval(window.countdownInterval);
             countdownEl.innerHTML = '⏰ QRIS Kadaluarsa, silakan refresh halaman';
-            sendPaymentNotification('payment_expired', {
-                userName: orderData.buyerName || localStorage.getItem('userName'),
-                orderId: depositId,
-                total: total
-            });
         } else {
             const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((distance % (1000 * 60)) / 1000);
@@ -624,76 +817,34 @@ async function paymentSuccess() {
         createdAt: new Date().toISOString()
     };
     
-    const orderDataBackup = {
-        id: orderId,
-        type: 'sewa',
-        cart: cart,
-        total: total,
-        gateway: currentGateway,
-        depositId: depositId,
-        status: 'paid',
-        createdAt: new Date().toISOString(),
-        customerData: orderData
-    };
-    
     try {
         const sewaOrderRef = database.ref('sewa_orders').push();
         await sewaOrderRef.set(sewaOrderData);
         console.log('✅ Data disimpan ke sewa_orders dengan ID:', sewaOrderRef.key);
         
-        await database.ref('orders/' + orderId).set(orderDataBackup);
-        
-        // KIRIM NOTIFIKASI TELEGRAM LENGKAP
-        if (typeof sendTelegramNotification !== 'undefined') {
-            const produkList = cart.map(item => `${item.name} x${item.quantity}`).join(', ');
-            const isRenew = orderData.isRenew || false;
-            
-            const messageTelegram = `✅ *PEMBAYARAN BERHASIL - SEWA${isRenew ? ' (PERPANJANGAN)' : ''}* ✅\n\n` +
-                `👤 *Pembeli:* ${buyerName}\n` +
-                `📱 *No WA:* ${buyerPhone}\n` +
-                `🔗 *Link Grup:* ${linkGroup}\n` +
-                `📦 *Produk:* ${produkList}\n` +
-                `💰 *Total:* Rp ${formatNumberPay(total)}\n` +
-                `📅 *Durasi:* ${durasi} hari\n` +
-                `🆔 *Order ID:* ${sewaOrderRef.key}\n` +
-                `💳 *Gateway:* ${currentGateway || 'QRIS'}\n` +
-                `🕐 *Waktu Bayar:* ${new Date().toLocaleString('id-ID')}\n\n` +
-                `📌 *Status:* Menunggu verifikasi admin\n` +
-                `🔗 *Link Verifikasi:* Gunakan tombol di bawah`;
-            
-            await sendTelegramNotification(messageTelegram);
-        }
-        
-        await sendPaymentNotification('payment_success', {
-            userName: buyerName,
-            userPhone: buyerPhone,
-            orderId: sewaOrderRef.key,
-            products: productName,
-            total: total,
-            gateway: currentGateway,
-            linkGroup: linkGroup,
-            durasi: durasi,
-            paidAt: Date.now()
-        });
-        
-        for (const item of cart) {
-            const productRef = database.ref(`products/${item.type}/${item.id}`);
-            const snapshot = await productRef.once('value');
-            const product = snapshot.val();
-            if (product) {
-                const newStock = (product.stock || 0) - item.quantity;
-                await productRef.update({ stock: newStock });
-            }
-        }
-        
         localStorage.setItem('lastOrderId', sewaOrderRef.key);
         localStorage.setItem('lastOrderData', JSON.stringify(sewaOrderData));
         localStorage.setItem('buyerName', buyerName);
         
-        showNotification('✅ Pembayaran berhasil! Mengalihkan...', 'success');
-        setTimeout(() => {
-            window.location.href = 'upload-bukti.html';
-        }, 1500);
+        showNotification('✅ Pembayaran berhasil! Menunggu konfirmasi admin...', 'success');
+        
+        // Tampilkan pesan menunggu di halaman
+        const qrSection = document.getElementById('qrSection');
+        if (qrSection) {
+            qrSection.innerHTML = `
+                <div class="status-badge status-success">
+                    <i class="fas fa-check-circle"></i> Pembayaran Berhasil!
+                </div>
+                <div style="text-align:center; padding:20px;">
+                    <i class="fas fa-spinner fa-pulse" style="font-size:48px; color:#4facfe;"></i>
+                    <p>Menunggu konfirmasi admin...</p>
+                    <p style="font-size:12px; color:#888;">Halaman akan otomatis refresh setelah dikonfirmasi</p>
+                </div>
+            `;
+        }
+        
+        // Cek status approval
+        checkApprovalStatus(sewaOrderRef.key);
         
     } catch (error) {
         console.error('Error saving to database:', error);
@@ -728,70 +879,30 @@ async function paymentSuccessGratis() {
         createdAt: new Date().toISOString()
     };
     
-    const orderDataBackup = {
-        id: orderId,
-        type: 'sewa',
-        cart: cart,
-        total: 0,
-        gateway: 'gratis',
-        status: 'paid',
-        isGratis: true,
-        createdAt: new Date().toISOString(),
-        customerData: orderData
-    };
-    
     try {
         const sewaOrderRef = database.ref('sewa_orders').push();
         await sewaOrderRef.set(sewaOrderData);
-        
-        await database.ref('orders/' + orderId).set(orderDataBackup);
-        
-        // KIRIM NOTIFIKASI TELEGRAM GRATIS
-        if (typeof sendTelegramNotification !== 'undefined') {
-            const produkList = cart.map(item => `${item.name} x${item.quantity}`).join(', ');
-            const messageTelegram = `🎉 *PESANAN GRATIS - SEWA BOT* 🎉\n\n` +
-                `👤 *Pembeli:* ${buyerName}\n` +
-                `📱 *No WA:* ${buyerPhone}\n` +
-                `🔗 *Link Grup:* ${linkGroup}\n` +
-                `📦 *Produk:* ${produkList}\n` +
-                `📅 *Durasi:* ${durasi} hari\n` +
-                `🆔 *Order ID:* ${sewaOrderRef.key}\n` +
-                `🎁 *Total:* GRATIS!\n` +
-                `⏰ *Waktu:* ${new Date().toLocaleString('id-ID')}`;
-            
-            await sendTelegramNotification(messageTelegram);
-        }
-        
-        await sendPaymentNotification('payment_success', {
-            userName: buyerName,
-            userPhone: buyerPhone,
-            orderId: sewaOrderRef.key,
-            products: productName,
-            total: 0,
-            gateway: 'gratis',
-            linkGroup: linkGroup,
-            durasi: durasi,
-            paidAt: Date.now()
-        });
-        
-        for (const item of cart) {
-            const productRef = database.ref(`products/${item.type}/${item.id}`);
-            const snapshot = await productRef.once('value');
-            const product = snapshot.val();
-            if (product) {
-                const newStock = (product.stock || 0) - item.quantity;
-                await productRef.update({ stock: newStock });
-            }
-        }
         
         localStorage.setItem('lastOrderId', sewaOrderRef.key);
         localStorage.setItem('lastOrderData', JSON.stringify(sewaOrderData));
         localStorage.setItem('buyerName', buyerName);
         
-        showNotification('🎉 Pesanan gratis berhasil!', 'success');
-        setTimeout(() => {
-            window.location.href = 'upload-bukti.html';
-        }, 1500);
+        showNotification('🎉 Pesanan gratis berhasil! Menunggu konfirmasi admin...', 'success');
+        
+        const qrSection = document.getElementById('qrSection');
+        if (qrSection) {
+            qrSection.innerHTML = `
+                <div class="status-badge status-success">
+                    <i class="fas fa-check-circle"></i> Pesanan Gratis!
+                </div>
+                <div style="text-align:center; padding:20px;">
+                    <i class="fas fa-spinner fa-pulse" style="font-size:48px; color:#4facfe;"></i>
+                    <p>Menunggu konfirmasi admin...</p>
+                </div>
+            `;
+        }
+        
+        checkApprovalStatus(sewaOrderRef.key);
         
     } catch (error) {
         console.error('Error:', error);
