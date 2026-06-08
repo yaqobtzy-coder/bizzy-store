@@ -1,3 +1,7 @@
+// ========================================
+// PAY.JS - PEMBAYARAN RAYY STORE (FIX UNTUK SEWA BOT)
+// ========================================
+
 let cart = [];
 let total = 0;
 let currentGateway = null;
@@ -8,10 +12,17 @@ let processingNotifSent = false;
 let activeGateways = { zakki: true, ramashop: false };
 let isDepositCreated = false;
 
+// Konfigurasi Zakki Store (ambil dari global atau default)
+const ZAKKI_TOKEN = (typeof PAYMENT_GATEWAYS !== 'undefined' && PAYMENT_GATEWAYS.zakki) 
+    ? PAYMENT_GATEWAYS.zakki.token 
+    : "c7f15169bcfd61";
+
 function loadActiveGateways() {
     const saved = localStorage.getItem('activeGateways');
     if (saved) {
-        activeGateways = JSON.parse(saved);
+        try {
+            activeGateways = JSON.parse(saved);
+        } catch(e) {}
     }
 }
 
@@ -43,6 +54,7 @@ async function loadCheckoutData() {
     console.log('📦 Loaded cart:', cart);
     console.log('💰 Total:', total);
     console.log('📋 Order type:', orderData.type);
+    console.log('🔑 Zakki Token:', ZAKKI_TOKEN);
     
     if (cart.length === 0) {
         window.location.href = 'rayy-store.com.html';
@@ -73,7 +85,6 @@ async function loadCheckoutData() {
     }
 }
 
-// KHUSUS PANEL GRATIS
 async function paymentSuccessPanelGratis() {
     if (statusInterval) clearInterval(statusInterval);
     if (window.countdownInterval) clearInterval(window.countdownInterval);
@@ -130,7 +141,6 @@ async function paymentSuccessPanelGratis() {
     }
 }
 
-// KHUSUS PANEL BERBAYAR - setelah pembayaran sukses
 async function paymentSuccessPanelPaid(orderIdBaru, depositIdValue) {
     if (statusInterval) clearInterval(statusInterval);
     if (window.countdownInterval) clearInterval(window.countdownInterval);
@@ -233,10 +243,12 @@ function renderGatewayOptions() {
     if (!currentGateway) {
         if (activeGateways.zakki) {
             currentGateway = 'zakki';
-            document.getElementById('gatewayZakki')?.setAttribute('checked', 'checked');
+            const radio = document.getElementById('gatewayZakki');
+            if (radio) radio.checked = true;
         } else if (activeGateways.ramashop) {
             currentGateway = 'ramashop';
-            document.getElementById('gatewayRamashop')?.setAttribute('checked', 'checked');
+            const radio = document.getElementById('gatewayRamashop');
+            if (radio) radio.checked = true;
         }
     }
     
@@ -342,11 +354,14 @@ function displayOrderSummary() {
     if (!container) return;
     
     let itemsHtml = '';
+    let totalHarga = 0;
     cart.forEach(item => {
+        const itemTotal = item.price * item.quantity;
+        totalHarga += itemTotal;
         itemsHtml += `
             <div class="order-item">
                 <span>${escapeHtml(item.name)} x${item.quantity}</span>
-                <span>Rp ${formatNumberPay(item.price * item.quantity)}</span>
+                <span>Rp ${formatNumberPay(itemTotal)}</span>
             </div>
         `;
     });
@@ -412,7 +427,9 @@ async function createDeposit() {
     }
     
     const qrSection = document.getElementById('qrSection');
-    qrSection.innerHTML = `<div class="loading-spinner"><i class="fas fa-spinner"></i><p>Menyiapkan QRIS...</p></div>`;
+    if (qrSection) {
+        qrSection.innerHTML = `<div class="loading-spinner"><i class="fas fa-spinner"></i><p>Menyiapkan QRIS...</p></div>`;
+    }
     document.getElementById('paymentInfo').style.display = 'none';
     
     if (currentGateway === 'zakki') {
@@ -430,11 +447,10 @@ async function createDeposit() {
     }
 }
 
-// ============ KIRIM NOTIFIKASI KE TELEGRAM ==========
 async function sendToTelegram(message, replyMarkup = null) {
     try {
-        const TELEGRAM_BOT_TOKEN = "8277063637:AAHUkTG_InkhLl3FV2GN-nMEz0P-pk8_z2Q";
-        const BOT_OWNER_ID = "6709377378";
+        const TELEGRAM_BOT_TOKEN = window.TELEGRAM_BOT_TOKEN || "8277063637:AAHUkTG_InkhLl3FV2GN-nMEz0P-pk8_z2Q";
+        const BOT_OWNER_ID = window.BOT_OWNER_ID || "6709377378";
         
         const body = {
             chat_id: BOT_OWNER_ID,
@@ -444,35 +460,68 @@ async function sendToTelegram(message, replyMarkup = null) {
         if (replyMarkup) {
             body.reply_markup = replyMarkup;
         }
-        await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+        const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(body)
         });
-        console.log('✅ Notifikasi Telegram terkirim');
-        return true;
+        const result = await response.json();
+        if (result.ok) {
+            console.log('✅ Notifikasi Telegram terkirim');
+        } else {
+            console.error('❌ Gagal kirim Telegram:', result);
+        }
+        return result.ok;
     } catch (error) {
-        console.error('❌ Gagal kirim Telegram:', error);
+        console.error('❌ Error kirim Telegram:', error);
         return false;
     }
 }
 
+// ============ FUNGSI UTAMA CREATE DEPOSIT ZAKKI ==========
 async function createZakkiDeposit() {
+    // VALIDASI: Pastikan nominal > 0
+    if (!total || total <= 0) {
+        showError('Nominal pembayaran tidak valid');
+        return;
+    }
+    
+    console.log('🔄 [ZAKKI] Membuat deposit dengan nominal:', total);
+    console.log('🔄 [ZAKKI] Menggunakan token:', ZAKKI_TOKEN);
+    
+    // Tampilkan loading
+    const qrSection = document.getElementById('qrSection');
+    if (qrSection) {
+        qrSection.innerHTML = `<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>Menghubungi Zakki Store...</p></div>`;
+    }
+    
     try {
+        const requestBody = {
+            token: ZAKKI_TOKEN,
+            nominal: total
+        };
+        
+        console.log('📤 [ZAKKI] Request body:', requestBody);
+        
         const response = await fetch('https://qris.zakki.store/topup', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                token: PAYMENT_GATEWAYS.zakki.token,
-                nominal: total
-            })
+            headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(requestBody)
         });
         
+        console.log('📡 [ZAKKI] Response status:', response.status);
+        
         const data = await response.json();
+        console.log('📡 [ZAKKI] Response data:', data);
         
         if (data.code === 201 && data.data) {
             depositId = data.data.id_transaksi;
             isDepositCreated = true;
+            
+            console.log('✅ [ZAKKI] Deposit berhasil dibuat, ID:', depositId);
             
             const qrHtml = displayZakkiQR(data.data);
             
@@ -482,7 +531,7 @@ async function createZakkiDeposit() {
                 expiredAt: data.data.expired_at
             });
             
-            // ============ KIRIM NOTIFIKASI QR KE BOT ============
+            // KIRIM NOTIFIKASI QR KE BOT
             const buyerName = orderData.buyerName || localStorage.getItem('userName');
             const userPhone = localStorage.getItem('userPhone') || '';
             const produkList = cart.map(item => `${item.name} x${item.quantity}`).join(', ');
@@ -524,11 +573,43 @@ async function createZakkiDeposit() {
             startZakkiStatusCheck(depositId);
             startCountdown(data.data.expired_at);
         } else {
+            console.error('❌ [ZAKKI] Error response:', data);
             showError('Gagal membuat pembayaran: ' + (data.message || 'Unknown error'));
+            
+            // Tampilkan detail error untuk debugging
+            if (qrSection) {
+                qrSection.innerHTML = `
+                    <div style="text-align: center; color: #ff6b6b; padding: 20px;">
+                        <i class="fas fa-exclamation-circle" style="font-size: 48px;"></i>
+                        <p><strong>Error:</strong> ${data.message || 'Gagal membuat pembayaran'}</p>
+                        <p style="font-size: 12px; margin-top: 10px;">Kode: ${data.code || '-'}</p>
+                        <button class="back-btn" onclick="location.reload()" style="margin-top: 15px;">
+                            <i class="fas fa-sync"></i> Coba Lagi
+                        </button>
+                    </div>
+                `;
+            }
         }
     } catch (err) {
-        console.error('Error:', err);
-        showError('Gagal terhubung ke payment gateway Zakki');
+        console.error('❌ [ZAKKI] Network error:', err);
+        showError('Gagal terhubung ke payment gateway Zakki. Periksa koneksi internet Anda.');
+        
+        const qrSection = document.getElementById('qrSection');
+        if (qrSection) {
+            qrSection.innerHTML = `
+                <div style="text-align: center; color: #ff6b6b; padding: 20px;">
+                    <i class="fas fa-wifi" style="font-size: 48px;"></i>
+                    <p>Gagal terhubung ke server pembayaran</p>
+                    <p style="font-size: 12px;">${err.message || 'Network error'}</p>
+                    <button class="back-btn" onclick="location.reload()" style="margin-top: 15px;">
+                        <i class="fas fa-sync"></i> Coba Lagi
+                    </button>
+                    <button class="back-btn" onclick="window.location.href='rayy-store.com.html'" style="margin-top: 15px; margin-left: 10px; background: #64748b;">
+                        <i class="fas fa-home"></i> Kembali ke Toko
+                    </button>
+                </div>
+            `;
+        }
     }
 }
 
@@ -543,11 +624,14 @@ function displayZakkiQR(data) {
         <div class="payment-info-box">
             <p><strong>Total Bayar:</strong> Rp ${formatNumberPay(data.rincian?.total_bayar || total)}</p>
             <p><strong>Kode Unik:</strong> ${data.rincian?.kode_unik || '-'}</p>
+            <p><strong>ID Transaksi:</strong> ${data.id_transaksi}</p>
         </div>
     `;
     
     const qrSection = document.getElementById('qrSection');
-    qrSection.innerHTML = qrHtml;
+    if (qrSection) {
+        qrSection.innerHTML = qrHtml;
+    }
     document.getElementById('paymentInfo').style.display = 'block';
     
     return qrHtml;
@@ -563,7 +647,7 @@ function startZakkiStatusCheck(id) {
             const response = await fetch(`https://qris.zakki.store/cektopup?idtopup=${id}`);
             const data = await response.json();
             
-            console.log('🔍 Status Check:', data);
+            console.log('🔍 [ZAKKI] Status Check:', data);
             
             if (data && data.kategori_status === 'SUCCESS' && !successSent) {
                 successSent = true;
@@ -576,7 +660,6 @@ function startZakkiStatusCheck(id) {
                 const orderIdDB = Date.now().toString();
                 const isPanelOrder = (orderData.type === 'panel');
                 
-                // KIRIM NOTIFIKASI KE BOT
                 const notifMessage = `✅ *PEMBAYARAN BERHASIL* ✅\n\n` +
                     `👤 *Pembeli:* ${buyerName}\n` +
                     `📱 *No WA:* ${buyerPhone}\n` +
@@ -608,10 +691,8 @@ function startZakkiStatusCheck(id) {
                 });
                 
                 if (isPanelOrder) {
-                    // PANEL: langsung proses
                     await paymentSuccessPanelPaid(orderIdDB, id);
                 } else {
-                    // BUKAN PANEL: simpan ke sewa_orders dulu
                     const sewaOrderData = {
                         orderId: orderIdDB,
                         buyerName: buyerName,
@@ -635,7 +716,6 @@ function startZakkiStatusCheck(id) {
                     localStorage.setItem('lastOrderId', orderIdDB);
                     localStorage.setItem('lastOrderData', JSON.stringify(sewaOrderData));
                     
-                    // Tampilkan di web
                     const qrSection = document.getElementById('qrSection');
                     if (qrSection) {
                         qrSection.innerHTML = `
@@ -650,7 +730,6 @@ function startZakkiStatusCheck(id) {
                         `;
                     }
                     
-                    // Mulai cek status approval
                     checkApprovalStatus(orderIdDB);
                 }
                 
@@ -665,7 +744,6 @@ function startZakkiStatusCheck(id) {
     }, 5000);
 }
 
-// Cek status approval untuk non-panel
 async function checkApprovalStatus(orderIdDB) {
     const approvalRef = database.ref(`sewa_orders/${orderIdDB}`);
     const interval = setInterval(async () => {
@@ -690,10 +768,16 @@ async function checkApprovalStatus(orderIdDB) {
 
 async function createRamashopDeposit() {
     try {
+        const token = (typeof PAYMENT_GATEWAYS !== 'undefined' && PAYMENT_GATEWAYS.ramashop) 
+            ? PAYMENT_GATEWAYS.ramashop.token 
+            : "rg_fb3d84af5d92b8c09f3b2194e870db";
+        
+        console.log('🔄 [RAMASHOP] Membuat deposit dengan nominal:', total);
+        
         const response = await fetch('https://ramashop.my.id/api/public/deposit/create', {
             method: 'POST',
             headers: {
-                'X-API-Key': PAYMENT_GATEWAYS.ramashop.token,
+                'X-API-Key': token,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
@@ -703,6 +787,7 @@ async function createRamashopDeposit() {
         });
         
         const data = await response.json();
+        console.log('📡 [RAMASHOP] Response:', data);
         
         if (data.success && data.data) {
             depositId = data.data.depositId;
@@ -716,7 +801,6 @@ async function createRamashopDeposit() {
                 expiredAt: data.data.expiredAt
             });
             
-            // KIRIM NOTIFIKASI QR KE BOT UNTUK RAMASHOP
             const buyerName = orderData.buyerName || localStorage.getItem('userName');
             const userPhone = localStorage.getItem('userPhone') || '';
             const produkList = cart.map(item => `${item.name} x${item.quantity}`).join(', ');
@@ -752,7 +836,7 @@ async function createRamashopDeposit() {
             showError('Gagal membuat pembayaran: ' + (data.message || 'Unknown error'));
         }
     } catch (err) {
-        console.error('Error:', err);
+        console.error('Error connecting to Ramashop:', err);
         showError('Gagal terhubung ke payment gateway Ramashop');
     }
 }
@@ -772,7 +856,9 @@ function displayRamashopQR(data) {
     `;
     
     const qrSection = document.getElementById('qrSection');
-    qrSection.innerHTML = qrHtml;
+    if (qrSection) {
+        qrSection.innerHTML = qrHtml;
+    }
     document.getElementById('paymentInfo').style.display = 'block';
     
     return qrHtml;
@@ -785,7 +871,9 @@ function startRamashopStatusCheck(id) {
         try {
             const response = await fetch(`https://ramashop.my.id/api/public/deposit/status/${id}`, {
                 headers: {
-                    'X-API-Key': PAYMENT_GATEWAYS.ramashop.token,
+                    'X-API-Key': (typeof PAYMENT_GATEWAYS !== 'undefined' && PAYMENT_GATEWAYS.ramashop) 
+                        ? PAYMENT_GATEWAYS.ramashop.token 
+                        : "rg_fb3d84af5d92b8c09f3b2194e870db",
                     'Content-Type': 'application/json'
                 }
             });
@@ -876,7 +964,6 @@ async function paymentSuccess() {
         
         showNotification('✅ Pembayaran berhasil! Menunggu konfirmasi admin...', 'success');
         
-        // Tampilkan pesan menunggu di halaman
         const qrSection = document.getElementById('qrSection');
         if (qrSection) {
             qrSection.innerHTML = `
@@ -891,7 +978,6 @@ async function paymentSuccess() {
             `;
         }
         
-        // Cek status approval
         checkApprovalStatus(sewaOrderRef.key);
         
     } catch (error) {
@@ -965,12 +1051,16 @@ function showError(message) {
             <div style="text-align: center; color: #ff6b6b; padding: 20px;">
                 <i class="fas fa-exclamation-circle" style="font-size: 48px;"></i>
                 <p>${message}</p>
-                <button class="back-btn" onclick="location.reload()" style="margin-top: 15px;">
+                <button class="back-btn" onclick="location.reload()" style="margin-top: 15px; background: #3b82f6; border: none; padding: 10px 20px; border-radius: 30px; color: white; cursor: pointer;">
                     <i class="fas fa-sync"></i> Coba Lagi
+                </button>
+                <button class="back-btn" onclick="window.location.href='rayy-store.com.html'" style="margin-top: 15px; margin-left: 10px; background: #64748b; border: none; padding: 10px 20px; border-radius: 30px; color: white; cursor: pointer;">
+                    <i class="fas fa-home"></i> Kembali ke Toko
                 </button>
             </div>
         `;
     }
 }
 
+// Jalankan
 loadCheckoutData();
