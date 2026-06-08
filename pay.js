@@ -19,7 +19,20 @@ function isTotalGratis() {
     return total <= 0;
 }
 
-function loadCheckoutData() {
+// CEK APAKAH INI PESANAN PANEL UNLIMITED
+function isPanelUnlimited() {
+    if (!orderData || orderData.type !== 'panel') return false;
+    // Cek dari cart atau orderData
+    if (orderData.ramLabel === '♾️ UNLIMITED' || orderData.ramSize === 0 || orderData.ram === 'unli') {
+        return true;
+    }
+    if (cart[0] && (cart[0].ramLabel === '♾️ UNLIMITED' || cart[0].ramSize === 0)) {
+        return true;
+    }
+    return false;
+}
+
+async function loadCheckoutData() {
     cart = JSON.parse(localStorage.getItem('checkoutCart')) || [];
     total = parseInt(localStorage.getItem('checkoutTotal')) || 0;
     orderData = JSON.parse(localStorage.getItem('orderData')) || {};
@@ -43,6 +56,7 @@ function loadCheckoutData() {
     
     console.log('📦 Loaded cart:', cart);
     console.log('💰 Total:', total);
+    console.log('📋 Order type:', orderData.type);
     
     if (cart.length === 0) {
         window.location.href = 'rayy-store.com.html';
@@ -51,6 +65,17 @@ function loadCheckoutData() {
     
     displayOrderSummary();
     
+    // JIKA PANEL UNLIMITED -> LANGSUNG SUKSES TANPA QRIS
+    if (isPanelUnlimited()) {
+        console.log('🎉 Panel UNLIMITED detected! Proses langsung tanpa pembayaran...');
+        showNotification('🎉 Panel UNLIMITED! Memproses pesanan...', 'success');
+        setTimeout(() => {
+            paymentSuccessPanelUnlimited();
+        }, 1500);
+        return;
+    }
+    
+    // JIKA GRATIS
     if (isTotalGratis()) {
         showNotification('🎉 Total Rp 0! Langsung konfirmasi pesanan.', 'success');
         setTimeout(() => {
@@ -66,6 +91,70 @@ function loadCheckoutData() {
         if (activeGateways.zakki || activeGateways.ramashop) {
             createDeposit();
         }
+    }
+}
+
+// KHUSUS PANEL UNLIMITED - LANGSUNG SUKSES
+async function paymentSuccessPanelUnlimited() {
+    if (statusInterval) clearInterval(statusInterval);
+    if (window.countdownInterval) clearInterval(window.countdownInterval);
+    
+    clearExistingDeposit();
+    
+    const orderId = Date.now().toString();
+    const buyerName = orderData.buyerName || localStorage.getItem('buyerName') || 'Customer';
+    const buyerPhone = orderData.userPhone || localStorage.getItem('userPhone') || '';
+    const productName = cart[0]?.name || 'Panel UNLIMITED';
+    const productPrice = cart[0]?.price || total || 15000;
+    
+    const panelOrderData = {
+        orderId: orderId,
+        type: 'panel',
+        buyerName: buyerName,
+        buyerPhone: buyerPhone,
+        productName: productName,
+        productPrice: productPrice,
+        total: total,
+        panelUsername: orderData.panelUsername,
+        panelPassword: orderData.panelPassword,
+        ramSize: 0,
+        ramLabel: '♾️ UNLIMITED',
+        status: 'pending',
+        isPaid: true,
+        isGratis: total <= 0,
+        paidAt: new Date().toISOString(),
+        createdAt: new Date().toISOString()
+    };
+    
+    try {
+        // Simpan ke panel_orders (trigger bot untuk generate panel)
+        const panelOrderRef = database.ref('panel_orders').push();
+        await panelOrderRef.set(panelOrderData);
+        console.log('✅ Data panel disimpan ke panel_orders, menunggu bot generate...');
+        
+        // Juga simpan ke sewa_orders untuk backup
+        const sewaOrderRef = database.ref('sewa_orders').push();
+        await sewaOrderRef.set({
+            ...panelOrderData,
+            orderId: orderId,
+            status: 'pending_approval'
+        });
+        
+        // Simpan ke localStorage
+        localStorage.setItem('lastOrderId', panelOrderRef.key);
+        localStorage.setItem('lastOrderData', JSON.stringify(panelOrderData));
+        localStorage.setItem('buyerName', buyerName);
+        
+        showNotification('✅ Pesanan panel berhasil! Menunggu bot membuat panel...', 'success');
+        
+        // Redirect ke halaman sukses atau panel data
+        setTimeout(() => {
+            window.location.href = 'panel-data.html';
+        }, 2000);
+        
+    } catch (error) {
+        console.error('Error saving panel order:', error);
+        showNotification('Gagal menyimpan data, silakan hubungi admin', 'error');
     }
 }
 

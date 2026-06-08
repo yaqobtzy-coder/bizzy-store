@@ -4,6 +4,7 @@
 
 let sewaProducts = [];
 let scriptProducts = [];
+let panelProducts = [];  // <-- TAMBAH PRODUK PANEL
 let cart = JSON.parse(localStorage.getItem('cart')) || [];
 let swiperInstance = null;
 let activeVoucher = null;
@@ -37,7 +38,6 @@ async function sendAddToCartNotification(productName, price, quantity, userName,
             timestamp: Date.now()
         });
         
-        // Kirim notifikasi langsung ke Telegram
         if (typeof sendTelegramNotification !== 'undefined') {
             const messageTelegram = `🛒 *TAMBAH KE KERANJANG*\n\n` +
                 `👤 *User:* ${userName || 'Guest'}\n` +
@@ -60,17 +60,32 @@ function formatNumber(num) {
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 }
 
-// ========================================
-// SIDEBAR FUNCTIONS
-// ========================================
+// ============ SIDEBAR FUNCTIONS ==========
 function openSidebar() {
-    document.getElementById('sidebar').classList.add('open');
-    document.getElementById('overlay').classList.add('active');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+    const body = document.body;
+    
+    sidebar.classList.add('open');
+    overlay.classList.add('active');
+    body.classList.add('sidebar-open');
+    const scrollY = window.scrollY;
+    body.style.top = `-${scrollY}px`;
 }
 
 function closeSidebar() {
-    document.getElementById('sidebar').classList.remove('open');
-    document.getElementById('overlay').classList.remove('active');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+    const body = document.body;
+    
+    sidebar.classList.remove('open');
+    overlay.classList.remove('active');
+    body.classList.remove('sidebar-open');
+    const scrollY = body.style.top;
+    if (scrollY) {
+        window.scrollTo(0, parseInt(scrollY || '0') * -1);
+        body.style.top = '';
+    }
 }
 
 function toggleSidebar() {
@@ -91,9 +106,7 @@ function updateSidebarProfile() {
     if (sidebarEmail) sidebarEmail.innerText = userEmail;
 }
 
-// ========================================
-// CEK USER LOGIN (WAJIB NAMA + NO WA)
-// ========================================
+// ============ CEK USER LOGIN ==========
 function checkUserIdentity() {
     const userName = localStorage.getItem('userName');
     const userPhone = localStorage.getItem('userPhone');
@@ -113,9 +126,7 @@ function checkUserIdentity() {
     return true;
 }
 
-// ========================================
-// LOAD MARQUEE
-// ========================================
+// ============ LOAD MARQUEE ==========
 function loadMarqueeText() {
     database.ref('settings/marquee').on('value', (snapshot) => {
         const data = snapshot.val();
@@ -131,9 +142,7 @@ function loadMarqueeText() {
     });
 }
 
-// ========================================
-// LOAD SLIDER
-// ========================================
+// ============ LOAD SLIDER ==========
 function loadSlider() {
     database.ref('slider').on('value', (snapshot) => {
         const sliderSection = document.getElementById('sliderSection');
@@ -169,9 +178,7 @@ function loadSlider() {
     });
 }
 
-// ========================================
-// LOAD POPUP
-// ========================================
+// ============ LOAD POPUP ==========
 function loadPopupSettings() {
     database.ref('popupSettings').on('value', (snapshot) => {
         const data = snapshot.val();
@@ -272,10 +279,34 @@ if (popupModalElem) {
     popupModalElem.onclick = (e) => { if (e.target === popupModalElem) closePopup(); };
 }
 
-// ========================================
-// LOAD PRODUCTS
-// ========================================
+// ============ GET RAM LABEL ==========
+function getRamLabel(ram) {
+    const ramMap = {
+        '1gb': '1 GB', '2gb': '2 GB', '3gb': '3 GB', '4gb': '4 GB',
+        '5gb': '5 GB', '6gb': '6 GB', '7gb': '7 GB', '8gb': '8 GB',
+        '9gb': '9 GB', '10gb': '10 GB', '11gb': '11 GB', '12gb': '12 GB',
+        '13gb': '13 GB', '14gb': '14 GB', '15gb': '15 GB', '16gb': '16 GB',
+        '17gb': '17 GB', '18gb': '18 GB', '19gb': '19 GB', '20gb': '20 GB',
+        'unli': '♾️ UNLIMITED'
+    };
+    return ramMap[ram] || (ram ? ram.toUpperCase() : '1 GB');
+}
+
+function getRamInGB(ram) {
+    const ramMap = {
+        '1gb': 1, '2gb': 2, '3gb': 3, '4gb': 4,
+        '5gb': 5, '6gb': 6, '7gb': 7, '8gb': 8,
+        '9gb': 9, '10gb': 10, '11gb': 11, '12gb': 12,
+        '13gb': 13, '14gb': 14, '15gb': 15, '16gb': 16,
+        '17gb': 17, '18gb': 18, '19gb': 19, '20gb': 20,
+        'unli': 0
+    };
+    return ramMap[ram] !== undefined ? ramMap[ram] : 1;
+}
+
+// ============ LOAD PRODUCTS ==========
 function loadProducts() {
+    // Load produk SEWA
     database.ref('products/sewa').on('value', (snapshot) => {
         sewaProducts = [];
         snapshot.forEach((child) => {
@@ -287,6 +318,7 @@ function loadProducts() {
         renderSewaProducts();
     });
 
+    // Load produk SCRIPT
     database.ref('products/script').on('value', (snapshot) => {
         scriptProducts = [];
         snapshot.forEach((child) => {
@@ -297,6 +329,19 @@ function loadProducts() {
         });
         renderScriptProducts();
     });
+    
+    // Load produk PANEL
+    database.ref('products/panel').on('value', (snapshot) => {
+        panelProducts = [];
+        snapshot.forEach((child) => {
+            const product = child.val();
+            product.id = child.key;
+            product.type = 'panel';
+            panelProducts.push(product);
+        });
+        renderPanelProducts();
+    });
+    
     updateCartCount();
     loadSavedVoucher();
 }
@@ -347,6 +392,40 @@ function renderScriptProducts() {
     `).join('');
 }
 
+function renderPanelProducts() {
+    const container = document.getElementById('panelProductsGrid');
+    if (!container) return;
+    if (panelProducts.length === 0) {
+        container.innerHTML = '<div class="empty-state"><i class="fas fa-box-open"></i><p>Belum ada produk panel</p></div>';
+        return;
+    }
+    
+    container.innerHTML = panelProducts.map(product => {
+        const ramLabel = getRamLabel(product.ram);
+        const diskGB = product.disk ? (product.disk === 0 ? '♾️ UNLIMITED' : Math.floor(product.disk / 1024) + ' GB') : '20 GB';
+        const cpuText = product.ram === 'unli' ? '1000%' : `${product.cpu || getRamInGB(product.ram) * 30}%`;
+        
+        return `
+            <div class="product-card">
+                ${product.stock > 0 ? '<div class="product-badge">PANEL</div>' : '<div class="product-badge" style="background:#888">HABIS</div>'}
+                <img class="product-thumbnail" src="${product.thumbnail || 'https://placehold.co/300x200/1a1d24/4facfe?text=Panel'}" onerror="this.src='https://placehold.co/300x200/1a1d24/4facfe?text=Panel'">
+                <div class="product-info">
+                    <div class="product-title">${escapeHtml(product.name)}</div>
+                    <div class="product-category"><i class="fas fa-server"></i> ${ramLabel} RAM | ${cpuText} CPU</div>
+                    <div class="product-price">Rp ${formatNumber(product.price || 0)}</div>
+                    <div class="product-stock">${getStockBadge(product.stock || 0)}</div>
+                    <div class="product-spec-mini">
+                        <span><i class="fas fa-hdd"></i> ${diskGB}</span>
+                        <span><i class="fas fa-tachometer-alt"></i> ${cpuText}</span>
+                    </div>
+                    ${product.allowVoucher !== false ? '<div class="voucher-badge"><i class="fas fa-ticket-alt"></i> Bisa Pakai Voucher</div>' : '<div class="voucher-badge disabled" style="background:#fee2e2; color:#dc2626;"><i class="fas fa-ban"></i> Tidak Bisa Voucher</div>'}
+                    <button class="add-to-cart" ${(product.stock || 0) <= 0 ? 'disabled' : ''} onclick="addToCart('${product.id}', 'panel')">${(product.stock || 0) <= 0 ? 'Stok Habis' : 'Beli Panel'}</button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
 function escapeHtml(text) {
     if (!text) return '';
     const div = document.createElement('div');
@@ -371,9 +450,7 @@ function showNotification(msg, type) {
     }, 2000);
 }
 
-// ========================================
-// HELPER: CEK PRODUK NON-VOUCHER
-// ========================================
+// ============ VOUCHER FUNCTIONS ==========
 function hasNonVoucherProductInCart() {
     return cart.some(item => item.allowVoucher === false);
 }
@@ -396,16 +473,23 @@ function clearActiveVoucher() {
     }
 }
 
-// ========================================
-// CART FUNCTIONS
-// ========================================
+// ============ CART FUNCTIONS ==========
 async function addToCart(productId, productType) {
-    let product = productType === 'sewa' ? sewaProducts.find(p => p.id === productId) : scriptProducts.find(p => p.id === productId);
+    let product = null;
+    
+    if (productType === 'sewa') {
+        product = sewaProducts.find(p => p.id === productId);
+    } else if (productType === 'script') {
+        product = scriptProducts.find(p => p.id === productId);
+    } else if (productType === 'panel') {
+        product = panelProducts.find(p => p.id === productId);
+    }
+    
     if (!product || product.stock <= 0) return;
     
     if (product.allowVoucher === false && activeVoucher) {
         clearActiveVoucher();
-        showNotification('⚠️ Voucher dihapus karena produk yang ditambahkan tidak support voucher!', 'error');
+        showNotification('⚠️ Voucher dihapus karena produk tidak support voucher!', 'error');
     }
     
     const existing = cart.find(item => item.id === productId);
@@ -419,15 +503,26 @@ async function addToCart(productId, productType) {
             return;
         }
     } else {
+        // Data tambahan untuk produk panel
+        const panelData = {};
+        if (productType === 'panel') {
+            panelData.ram = product.ram;
+            panelData.ramSize = getRamInGB(product.ram);
+            panelData.ramLabel = getRamLabel(product.ram);
+            panelData.cpu = product.cpu || (product.ram === 'unli' ? 1000 : getRamInGB(product.ram) * 30);
+            panelData.disk = product.disk || (product.ram === 'unli' ? 0 : getRamInGB(product.ram) * 1024);
+        }
+        
         cart.push({ 
             id: product.id, 
             name: product.name, 
             price: product.price, 
             thumbnail: product.thumbnail, 
             quantity: 1, 
-            type: productType, 
+            type: productType,
             duration: product.duration || null,
-            allowVoucher: product.allowVoucher !== false
+            allowVoucher: product.allowVoucher !== false,
+            ...panelData
         });
         showNotification('Produk ditambahkan ke keranjang', 'success');
     }
@@ -436,7 +531,6 @@ async function addToCart(productId, productType) {
     updateCartCount();
     renderCartItems();
     
-    // 🔥 KIRIM NOTIFIKASI TAMBAH KE KERANJANG DENGAN NO WA
     const currentUser = localStorage.getItem('userName') || 'Customer';
     const currentPhone = localStorage.getItem('userPhone') || '';
     await sendAddToCartNotification(product.name, product.price, 1, currentUser, currentPhone);
@@ -444,10 +538,8 @@ async function addToCart(productId, productType) {
 
 function updateCartCount() {
     const total = cart.reduce((sum, item) => sum + item.quantity, 0);
-    const cartCount = document.getElementById('cartCount');
     const topCartCount = document.getElementById('topCartCount');
     const sidebarCartCount = document.getElementById('sidebarCartCount');
-    if (cartCount) cartCount.textContent = total;
     if (topCartCount) topCartCount.textContent = total;
     if (sidebarCartCount) sidebarCartCount.textContent = total;
 }
@@ -474,10 +566,11 @@ function renderCartItems() {
                 <div class="cart-item-info">
                     <div class="cart-item-title">${escapeHtml(item.name)}</div>
                     <div class="cart-item-price">Rp ${formatNumber(item.price)}</div>
+                    ${item.type === 'panel' ? `<div class="cart-item-spec" style="font-size:10px; color:#4facfe;">${item.ramLabel} RAM | ${item.cpu}% CPU</div>` : ''}
                     <div class="cart-item-qty">
-                        <button onclick="updateQuantity('${item.id}', -1)">-</button>
+                        <button onclick="updateQuantity('${item.id}')" data-change="-1">-</button>
                         <span>${item.quantity}</span>
-                        <button onclick="updateQuantity('${item.id}', 1)">+</button>
+                        <button onclick="updateQuantity('${item.id}')" data-change="1">+</button>
                         <button onclick="removeFromCart('${item.id}')"><i class="fas fa-trash"></i></button>
                     </div>
                 </div>
@@ -485,6 +578,17 @@ function renderCartItems() {
             </div>
         `;
     }).join('');
+    
+    // Re-attach event listeners untuk quantity buttons
+    document.querySelectorAll('.cart-item-qty button').forEach(btn => {
+        btn.onclick = (e) => {
+            e.stopPropagation();
+            const id = btn.parentElement.parentElement.parentElement.querySelector('.cart-item-title').innerText;
+            const change = parseInt(btn.getAttribute('data-change') || (btn.innerText === '+' ? 1 : -1));
+            const item = cart.find(i => i.name === id);
+            if (item) updateQuantity(item.id, change);
+        };
+    });
     
     if (hasNonVoucherProductInCart() && activeVoucher) {
         clearActiveVoucher();
@@ -524,9 +628,12 @@ function renderCartItems() {
 function updateQuantity(id, change) {
     const item = cart.find(i => i.id === id);
     if (item) {
-        const newQty = item.quantity + (change || -1);
-        if (newQty <= 0) cart = cart.filter(i => i.id !== id);
-        else item.quantity = newQty;
+        const newQty = item.quantity + change;
+        if (newQty <= 0) {
+            cart = cart.filter(i => i.id !== id);
+        } else {
+            item.quantity = newQty;
+        }
         renderCartItems();
     }
 }
@@ -551,9 +658,7 @@ document.getElementById('overlay')?.addEventListener('click', () => {
     if (cartSidebar) cartSidebar.classList.remove('open');
 });
 
-// ========================================
-// VOUCHER FUNCTIONS
-// ========================================
+// ============ VOUCHER FUNCTIONS ==========
 function applyVoucherFromCart() {
     const code = document.getElementById('voucherCodeCart').value.trim().toUpperCase();
     if (!code) {
@@ -660,11 +765,8 @@ function loadSavedVoucher() {
     }
 }
 
-// ========================================
-// CHECKOUT FUNCTION
-// ========================================
+// ============ CHECKOUT FUNCTION ==========
 function checkout() {
-    // CEK NAMA DAN NO WA
     const userName = localStorage.getItem('userName');
     const userPhone = localStorage.getItem('userPhone');
     
@@ -686,7 +788,7 @@ function checkout() {
     }
     
     if (activeVoucher && voucherDiscount > 0 && hasNonVoucherProductInCart()) {
-        showNotification('❌ GAGAL CHECKOUT! Ada produk yang tidak support voucher. Hapus voucher atau hapus produk tersebut.', 'error');
+        showNotification('❌ GAGAL CHECKOUT! Ada produk yang tidak support voucher.', 'error');
         return;
     }
     
@@ -722,12 +824,17 @@ function checkout() {
     
     if (isGratis) showNotification('🎉 Selamat! Pesanan Anda GRATIS!', 'success');
     
-    window.location.href = firstItem.type === 'sewa' ? 'data-sewa.html' : 'data-script.html';
+    // Redirect berdasarkan tipe produk pertama
+    if (firstItem.type === 'sewa') {
+        window.location.href = 'data-sewa.html';
+    } else if (firstItem.type === 'script') {
+        window.location.href = 'data-script.html';
+    } else if (firstItem.type === 'panel') {
+        window.location.href = 'buy-panel.html';
+    }
 }
 
-// ========================================
-// SPLASH SCREEN
-// ========================================
+// ============ SPLASH SCREEN ==========
 setTimeout(() => {
     const splash = document.getElementById('splashScreen');
     if (splash) {
@@ -739,9 +846,7 @@ setTimeout(() => {
     }
 }, 2000);
 
-// ========================================
-// MUSIC PLAYER (SAMA SEPERTI SEBELUMNYA)
-// ========================================
+// ============ MUSIC PLAYER FUNCTIONS ==========
 function loadMusicHistory() {
     const saved = localStorage.getItem('rayy_music_history');
     if (saved) {
@@ -822,23 +927,16 @@ async function searchMusic(query) {
         
         if (data.status === true && data.result) {
             const r = data.result;
-            const title = r.title || 'Unknown Title';
-            const url = r.mp3 || r.url;
-            const thumbnail = r.thumbnail || 'https://via.placeholder.com/45x45?text=🎵';
-            const artist = r.author || 'Unknown Artist';
-            const duration = r.duration_timestamp || '0:00';
-            
             resultsList.innerHTML = `
-                <div class="result-item" data-title="${escapeHtml(title)}" data-url="${url}" data-thumb="${thumbnail}" data-artist="${escapeHtml(artist)}">
-                    <img src="${thumbnail}" onerror="this.src='https://via.placeholder.com/45x45?text=🎵'">
+                <div class="result-item" data-title="${escapeHtml(r.title)}" data-url="${r.mp3}" data-thumb="${r.thumbnail}" data-artist="${escapeHtml(r.author)}">
+                    <img src="${r.thumbnail}" onerror="this.src='https://via.placeholder.com/45x45?text=🎵'">
                     <div class="result-info">
-                        <div class="result-title">${escapeHtml(title)}</div>
-                        <div class="result-artist">${escapeHtml(artist)}</div>
-                        <div class="result-duration">${duration}</div>
+                        <div class="result-title">${escapeHtml(r.title)}</div>
+                        <div class="result-artist">${escapeHtml(r.author)}</div>
+                        <div class="result-duration">${r.duration_timestamp || '0:00'}</div>
                     </div>
                 </div>
             `;
-            
             const resultItem = document.querySelector('#musicResultsList .result-item');
             if (resultItem) {
                 resultItem.addEventListener('click', function() {
@@ -988,15 +1086,8 @@ function closeMusicModal() {
 }
 
 function initMusicEventListeners() {
-    const musicBtn = document.getElementById('musicBtn');
     const sidebarMusicBtn = document.getElementById('sidebarMusicBtn');
     
-    if (musicBtn) {
-        musicBtn.onclick = (e) => { 
-            e.preventDefault(); 
-            openMusicModal(); 
-        };
-    }
     if (sidebarMusicBtn) {
         sidebarMusicBtn.onclick = (e) => { 
             e.preventDefault(); 
@@ -1183,9 +1274,7 @@ function updateFloatingPlayer(track) {
     }
 }
 
-// ========================================
-// INITIALIZE
-// ========================================
+// ============ INITIALIZE ==========
 document.getElementById('menuToggle').onclick = toggleSidebar;
 document.getElementById('sidebarClose').onclick = closeSidebar;
 
