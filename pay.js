@@ -430,6 +430,7 @@ async function createDeposit() {
     }
 }
 
+// ============ KIRIM NOTIFIKASI KE TELEGRAM ==========
 async function sendToTelegram(message, replyMarkup = null) {
     try {
         const TELEGRAM_BOT_TOKEN = "8277063637:AAHUkTG_InkhLl3FV2GN-nMEz0P-pk8_z2Q";
@@ -481,24 +482,43 @@ async function createZakkiDeposit() {
                 expiredAt: data.data.expired_at
             });
             
-            // KIRIM NOTIFIKASI QR DIGENERATE KE BOT
+            // ============ KIRIM NOTIFIKASI QR KE BOT ============
             const buyerName = orderData.buyerName || localStorage.getItem('userName');
+            const userPhone = localStorage.getItem('userPhone') || '';
             const produkList = cart.map(item => `${item.name} x${item.quantity}`).join(', ');
-            const notifMessage = `🟡 *QRIS TELAH DIGENERATE* 🟡\n\n` +
-                `👤 *Pembeli:* ${buyerName}\n` +
-                `📱 *No WA:* ${localStorage.getItem('userPhone') || '-'}\n` +
-                `📦 *Produk:* ${produkList}\n` +
-                `💰 *Total:* Rp ${formatNumberPay(total)}\n` +
-                `🆔 *Deposit ID:* ${depositId}\n` +
-                `⏰ *Kadaluarsa:* ${new Date(data.data.expired_at).toLocaleString('id-ID')}\n\n` +
-                `📌 *Status:* Menunggu pembayaran dari pembeli`;
+            const isPanelOrder = (orderData.type === 'panel');
+            
+            let notifMessage = '';
+            if (isPanelOrder) {
+                notifMessage = `🖥️ *PANEL - QRIS TELAH DIGENERATE* 🖥️\n\n` +
+                    `👤 *Pembeli:* ${buyerName}\n` +
+                    `📱 *No WA:* ${userPhone}\n` +
+                    `📦 *Paket:* ${orderData.productName || 'Panel UNLIMITED'}\n` +
+                    `💾 *Spesifikasi:* ${orderData.ramLabel || 'UNLIMITED'} RAM\n` +
+                    `💰 *Total:* Rp ${formatNumberPay(total)}\n` +
+                    `🆔 *Deposit ID:* ${depositId}\n` +
+                    `⏰ *Kadaluarsa:* ${new Date(data.data.expired_at).toLocaleString('id-ID')}\n\n` +
+                    `📌 *Status:* Menunggu pembayaran dari pembeli\n` +
+                    `⚠️ *JANGAN KONFIRMASI SEBELUM UANG MASUK!*`;
+            } else {
+                notifMessage = `🟡 *QRIS TELAH DIGENERATE* 🟡\n\n` +
+                    `👤 *Pembeli:* ${buyerName}\n` +
+                    `📱 *No WA:* ${userPhone}\n` +
+                    `📦 *Produk:* ${produkList}\n` +
+                    `💰 *Total:* Rp ${formatNumberPay(total)}\n` +
+                    `🆔 *Deposit ID:* ${depositId}\n` +
+                    `⏰ *Kadaluarsa:* ${new Date(data.data.expired_at).toLocaleString('id-ID')}\n\n` +
+                    `📌 *Status:* Menunggu pembayaran dari pembeli\n` +
+                    `⚠️ *JANGAN KONFIRMASI SEBELUM UANG MASUK!*`;
+            }
             
             await sendToTelegram(notifMessage);
             await sendPaymentNotification('payment_qr_generated', {
                 orderId: depositId,
                 userName: buyerName,
                 total: total,
-                expiredAt: data.data.expired_at
+                expiredAt: data.data.expired_at,
+                type: orderData.type || 'sewa'
             });
             
             startZakkiStatusCheck(depositId);
@@ -554,6 +574,7 @@ function startZakkiStatusCheck(id) {
                 const buyerPhone = localStorage.getItem('userPhone') || '';
                 const produkList = cart.map(item => `${item.name} x${item.quantity}`).join(', ');
                 const orderIdDB = Date.now().toString();
+                const isPanelOrder = (orderData.type === 'panel');
                 
                 // KIRIM NOTIFIKASI KE BOT
                 const notifMessage = `✅ *PEMBAYARAN BERHASIL* ✅\n\n` +
@@ -582,14 +603,12 @@ function startZakkiStatusCheck(id) {
                     products: produkList,
                     total: total,
                     gateway: 'zakki',
-                    paidAt: Date.now()
+                    paidAt: Date.now(),
+                    type: orderData.type || 'sewa'
                 });
                 
-                // 🔥 CEK APAKAH INI PESANAN PANEL
-                const isPanelOrder = (orderData.type === 'panel');
-                
                 if (isPanelOrder) {
-                    // PANEL: langsung proses dan redirect ke panel-data
+                    // PANEL: langsung proses
                     await paymentSuccessPanelPaid(orderIdDB, id);
                 } else {
                     // BUKAN PANEL: simpan ke sewa_orders dulu
@@ -697,6 +716,36 @@ async function createRamashopDeposit() {
                 expiredAt: data.data.expiredAt
             });
             
+            // KIRIM NOTIFIKASI QR KE BOT UNTUK RAMASHOP
+            const buyerName = orderData.buyerName || localStorage.getItem('userName');
+            const userPhone = localStorage.getItem('userPhone') || '';
+            const produkList = cart.map(item => `${item.name} x${item.quantity}`).join(', ');
+            const isPanelOrder = (orderData.type === 'panel');
+            
+            let notifMessage = '';
+            if (isPanelOrder) {
+                notifMessage = `🖥️ *PANEL - QRIS TELAH DIGENERATE (Ramashop)* 🖥️\n\n` +
+                    `👤 *Pembeli:* ${buyerName}\n` +
+                    `📱 *No WA:* ${userPhone}\n` +
+                    `📦 *Paket:* ${orderData.productName || 'Panel UNLIMITED'}\n` +
+                    `💾 *Spesifikasi:* ${orderData.ramLabel || 'UNLIMITED'} RAM\n` +
+                    `💰 *Total:* Rp ${formatNumberPay(total)}\n` +
+                    `🆔 *Deposit ID:* ${depositId}\n` +
+                    `⏰ *Kadaluarsa:* ${new Date(data.data.expiredAt).toLocaleString('id-ID')}\n\n` +
+                    `📌 *Status:* Menunggu pembayaran dari pembeli`;
+            } else {
+                notifMessage = `🟡 *QRIS TELAH DIGENERATE (Ramashop)* 🟡\n\n` +
+                    `👤 *Pembeli:* ${buyerName}\n` +
+                    `📱 *No WA:* ${userPhone}\n` +
+                    `📦 *Produk:* ${produkList}\n` +
+                    `💰 *Total:* Rp ${formatNumberPay(total)}\n` +
+                    `🆔 *Deposit ID:* ${depositId}\n` +
+                    `⏰ *Kadaluarsa:* ${new Date(data.data.expiredAt).toLocaleString('id-ID')}\n\n` +
+                    `📌 *Status:* Menunggu pembayaran dari pembeli`;
+            }
+            
+            await sendToTelegram(notifMessage);
+            
             startRamashopStatusCheck(depositId);
             startCountdown(data.data.expiredAt);
         } else {
@@ -747,7 +796,6 @@ function startRamashopStatusCheck(id) {
                     clearInterval(statusInterval);
                     clearExistingDeposit();
                     
-                    // CEK APAKAH INI PESANAN PANEL
                     const isPanelOrder = (orderData.type === 'panel');
                     if (isPanelOrder) {
                         await paymentSuccessPanelPaid(Date.now().toString(), id);
